@@ -4751,8 +4751,8 @@ if (origTranslateMinnan) {
 // [新增] 4 层语音识别降级（阿里云 FC 百度→讯飞 → Google → FunASR）
 // =============================================
 // 请在部署阿里云 FC 后，将下面的地址替换为实际地址
-const FC_PROXY_URL = 'https://your-fc-id.cn-shanghai.fc.aliyuncs.com/api/asr-proxy';
-const FC_FUNASR_URL = 'wss://your-fc-id.cn-shanghai.fc.aliyuncs.com/ws';
+const FC_PROXY_URL = 'https://ama-channel-qtsdkdknbc.cn-shanghai.fcapp.run';
+const FC_FUNASR_URL = 'wss://ama-channel-qtsdkdknbc.cn-shanghai.fcapp.run';
 
 async function callAliyunFcProxy(audioBlob) {
   const buffer = await audioBlob.arrayBuffer();
