@@ -1471,8 +1471,8 @@ input[type="text"], input[type="search"], textarea { font-size: clamp(22px, 5vw,
   <div class="gallery-nav">
     <h2>&#127916; 频道精选</h2>
     <div class="category-tabs" id="categoryTabs">
-      <button class="cat-btn" data-cat="all">全部</button>
-      <button class="cat-btn active" data-cat="莆仙戏">莆仙戏</button>
+      <button class="cat-btn active" data-cat="all">全部</button>
+      <button class="cat-btn" data-cat="莆仙戏">莆仙戏</button>
       <button class="cat-btn" data-cat="歌仔戏">歌仔戏</button>
       <button class="cat-btn" data-cat="南音">南音</button>
       <button class="cat-btn" data-cat="木偶戏">木偶戏</button>
@@ -1569,7 +1569,6 @@ input[type="text"], input[type="search"], textarea { font-size: clamp(22px, 5vw,
     <button class="about-btn" id="aboutBtn">&#128220; 关于这个频道</button>
     <button class="about-btn" id="puxianInputBtn">&#127908; 录入莆仙话</button>
     <button class="about-btn" id="minnanInputBtn">&#127908; 录入闽南话</button>
-    <button class="about-btn" id="privateVoiceLibBtn">&#127908; 私人语音库</button>
   </div>
 
 </div>
@@ -1672,6 +1671,44 @@ const puxianDict = {
   'cuncao': '春草', 'zhuangyuan': '状元', 'meifei': '梅妃',
   'xintinglei': '新亭泪', 'qiufengci': '秋风辞',
   'chuncuo': '春草', 'zhuangyuan': '状元',
+
+  // ---- 模拟搜索配对 ----
+  '春草闯唐': '春草闯堂',
+  '曹操闯堂': '春草闯堂',
+  '秋分': '秋风辞',
+  '状员乞丐': '状元与乞丐',
+  '状元乞丐': '状元与乞丐',
+  '帮我找状元乞丐': '状元与乞丐',
+  '播放春草': '春草闯堂',
+  '播放春草闯唐': '春草闯堂',
+  '帮我找': '',
+  '我要看': '',
+  '给我放': '',
+  '找一下': '',
+  '播放': '',
+  '陈三五娘': '陈三五娘',
+  '梁山伯': '梁山伯与祝英台',
+  '梁祝': '梁山伯与祝英台',
+  '射雕': '射雕英雄传',
+  '三国': '三国演义',
+  '水浒': '水浒传',
+  '西游': '西游记',
+  '红楼': '红楼梦',
+  '东方红': '东方红',
+  '地道战': '地道战',
+  '打靶': '打靶归来',
+  '小苹果': '小苹果',
+  '八骏马': '八骏马',
+  '梅花操': '梅花操',
+  '百鸟归巢': '百鸟归巢',
+  '小沙弥': '小沙弥下山',
+  '驯猴': '驯猴',
+  '元宵乐': '元宵乐',
+  '大名府': '大名府',
+  '打虎': '雷万春打虎',
+  '董永': '董永',
+  '七仙女': '董永',
+  '天仙配': '董永',
 };
 
 // =============================================
@@ -1727,6 +1764,42 @@ const minnanDict = {
   '加丝': '这样', '按呢': '这样', '彼当时': '那个时候',
   '即当时': '这个时候', '逐家': '大家', '家己': '自己',
   '啥人': '谁', '啥物': '什么', '佗位': '哪里', '做伙': '一起',
+
+  // ---- 模拟搜索配对 ----
+  '春草闯堂': '春草闯堂',
+  '曹操闯堂': '春草闯堂',
+  '秋分': '秋风辞',
+  '状员乞丐': '状元与乞丐',
+  '状元乞丐': '状元与乞丐',
+  '射雕': '射雕英雄传',
+  '三国': '三国演义',
+  '水浒': '水浒传',
+  '西游': '西游记',
+  '红楼': '红楼梦',
+  '东方红': '东方红',
+  '地道战': '地道战',
+  '打靶': '打靶归来',
+  '小苹果': '小苹果',
+  '八骏马': '八骏马',
+  '梅花操': '梅花操',
+  '百鸟归巢': '百鸟归巢',
+  '小沙弥': '小沙弥下山',
+  '驯猴': '驯猴',
+  '元宵乐': '元宵乐',
+  '大名府': '大名府',
+  '打虎': '雷万春打虎',
+  '董永': '董永',
+  '七仙女': '董永',
+  '天仙配': '董永',
+  '帮我找': '',
+  '我要看': '',
+  '给我放': '',
+  '找一下': '',
+  '播放': '',
+  '陈三五娘': '陈三五娘',
+  '梁山伯': '梁山伯与祝英台',
+  '梁祝': '梁山伯与祝英台',
+  '歌仔': '歌仔戏',
 };
 
 // =============================================
@@ -1759,6 +1832,38 @@ const puxianPronunciationDict = {
   '赵盾': ['zhaodun', 'zhao dun', '盾', '晋国', '忠臣'],
   '董永': ['dongyong', 'dong yong', '七仙女', '天仙配', '仙女', '织布'],
   '三打王瑛': ['sandawangying', 'san da wang ying', '三打', '王瑛', '王英'],
+  // ---- 跨类别节目发音变体 ----
+  '陈三五娘': ['chensanwuniang', 'chen san wu niang', 'tan sam ngoo nong', 'chen san', '五娘', '三五娘'],
+  '梁山伯与祝英台': ['liangshanboyuzhuyingtai', 'liang shan bo yu zhu ying tai', '山伯英台', '英台', '山伯', '梁祝', '祝影台'],
+  '吕蒙正': ['lvmengzheng', 'lv meng zheng', '蒙正', '绿蒙正'],
+  '薛平贵与王宝钏': ['xuepingguiyuwangbaochuan', 'xue ping gui yu wang bao chuan', '薛平贵', '平贵', '王宝钏', '宝钏'],
+  '王金龙与苏三': ['wangjinlongyususan', 'wang jin long yu su san', '王金龙', '金龙', '苏三', '苏三起解'],
+  '八骏马': ['bajunma', 'ba jun ma', '八俊马', '八军马'],
+  '梅花操': ['meihuacao', 'mei hua cao', '梅花草'],
+  '百鸟归巢': ['bainiaoguichao', 'bai niao gui chao', '白鸟归巢'],
+  '三千两金': ['sanqianliangjin', 'san qian liang jin', '三钱两金'],
+  '直入花园': ['zhiruhuayuan', 'zhi ru hua yuan', '只入花园'],
+  '小沙弥下山': ['xiaoshamixiaoshan', 'xiao sha mi xiao shan', '小沙弥', '小沙迷'],
+  '驯猴': ['xunhou', 'xun hou', '训猴'],
+  '元宵乐': ['yuanxiaole', 'yuan xiao le', '元霄乐'],
+  '大名府': ['damingfu', 'da ming fu', '大民府'],
+  '雷万春打虎': ['leiwenchundahu', 'lei wan chun da hu', '雷万春', '雷文春打虎', '雷文春大花'],
+  '射雕英雄传': ['shediaoyingxiongzhuan', 'she diao ying xiong zhuan', '射雕', '射雕英雄'],
+  '红楼梦': ['hongloumeng', 'hong lou meng', '红楼'],
+  '三国演义': ['sanguoyanyi', 'san guo yan yi', '三国'],
+  '水浒传': ['shuihuzhuan', 'shui hu zhuan', '水浒'],
+  '西游记': ['xiyouji', 'xi you ji', '西游', '孙悟空'],
+  '东方红': ['dongfanghong', 'dong fang hong', '东访红'],
+  '没有共产党就没有新中国': ['meiyougongchandang', '没有共产党'],
+  '打靶归来': ['dabatguilai', 'da ba gui lai', '打靶', '打靶归'],
+  '最炫民族风': ['zuixuanminzufeng', 'zui xuan min zu feng', '最炫', '民族风'],
+  '小苹果': ['xiaopingguo', 'xiao ping guo', '小苹果'],
+  '地道战': ['didaaozhan', 'di dao zhan', '地道'],
+  '铁道游击队': ['tiedaoyoujidui', 'tie dao you ji dui', '铁道', '游击队'],
+  '英雄儿女': ['yingxiongernv', 'ying xiong er nv', '英雄'],
+  '人到中年': ['rendaonianzhong', 'ren dao nian zhong', '人到中年'],
+  '庐山恋': ['lushanlian', 'lu shan lian', '庐山'],
+  '歌仔戏': ['gezaixi', 'ge zai xi', '歌仔', '歌子戏'],
 };
 
 const minnanPronunciationDict = {
@@ -1781,6 +1886,23 @@ const minnanPronunciationDict = {
   '雷文春大花': ['leiwinchundahua', 'lei wen chun da hua', '雷文春'],
   '岳飞传': ['yuefeizhuan', 'yue fei zhuan', '岳飞'],
   '猪八戒娶亲': ['zhubajiequqin', 'zhu ba jie qu qin', '猪八戒'],
+  // ---- 跨类别节目发音变体 ----
+  '雷万春打虎': ['leiwenchundahu', 'lei wan chun da hu', '雷万春', '雷文春打虎', '雷文春大花'],
+  '射雕英雄传': ['shediaoyingxiongzhuan', 'she diao ying xiong zhuan', '射雕', '射雕英雄'],
+  '红楼梦': ['hongloumeng', 'hong lou meng', '红楼'],
+  '三国演义': ['sanguoyanyi', 'san guo yan yi', '三国'],
+  '水浒传': ['shuihuzhuan', 'shui hu zhuan', '水浒'],
+  '西游记': ['xiyouji', 'xi you ji', '西游', '孙悟空'],
+  '东方红': ['dongfanghong', 'dong fang hong', '东访红'],
+  '没有共产党就没有新中国': ['meiyougongchandang', '没有共产党'],
+  '打靶归来': ['dabatguilai', 'da ba gui lai', '打靶', '打靶归'],
+  '最炫民族风': ['zuixuanminzufeng', 'zui xuan min zu feng', '最炫', '民族风'],
+  '小苹果': ['xiaopingguo', 'xiao ping guo', '小苹果'],
+  '地道战': ['didaaozhan', 'di dao zhan', '地道'],
+  '铁道游击队': ['tiedaoyoujidui', 'tie dao you ji dui', '铁道', '游击队'],
+  '英雄儿女': ['yingxiongernv', 'ying xiong er nv', '英雄'],
+  '人到中年': ['rendaonianzhong', 'ren dao nian zhong', '人到中年'],
+  '庐山恋': ['lushanlian', 'lu shan lian', '庐山'],
 };
 
 function getPronunciationVariants(title, lang) {
@@ -4642,13 +4764,8 @@ function refreshCustomList() {
 const origTranslatePuxian = typeof translatePuxian === 'function' ? translatePuxian : null;
 if (origTranslatePuxian) {
   window.translatePuxian = function(input) {
-    // First apply private voice dict
     let modified = input;
-    var pvd = (typeof privateVoiceDict !== 'undefined' ? privateVoiceDict : {});
-    for (const [dialect, chinese] of Object.entries(pvd)) {
-      modified = modified.split(dialect).join(chinese);
-    }
-    // Then apply custom puxian dict
+    // Apply custom puxian dict
     for (const [dialect, chinese] of Object.entries(customPuxianDict)) {
       modified = modified.split(dialect).join(chinese);
     }
@@ -4798,13 +4915,8 @@ function refreshMinnanCustomList() {
 const origTranslateMinnan = typeof translateMinnan === 'function' ? translateMinnan : null;
 if (origTranslateMinnan) {
   window.translateMinnan = function(input) {
-    // First apply private voice dict
     let modified = input;
-    var pvd = (typeof privateVoiceDict !== 'undefined' ? privateVoiceDict : {});
-    for (const [dialect, chinese] of Object.entries(pvd)) {
-      modified = modified.split(dialect).join(chinese);
-    }
-    // Then apply custom minnan dict
+    // Apply custom minnan dict
     for (const [dialect, chinese] of Object.entries(customMinnanDict)) {
       modified = modified.split(dialect).join(chinese);
     }
@@ -4814,181 +4926,7 @@ if (origTranslateMinnan) {
 }
 </script>
 
-<!-- ===== Private Voice Library Modal ===== -->
-<div class="about-modal-overlay hidden" id="privateVoiceOverlay">
-  <div class="about-modal" style="max-width:520px;">
-    <h2>&#127908; 私人语音库</h2>
-    <p class="about-subtitle">录入您习惯的说法，让语音搜索更懂您</p>
 
-    <div style="margin-bottom:16px;">
-      <label style="color:var(--gold);font-size:0.9em;">中文名称（对应频道库中的节目名）：</label>
-      <input type="text" id="privateChineseInput" placeholder="如：春草闯堂" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(212,168,83,0.3);background:rgba(255,248,232,0.9);color:#2A1A0E;font-size:1em;margin-top:6px;font-family:'Noto Serif SC','Songti SC','SimSun','Microsoft YaHei',serif;box-sizing:border-box;" />
-    </div>
-
-    <div style="margin-bottom:16px;">
-      <label style="color:var(--gold);font-size:0.9em;">您的说法（方言、口语或习惯叫法）：</label>
-      <input type="text" id="privateDialectInput" placeholder="如：春草闯堂、曹操闯堂等" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(212,168,83,0.3);background:rgba(255,248,232,0.9);color:#2A1A0E;font-size:1em;margin-top:6px;font-family:'Noto Serif SC','Songti SC','SimSun','Microsoft YaHei',serif;box-sizing:border-box;" />
-    </div>
-
-    <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
-      <button id="privateDictMicBtn" style="width:56px;height:56px;border-radius:50%;border:2px solid var(--gold);background:transparent;color:var(--gold);font-size:1.5em;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="按住说话">&#127908;</button>
-      <div id="privateDictPinyin" style="flex:1;font-size:clamp(14px,3vw,17px);color:var(--text-muted);min-height:28px;line-height:1.5;">点击麦克风录入您的说法，系统自动显示拼音近似</div>
-    </div>
-
-    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      <button id="privateSaveBtn" style="padding:10px 28px;border-radius:25px;border:2px solid var(--gold);background:linear-gradient(135deg,var(--gold),#C49A3A);color:var(--bg-dark);font-weight:700;font-size:1em;cursor:pointer;font-family:'Noto Serif SC','Songti SC','SimSun','Microsoft YaHei',serif;">保存词条</button>
-      <button id="privateMatchBtn" style="padding:10px 28px;border-radius:25px;border:2px solid var(--gold);background:transparent;color:var(--gold);font-size:1em;cursor:pointer;font-family:'Noto Serif SC','Songti SC','SimSun','Microsoft YaHei',serif;">匹配节目</button>
-    </div>
-
-    <div id="privateInputStatus" style="margin-top:12px;text-align:center;color:var(--text-muted);font-size:0.85em;"></div>
-
-    <div style="margin-top:20px;border-top:1px solid rgba(212,168,83,0.15);padding-top:16px;">
-      <label style="color:var(--gold);font-size:0.9em;">已录入的私人语音词条（保存在本地）：</label>
-      <div id="privateCustomList" style="max-height:150px;overflow-y:auto;margin-top:8px;font-size:0.85em;"></div>
-    </div>
-
-    <button class="about-close-btn" id="privateVoiceCloseBtn">关 闭</button>
-  </div>
-</div>
-
-
-<script>
-// Private Voice Library
-const privateVoiceLibBtn = document.getElementById('privateVoiceLibBtn');
-const privateVoiceOverlay = document.getElementById('privateVoiceOverlay');
-const privateVoiceCloseBtn = document.getElementById('privateVoiceCloseBtn');
-const privateSaveBtn = document.getElementById('privateSaveBtn');
-const privateMatchBtn = document.getElementById('privateMatchBtn');
-const privateInputStatus = document.getElementById('privateInputStatus');
-const privateCustomList = document.getElementById('privateCustomList');
-
-// Load private entries from localStorage
-let privateVoiceDict = JSON.parse(localStorage.getItem('privateVoiceDict') || '{}');
-// Inject into both dicts for search
-Object.assign(puxianDict, privateVoiceDict);
-Object.assign(minnanDict, privateVoiceDict);
-
-if (privateVoiceLibBtn) {
-  privateVoiceLibBtn.addEventListener('click', () => {
-    privateVoiceOverlay.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-    refreshPrivateList();
-  });
-}
-
-if (privateVoiceCloseBtn) {
-  privateVoiceCloseBtn.addEventListener('click', () => {
-    privateVoiceOverlay.classList.add('hidden');
-    document.body.style.overflow = '';
-  });
-}
-
-if (privateVoiceOverlay) {
-  privateVoiceOverlay.addEventListener('click', (e) => {
-    if (e.target === privateVoiceOverlay) {
-      privateVoiceOverlay.classList.add('hidden');
-      document.body.style.overflow = '';
-    }
-  });
-}
-
-if (document.getElementById('privateDictMicBtn')) {
-  setupDialectDictMic({
-    buttonId: 'privateDictMicBtn',
-    statusId: 'privateDictPinyin',
-    dialectInputId: 'privateDialectInput',
-    chineseInputId: 'privateChineseInput'
-  });
-}
-
-if (privateSaveBtn) {
-  privateSaveBtn.addEventListener('click', () => {
-    const chinese = document.getElementById('privateChineseInput').value.trim();
-    const dialect = document.getElementById('privateDialectInput').value.trim();
-    if (!chinese || !dialect) {
-      privateInputStatus.textContent = '请填写中文名称和您的说法';
-      privateInputStatus.style.color = '#FF6B6B';
-      return;
-    }
-    privateVoiceDict[dialect] = chinese;
-    puxianDict[dialect] = chinese;
-    minnanDict[dialect] = chinese;
-    localStorage.setItem('privateVoiceDict', JSON.stringify(privateVoiceDict));
-    privateInputStatus.textContent = '已保存："' + dialect + '" → "' + chinese + '"';
-    privateInputStatus.style.color = '#4CAF50';
-    document.getElementById('privateChineseInput').value = '';
-    document.getElementById('privateDialectInput').value = '';
-    refreshPrivateList();
-  });
-}
-
-if (privateMatchBtn) {
-  privateMatchBtn.addEventListener('click', () => {
-    const chinese = document.getElementById('privateChineseInput').value.trim();
-    if (!chinese) {
-      privateInputStatus.textContent = '请先输入中文名称';
-      privateInputStatus.style.color = '#FF6B6B';
-      return;
-    }
-    const found = operaDB.find(opera => opera.title === chinese || opera.title.includes(chinese));
-    if (found) {
-      privateInputStatus.innerHTML = '找到节目：<strong style="color:var(--gold);">' + found.title + '</strong>（' + found.category + '）';
-      privateInputStatus.style.color = '#4CAF50';
-    } else {
-      privateInputStatus.textContent = '未找到匹配的节目：' + chinese;
-      privateInputStatus.style.color = '#FF6B6B';
-    }
-  });
-}
-
-function refreshPrivateList() {
-  privateCustomList.innerHTML = '';
-  const entries = Object.entries(privateVoiceDict);
-  if (entries.length === 0) {
-    privateCustomList.innerHTML = '<span style="color:var(--text-muted);">暂无自定义词条</span>';
-    return;
-  }
-  entries.forEach(([dialect, chinese]) => {
-    const item = document.createElement('div');
-    item.style.cssText = 'padding:6px 8px;border-bottom:1px solid rgba(212,168,83,0.1);display:flex;justify-content:space-between;align-items:center;';
-    item.innerHTML = '<span><span style="color:var(--gold);">' + escapeHtml(dialect) + '</span> → ' + escapeHtml(chinese) + '</span><button style="background:none;border:none;color:#FF6B6B;cursor:pointer;font-size:0.8em;padding:2px 6px;" type="button">删除</button>';
-    item.querySelector('button').addEventListener('click', () => {
-      delete privateVoiceDict[dialect];
-      delete puxianDict[dialect];
-      delete minnanDict[dialect];
-      localStorage.setItem('privateVoiceDict', JSON.stringify(privateVoiceDict));
-      refreshPrivateList();
-    });
-    privateCustomList.appendChild(item);
-  });
-}
-
-// Re-inject translate functions to include privateVoiceDict
-// (they were originally injected before privateVoiceDict was loaded)
-(function reInjectPrivateVoiceDict() {
-  var pvd = privateVoiceDict;
-  var origTP = typeof translatePuxian === 'function' ? translatePuxian : null;
-  var origTM = typeof translateMinnan === 'function' ? translateMinnan : null;
-  if (origTP) {
-    window.translatePuxian = function(input) {
-      let modified = input;
-      for (const [dialect, chinese] of Object.entries(pvd)) {
-        modified = modified.split(dialect).join(chinese);
-      }
-      return origTP(modified);
-    };
-  }
-  if (origTM) {
-    window.translateMinnan = function(input) {
-      let modified = input;
-      for (const [dialect, chinese] of Object.entries(pvd)) {
-        modified = modified.split(dialect).join(chinese);
-      }
-      return origTM(modified);
-    };
-  }
-})();
-</script>
 
 </body>
 </html>
