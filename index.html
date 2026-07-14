@@ -2485,7 +2485,7 @@ function initGallery() {
     item.className = 'gallery-item';
     
     const imgHtml = opera.poster 
-      ? `<img src="${opera.poster}" alt="${opera.title}" onerror="this.outerHTML='<div style=\\'width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,${getCategoryGradient(opera.category)});border-radius:10px 10px 0 0;font-size:2em;\\'>${getCategoryEmoji(opera.category)}</div>'" />`
+      ? `<img src="${opera.poster}" alt="${opera.title}" loading="lazy" decoding="async" onerror="this.outerHTML='<div style=\\'width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,${getCategoryGradient(opera.category)});border-radius:10px 10px 0 0;font-size:2em;\\'>${getCategoryEmoji(opera.category)}</div>'" />`
       : `<div style="width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,${getCategoryGradient(opera.category)});border-radius:10px 10px 0 0;font-size:2em;">${getCategoryEmoji(opera.category)}</div>`;
     
     item.innerHTML = `${imgHtml}<button class="item-play-btn" title="点播" data-opera-id="${opera.id || opera.title}">&#9654;</button><div class="item-title">${opera.title}</div>`;
