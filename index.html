@@ -1578,42 +1578,151 @@ input[type="text"], input[type="search"], textarea { font-size: clamp(22px, 5vw,
 // 莆仙话方言翻译词典
 // =============================================
 const puxianDict = {
-  // ---- 戏曲名称 ----
-  '春草': '春草', '春草闯堂': '春草闯堂', '闯堂': '闯堂',
-  '状元': '状元', '状元与乞丐': '状元与乞丐', '乞丐': '乞丐', '状元乞丐': '状元与乞丐',
-  '梅妃': '梅妃', '江梅妃': '江梅妃', '江采萍': '江梅妃', '江氏': '江梅妃',
-  '新亭泪': '新亭泪', '新亭': '新亭', '亭泪': '新亭泪', '新亭对泣': '新亭泪',
-  '秋风辞': '秋风辞', '秋风': '秋风', '风辞': '秋风辞',
-  '团圆之后': '团圆之后', '团圆': '团圆', '合家': '团圆',
-  '踏伞行': '踏伞行', '踏伞': '踏伞行', '共伞': '踏伞行', '雨中': '踏伞行',
-  '目连救母': '目连救母', '目连': '目连救母', '救母': '目连救母',
-  '琴挑': '琴挑', '弹琴': '琴挑', '抚琴': '琴挑',
-  '百花亭': '百花亭', '百花': '百花亭', '花亭': '百花亭',
-  '张协状元': '张协状元', '张协': '张协状元',
-  '蔡伯喈': '蔡伯喈', '蔡伯': '蔡伯喈', '伯喈': '蔡伯喈', '琵琶记': '蔡伯喈',
-  '王魁': '王魁', '桂英': '王魁', '负心汉': '王魁',
-  '杀狗记': '杀狗记', '杀狗': '杀狗记',
-  '刘知远': '刘知远', '知远': '刘知远', '白兔记': '刘知远', '李三娘': '刘知远',
-  '刘文龙': '刘文龙', '文龙': '刘文龙',
-  '郭华': '郭华',
-  '王十朋': '王十朋', '十朋': '王十朋',
-  '高文举': '高文举', '文举': '高文举',
-  '妈祖': '妈祖', '海神': '妈祖', '海神妈祖': '妈祖', '林默娘': '妈祖',
-  '御史江春霖': '御史江春霖', '江春霖': '御史江春霖', '御史': '御史江春霖',
-  '朱买臣': '朱买臣', '买臣': '朱买臣', '马前泼水': '朱买臣', '砍柴': '朱买臣',
-  '赵盾': '赵盾', '盾': '赵盾', '晋国': '赵盾', '忠臣': '赵盾',
-  '董永': '董永', '七仙女': '董永', '天仙配': '董永', '仙女': '董永', '织布': '董永',
-  '三打王瑛': '三打王瑛', '三打': '三打王瑛', '王瑛': '三打王瑛', '王英': '三打王瑛',
-
-  // ---- 莆仙话常用词 → 普通话 ----
-  // 称谓
+  // ---- 莆仙戏节目词条 ----
+  '春草闯堂': '春草闯堂', '春草': '春草闯堂', '闯堂': '春草闯堂',
+  'cun cao chuang tang': '春草闯堂', 'cun cao': '春草闯堂', 'chuang tang': '春草闯堂',
+  '春草戏': '春草闯堂', '草闯堂': '春草闯堂', '小丫鬟': '春草闯堂',
+  '薛玫庭': '春草闯堂', '聪明': '春草闯堂', '喜剧': '春草闯堂', '好笑': '春草闯堂',
+  
+  '状元与乞丐': '状元与乞丐', '状元': '状元与乞丐', '乞丐': '状元与乞丐',
+  '状元乞丐': '状元与乞丐', 'zhuang yuan yu qi gai': '状元与乞丐',
+  'zhuang yuan': '状元与乞丐', 'qi gai': '状元与乞丐',
+  '状元戏': '状元与乞丐', '乞丐戏': '状元与乞丐',
+  '命运': '状元与乞丐', '读书': '状元与乞丐', '考上': '状元与乞丐',
+  '发奋': '状元与乞丐', '状圆': '状元与乞丐', '壮员': '状元与乞丐',
+  
+  '江梅妃': '江梅妃', '梅妃': '江梅妃', '江采萍': '江梅妃',
+  '江氏': '江梅妃', 'jiang mei fei': '江梅妃', 'mei fei': '江梅妃',
+  'jiang cai ping': '江梅妃', '梅妃戏': '江梅妃', '采萍': '江梅妃',
+  '江美飞': '江梅妃', '唐玄宗': '江梅妃', '皇帝': '江梅妃',
+  '梅花': '江梅妃', '妃子': '江梅妃', '美人': '江梅妃',
+  
+  '新亭泪': '新亭泪', '新亭': '新亭泪', '新亭对泣': '新亭泪',
+  'xin ting lei': '新亭泪', 'xin ting': '新亭泪',
+  '新品类': '新亭泪', '新品泪': '新亭泪', '新亭类': '新亭泪',
+  '新停泪': '新亭泪', '新亭累': '新亭泪', '新庭泪': '新亭泪',
+  '对泣': '新亭泪', '东晋': '新亭泪', '名士': '新亭泪',
+  '忧国': '新亭泪', '爱国': '新亭泪', '王导': '新亭泪', '周顗': '新亭泪', '悲': '新亭泪',
+  
+  '秋风辞': '秋风辞', '秋风': '秋风辞', 'qiu feng ci': '秋风辞',
+  'qiu feng': '秋风辞', '秋风词': '秋风辞',
+  '汉武帝': '秋风辞', '皇帝': '秋风辞', '晚年': '秋风辞',
+  '孤独': '秋风辞', '帝王': '秋风辞', '求仙': '秋风辞',
+  '萧瑟': '秋风辞', '秋风戏': '秋风辞', '汉武': '秋风辞',
+  
+  // ---- 歌仔戏节目词条 ----
+  '陈三五娘': '陈三五娘', '陈三': '陈三五娘', '五娘': '陈三五娘',
+  'chen san wu niang': '陈三五娘', '陈三无娘': '陈三五娘',
+  '陈三和五娘': '陈三五娘', '泉州': '陈三五娘', '潮州': '陈三五娘',
+  '才子': '陈三五娘', '佳人': '陈三五娘',
+  
+  '梁山伯与祝英台': '梁山伯与祝英台', '梁山伯': '梁山伯与祝英台',
+  '祝英台': '梁山伯与祝英台', '梁祝': '梁山伯与祝英台',
+  '山伯': '梁山伯与祝英台', '英台': '梁山伯与祝英台',
+  '山伯英台': '梁山伯与祝英台', 'liang shan bo yu zhu ying tai': '梁山伯与祝英台',
+  'liang zhu': '梁山伯与祝英台', '梁影台': '梁山伯与祝英台',
+  '蝴蝶': '梁山伯与祝英台', '爱情': '梁山伯与祝英台', '悲剧': '梁山伯与祝英台',
+  '化蝶': '梁山伯与祝英台', '同窗': '梁山伯与祝英台', '十八相送': '梁山伯与祝英台',
+  
+  '吕蒙正': '吕蒙正', '蒙正': '吕蒙正', 'lv meng zheng': '吕蒙正',
+  '绿蒙正': '吕蒙正', '吕梦正': '吕蒙正',
+  '穷书生': '吕蒙正', '状元': '吕蒙正', '抛绣球': '吕蒙正',
+  '发奋': '吕蒙正', '不嫌贫': '吕蒙正', '刘月娥': '吕蒙正',
+  
+  '薛平贵与王宝钏': '薛平贵与王宝钏', '薛平贵': '薛平贵与王宝钏',
+  '王宝钏': '薛平贵与王宝钏', '平贵': '薛平贵与王宝钏',
+  '宝钏': '薛平贵与王宝钏', '薛平贵王宝钏': '薛平贵与王宝钏',
+  'xue ping gui yu wang bao chuan': '薛平贵与王宝钏',
+  'xue ping gui': '薛平贵与王宝钏',
+  '十八年': '薛平贵与王宝钏', '寒窑': '薛平贵与王宝钏',
+  '苦守': '薛平贵与王宝钏', '团圆': '薛平贵与王宝钏',
+  '西凉': '薛平贵与王宝钏', '忠贞': '薛平贵与王宝钏',
+  
+  '王金龙与苏三': '王金龙与苏三', '王金龙': '王金龙与苏三',
+  '苏三': '王金龙与苏三', '金龙': '王金龙与苏三',
+  '王金龙苏三': '王金龙与苏三', 'wang jin long yu su san': '王金龙与苏三',
+  'wang jin long': '王金龙与苏三', 'su san': '王金龙与苏三',
+  '苏三起解': '王金龙与苏三', '冤屈': '王金龙与苏三',
+  '昭雪': '王金龙与苏三', '有情人': '王金龙与苏三', '爱情': '王金龙与苏三',
+  
+  // ---- 南音节目词条 ----
+  '八骏马': '八骏马', '八骏': '八骏马', 'ba jun ma': '八骏马',
+  '八军马': '八骏马', '骏马': '八骏马', '奔腾': '八骏马',
+  '梅花操': '梅花操', '梅花': '梅花操', 'mei hua cao': '梅花操',
+  '梅花草': '梅花操', 'mei hua': '梅花操', '清雅': '梅花操',
+  '百鸟归巢': '百鸟归巢', '百鸟': '百鸟归巢',
+  'bai niao gui chao': '百鸟归巢', '白鸟归巢': '百鸟归巢',
+  'bai niao': '百鸟归巢', '鸟儿': '百鸟归巢',
+  '三千两金': '三千两金', '三千': '三千两金', '两金': '三千两金',
+  'san qian liang jin': '三千两金', '三钱两金': '三千两金',
+  '直入花园': '直入花园', '直入': '直入花园', '花园': '直入花园',
+  'zhi ru hua yuan': '直入花园', '只入花园': '直入花园',
+  'zhi ru': '直入花园', '春游': '直入花园', '优美': '直入花园',
+  
+  // ---- 木偶戏节目词条 ----
+  '小沙弥下山': '小沙弥下山', '小沙弥': '小沙弥下山',
+  '下山': '小沙弥下山', 'xiao sha mi xia shan': '小沙弥下山',
+  '小沙迷': '小沙弥下山', '沙弥': '小沙弥下山',
+  '元宵乐': '元宵乐', '元宵': '元宵乐', 'yuan xiao le': '元宵乐',
+  '元霄乐': '元宵乐', 'yuan xiao': '元宵乐',
+  '驯猴': '驯猴', 'xun hou': '驯猴', '训猴': '驯猴', '猴子': '驯猴',
+  '大名府': '大名府', 'da ming fu': '大名府', '大民府': '大名府',
+  '雷万春打虎': '雷万春打虎', '雷万春': '雷万春打虎',
+  '打虎': '雷万春打虎', 'lei wan chun da hu': '雷万春打虎',
+  'lei wan chun': '雷万春打虎', '雷文春': '雷万春打虎',
+  
+  // ---- 电视剧节目词条 ----
+  '射雕英雄传': '射雕英雄传', '射雕': '射雕英雄传',
+  'she diao ying xiong zhuan': '射雕英雄传', 'she diao': '射雕英雄传',
+  '郭靖': '射雕英雄传', '黄蓉': '射雕英雄传',
+  '83版': '射雕英雄传', '华山论剑': '射雕英雄传',
+  
+  '红楼梦': '红楼梦', '红楼': '红楼梦', 'hong lou meng': '红楼梦',
+  '贾宝玉': '红楼梦', '林黛玉': '红楼梦', '87版': '红楼梦',
+  '陈晓旭': '红楼梦',
+  
+  '三国演义': '三国演义', '三国': '三国演义',
+  'san guo yan yi': '三国演义', 'san guo': '三国演义',
+  '诸葛亮': '三国演义', '刘备': '三国演义', '关羽': '三国演义', '曹操': '三国演义',
+  
+  '水浒传': '水浒传', '水浒': '水浒传', 'shui hu zhuan': '水浒传',
+  'shui hu': '水浒传',
+  '武松': '水浒传', '宋江': '水浒传', '林冲': '水浒传', '鲁智深': '水浒传',
+  
+  '西游记': '西游记', '西游': '西游记', 'xi you ji': '西游记',
+  'xi you': '西游记',
+  '孙悟空': '西游记', '六小龄童': '西游记', '大闹天宫': '西游记',
+  
+  // ---- 音乐节目词条 ----
+  '东方红': '东方红', '东方': '东方红', 'dong fang hong': '东方红',
+  '没有共产党就没有新中国': '没有共产党就没有新中国',
+  '没有共产党': '没有共产党就没有新中国', 'mei you gong chan dang': '没有共产党就没有新中国',
+  '打靶归来': '打靶归来', 'da ba gui lai': '打靶归来', '打把归来': '打靶归来',
+  '日落西山': '打靶归来',
+  '最炫民族风': '最炫民族风', '最炫': '最炫民族风',
+  'zui xuan min zu feng': '最炫民族风', '最悬民族风': '最炫民族风',
+  'zui xuan': '最炫民族风',
+  '小苹果': '小苹果', 'xiao ping guo': '小苹果', '苹果': '小苹果',
+  
+  // ---- 电影节目词条 ----
+  '地道战': '地道战', 'di dao zhan': '地道战', '地道': '地道战',
+  '铁道游击队': '铁道游击队', '铁道': '铁道游击队',
+  'tie dao you ji dui': '铁道游击队', '铁道游鸡队': '铁道游击队',
+  '英雄儿女': '英雄儿女', '英雄': '英雄儿女', 'ying xiong er nv': '英雄儿女',
+  '向我开炮': '英雄儿女', '王成': '英雄儿女',
+  '人到中年': '人到中年', 'ren dao zhong nian': '人到中年', '中年': '人到中年',
+  '陆文婷': '人到中年',
+  '庐山恋': '庐山恋', '庐山': '庐山恋', 'lu shan lian': '庐山恋',
+  'lu shan': '庐山恋', '张瑜': '庐山恋', '郭凯敏': '庐山恋',
+  
+  // ---- 莆仙话常用词（称谓） ----
   '阿公': '爷爷', '阿嬷': '奶奶', '阿婆': '外婆', '外嬷': '外婆',
-  '阿翁': '爷爷', '妈祖': '妈祖', '婶婆': '婶婶',
+  '阿翁': '爷爷', '婶婆': '婶婶',
   '丈老': '岳父', '丈嬷': '岳母', '新妇': '媳妇', '翁姐': '公公婆婆',
   '后生': '年轻人', '囝仔': '小孩', '查某囝': '女孩', '番仔囝': '男孩',
   '媒人婆': '媒婆', '先生': '老师', '头家': '老板', '做买卖': '做生意',
-
-  // 动词
+  
+  // ---- 莆仙话常用词（动词） ----
   '食': '吃', '呷': '喝', '行': '走', '走': '跑', '睇': '看',
   '讲': '说', '话': '说', '做': '做', '鬭': '玩', '迌': '玩',
   '倒': '睡觉', '睏': '睡觉', '起来': '起床', '洗浴': '洗澡',
@@ -1626,24 +1735,24 @@ const puxianDict = {
   '会': '会', '咧': '在', '咧做': '在做',
   '唱戏': '唱戏', '看戏': '看戏', '听戏': '听戏', '做戏': '演戏',
   '点戏': '点戏', '拣戏': '选戏', '看好': '好看',
-
-  // 名词
+  
+  // ---- 莆仙话常用词（名词） ----
   '戏': '戏', '戏台': '戏台', '戏棚': '戏台', '戏班': '戏班',
   '佬': '人', '人': '人', '侬': '人', '厝': '家', '门兜': '门口',
   '学堂': '学校', '渡船': '坐船', '猪': '猪', '鸡': '鸡', '鸭': '鸭',
   '田': '田地', '路': '路', '山': '山', '水': '水', '日头': '太阳',
   '落雨': '下雨', '起风': '刮风', '天时': '天气', '春天': '春天',
   '梅花': '梅花', '花': '花', '草': '草', '树': '树',
-
-  // 形容词
+  
+  // ---- 莆仙话常用词（形容词） ----
   '好': '好', '歹': '坏', '大': '大', '细': '小', '长': '长',
   '短': '短', '美': '美', '丑': '丑', '新': '新', '旧': '旧',
   '红': '红', '白': '白', '乌': '黑', '青': '蓝', '黄': '黄',
   '欢喜': '高兴', '悲哀': '伤心', '气力': '力气', '幼秀': '漂亮',
   '厉害': '厉害', '古意': '老实', '勤力': '勤劳', '聪明': '聪明',
   '糊涂': '糊涂', '忠义': '忠义', '孝': '孝顺', '善': '善良',
-
-  // 情感/场景相关
+  
+  // ---- 莆仙话情感/场景 ----
   '想': '想', '爱': '爱', '欢喜': '喜欢', '心痛': '心疼',
   '哭': '哭', '笑': '笑', '眼泪': '眼泪', '泪': '泪',
   '忧愁': '忧愁', '快乐': '快乐', '烦恼': '烦恼', '相思': '相思',
@@ -1651,8 +1760,8 @@ const puxianDict = {
   '将军': '将军', '宰相': '宰相', '大臣': '大臣', '才子': '才子',
   '佳人': '佳人', '丫鬟': '丫鬟', '小姐': '小姐', '公子': '公子',
   '书生': '书生', '乞丐': '乞丐', '和尚': '和尚', '尼姑': '尼姑',
-
-  // 莆仙话特有短语 → 普通话（整句映射）
+  
+  // ---- 莆仙话整句映射 ----
   '我想看戏': '我想看戏', '我要看戏': '我要看戏',
   '给我看': '给我看', '汝讲咩': '你说什么',
   '汝卜看咩戏': '你要看什么戏', '想看什么戏': '想看什么戏',
@@ -1666,141 +1775,146 @@ const puxianDict = {
   '放来听': '播放来听', '播来听': '播放来听',
   '这出好': '这出戏好', '许出好': '那出戏好',
   '这出': '这出', '许出': '那出', '这曲': '这首', '许曲': '那首',
-
-  // 拼音/谐音变体（模拟语音识别可能输出）
-  'cuncao': '春草', 'zhuangyuan': '状元', 'meifei': '梅妃',
-  'xintinglei': '新亭泪', 'qiufengci': '秋风辞',
-  'chuncuo': '春草', 'zhuangyuan': '状元',
-
-  // ---- 模拟搜索配对 ----
-  '春草闯唐': '春草闯堂',
-  '曹操闯堂': '春草闯堂',
-  '秋分': '秋风辞',
-  '状员乞丐': '状元与乞丐',
-  '状元乞丐': '状元与乞丐',
-  '帮我找状元乞丐': '状元与乞丐',
-  '播放春草': '春草闯堂',
-  '播放春草闯唐': '春草闯堂',
-  '帮我找': '',
-  '我要看': '',
-  '给我放': '',
-  '找一下': '',
-  '播放': '',
-  '陈三五娘': '陈三五娘',
-  '梁山伯': '梁山伯与祝英台',
-  '梁祝': '梁山伯与祝英台',
-  '射雕': '射雕英雄传',
-  '三国': '三国演义',
-  '水浒': '水浒传',
-  '西游': '西游记',
-  '红楼': '红楼梦',
-  '东方红': '东方红',
-  '地道战': '地道战',
-  '打靶': '打靶归来',
-  '小苹果': '小苹果',
-  '八骏马': '八骏马',
-  '梅花操': '梅花操',
-  '百鸟归巢': '百鸟归巢',
-  '小沙弥': '小沙弥下山',
-  '驯猴': '驯猴',
-  '元宵乐': '元宵乐',
-  '大名府': '大名府',
-  '打虎': '雷万春打虎',
-  '董永': '董永',
-  '七仙女': '董永',
-  '天仙配': '董永',
-};
+}
 
 // =============================================
 // 闽南话方言翻译词典
 // =============================================
 const minnanDict = {
-  // ---- 歌仔戏名称 ----
-  '歌仔戏': '歌仔戏', '歌仔': '歌仔戏', '歌子戏': '歌仔戏',
-  '陈三五娘': '陈三五娘', '三五娘': '陈三五娘', '陈三': '陈三五娘', '五娘': '陈三五娘',
-  '山伯英台': '梁山伯与祝英台', '英台': '祝英台', '山伯': '梁山伯', '梁祝': '梁山伯与祝英台',
-  '吕蒙正': '吕蒙正', '蒙正': '吕蒙正', '抛绣球': '吕蒙正',
-  '薛平贵': '薛平贵', '平贵': '薛平贵', '王宝钏': '薛平贵', '宝钏': '薛平贵',
-  '王金龙': '王金龙', '金龙': '王金龙', '苏三起解': '王金龙', '苏三': '王金龙',
-
-  // ---- 闽南话常用词 → 普通话 ----
-  // 称谓
-  '阿公': '爷爷', '阿嬷': '奶奶', '阿母': '妈妈', '阿爸': '爸爸',
-  '阿祖': '祖父母', '翁': '丈夫', '某': '妻子', '后生': '年轻人',
-  '囝': '孩子', '查某囡': '女孩', '查甫囡': '男孩', '头家': '老板',
-  '先生': '老师', '阿叔': '叔叔', '阿姨': '阿姨', '阿伯': '伯伯',
-
-  // 动词
-  '食': '吃', '呷': '喝', '行': '走', '走': '跑', '睇': '看',
-  '讲': '说', '咧': '正在', '卜': '要', '袂': '不', '毋': '不',
-  '呣': '不', '有': '有', '无': '没有', '爱': '喜欢', '挃': '玩',
-  '鬭': '玩', '迌': '玩', '睏': '睡觉', '剃头': '理发', '洗身': '洗澡',
-  '穿衫': '穿衣服', '转来': '回来', '出去': '出去', '徛': '站',
-  '索': '找', '买': '买', '鬨': '吵', '使': '用', '刣': '杀',
-
-  // 名词
-  '厝': '家/房子', '学堂': '学校', '碇': '石头', '跤': '脚', '手骨': '手臂',
-  '面': '脸', '目睭': '眼睛', '喙': '嘴巴', '鼻': '鼻子', '耳': '耳朵',
-  '头毛': '头发', '腹肚': '肚子', '日头': '太阳', '月娘': '月亮',
-  '落雨': '下雨', '起风': '刮风', '天时': '天气', '溪': '河流',
-  '海': '大海', '山': '山', '路': '路', '树': '树', '花': '花',
-  ' TAS': '茶', '咖啡': '咖啡', '面': '面条', '粿': '糕点',
-  '红包': '红包', '银': '钱', '厝边': '邻居', '亲像': '好像',
-
-  // 形容词
-  '水': '漂亮', '好': '好', '歹': '坏', '大': '大', '细': '小',
-  '济': '多', '少': '少', '远': '远', '近': '近', '重': '重', '轻': '轻',
-  '古锥': '可爱', '颟顸': '脏乱', '清气': '干净', '芳': '香',
-  '香': '香', '甜': '甜', '咸': '咸', '酸': '酸', '苦': '苦',
-  '爽': '舒服', '高兴': '高兴', '快乐': '快乐', '悲': '伤心',
-
-  // 闽南话特有短语 → 普通话
-  '我想看戏': '我想看戏', '我要看戏': '我要看戏',
-  '汝要吃什么': '你想吃什么', '呣知': '不知道', '敢会当': '可不可以',
-  '来去看戏': '一起去看戏', '去看戏': '去看戏', '这好的': '这个好的',
-  '诚好看': '真好看', '真好听': '真好听', '真水': '真漂亮',
-  '呣通': '不可以', '袂使': '不可以', '会使': '可以',
-  '袂记得': '不记得', '呣知影': '不知道', '知影': '知道',
-  '加丝': '这样', '按呢': '这样', '彼当时': '那个时候',
-  '即当时': '这个时候', '逐家': '大家', '家己': '自己',
-  '啥人': '谁', '啥物': '什么', '佗位': '哪里', '做伙': '一起',
-
-  // ---- 模拟搜索配对 ----
-  '春草闯堂': '春草闯堂',
-  '曹操闯堂': '春草闯堂',
-  '秋分': '秋风辞',
-  '状员乞丐': '状元与乞丐',
-  '状元乞丐': '状元与乞丐',
-  '射雕': '射雕英雄传',
-  '三国': '三国演义',
-  '水浒': '水浒传',
-  '西游': '西游记',
-  '红楼': '红楼梦',
-  '东方红': '东方红',
-  '地道战': '地道战',
-  '打靶': '打靶归来',
-  '小苹果': '小苹果',
-  '八骏马': '八骏马',
-  '梅花操': '梅花操',
-  '百鸟归巢': '百鸟归巢',
-  '小沙弥': '小沙弥下山',
-  '驯猴': '驯猴',
-  '元宵乐': '元宵乐',
-  '大名府': '大名府',
+  // ---- 莆仙戏节目词条（闽南话也可搜索） ----
+  '春草闯堂': '春草闯堂', '春草': '春草闯堂', '闯堂': '春草闯堂',
+  'cun cao chuang tang': '春草闯堂', '春草戏': '春草闯堂',
+  '状元与乞丐': '状元与乞丐', '状元': '状元与乞丐', '乞丐': '状元与乞丐',
+  '状元乞丐': '状元与乞丐', '状圆': '状元与乞丐', '壮员': '状元与乞丐',
+  '江梅妃': '江梅妃', '梅妃': '江梅妃', '江采萍': '江梅妃',
+  '新亭泪': '新亭泪', '新亭': '新亭泪', '新亭类': '新亭泪',
+  '秋风辞': '秋风辞', '秋风': '秋风辞', '秋风词': '秋风辞',
+  
+  // ---- 歌仔戏节目词条（闽南话核心） ----
+  '陈三五娘': '陈三五娘', '陈三': '陈三五娘', '五娘': '陈三五娘',
+  'tan sam ngoo nong': '陈三五娘', 'chen san wu niang': '陈三五娘',
+  '陈三无娘': '陈三五娘', '陈三和五娘': '陈三五娘',
+  '泉州': '陈三五娘', '潮州': '陈三五娘',
+  '才子': '陈三五娘', '佳人': '陈三五娘',
+  
+  '梁山伯与祝英台': '梁山伯与祝英台', '梁山伯': '梁山伯与祝英台',
+  '祝英台': '梁山伯与祝英台', '梁祝': '梁山伯与祝英台',
+  '山伯': '梁山伯与祝英台', '英台': '梁山伯与祝英台',
+  'liang shan bo yu zhu ying tai': '梁山伯与祝英台',
+  '蝴蝶': '梁山伯与祝英台', '化蝶': '梁山伯与祝英台', '十八相送': '梁山伯与祝英台',
+  
+  '吕蒙正': '吕蒙正', '蒙正': '吕蒙正', 'lv meng zheng': '吕蒙正',
+  '穷书生': '吕蒙正', '抛绣球': '吕蒙正', '刘月娥': '吕蒙正',
+  
+  '薛平贵与王宝钏': '薛平贵与王宝钏', '薛平贵': '薛平贵与王宝钏',
+  '王宝钏': '薛平贵与王宝钏', '平贵': '薛平贵与王宝钏',
+  '宝钏': '薛平贵与王宝钏', '寒窑': '薛平贵与王宝钏',
+  '十八年': '薛平贵与王宝钏', '团圆': '薛平贵与王宝钏',
+  
+  '王金龙与苏三': '王金龙与苏三', '王金龙': '王金龙与苏三',
+  '苏三': '王金龙与苏三', '苏三起解': '王金龙与苏三',
+  
+  // ---- 南音节目词条 ----
+  '八骏马': '八骏马', '八骏': '八骏马', 'ba jun ma': '八骏马',
+  '梅花操': '梅花操', '梅花': '梅花操', 'mei hua cao': '梅花操',
+  '百鸟归巢': '百鸟归巢', '百鸟': '百鸟归巢',
+  'bai niao gui chao': '百鸟归巢',
+  '三千两金': '三千两金', '三千': '三千两金',
+  'san qian liang jin': '三千两金',
+  '直入花园': '直入花园', '直入': '直入花园', '花园': '直入花园',
+  'zhi ru hua yuan': '直入花园',
+  
+  // ---- 木偶戏节目词条 ----
+  '小沙弥下山': '小沙弥下山', '小沙弥': '小沙弥下山',
+  'xiao sha mi xia shan': '小沙弥下山',
+  '元宵乐': '元宵乐', '元宵': '元宵乐',
+  '驯猴': '驯猴', '训猴': '驯猴', '猴子': '驯猴',
+  '大名府': '大名府', 'da ming fu': '大名府',
+  '雷万春打虎': '雷万春打虎', '雷万春': '雷万春打虎',
   '打虎': '雷万春打虎',
-  '董永': '董永',
-  '七仙女': '董永',
-  '天仙配': '董永',
-  '帮我找': '',
-  '我要看': '',
-  '给我放': '',
-  '找一下': '',
-  '播放': '',
-  '陈三五娘': '陈三五娘',
-  '梁山伯': '梁山伯与祝英台',
-  '梁祝': '梁山伯与祝英台',
-  '歌仔': '歌仔戏',
-};
+  
+  // ---- 电视剧节目词条 ----
+  '射雕英雄传': '射雕英雄传', '射雕': '射雕英雄传',
+  'she diao ying xiong zhuan': '射雕英雄传',
+  '郭靖': '射雕英雄传', '黄蓉': '射雕英雄传',
+  '红楼梦': '红楼梦', '红楼': '红楼梦', 'hong lou meng': '红楼梦',
+  '三国演义': '三国演义', '三国': '三国演义',
+  'san guo yan yi': '三国演义',
+  '诸葛亮': '三国演义', '刘备': '三国演义', '关羽': '三国演义',
+  '水浒传': '水浒传', '水浒': '水浒传', 'shui hu zhuan': '水浒传',
+  '西游记': '西游记', '西游': '西游记', 'xi you ji': '西游记',
+  '孙悟空': '西游记',
+  
+  // ---- 音乐节目词条 ----
+  '东方红': '东方红', '东方': '东方红', 'dong fang hong': '东方红',
+  '没有共产党就没有新中国': '没有共产党就没有新中国',
+  '打靶归来': '打靶归来', 'da ba gui lai': '打靶归来',
+  '最炫民族风': '最炫民族风', '最炫': '最炫民族风',
+  'zui xuan min zu feng': '最炫民族风',
+  '小苹果': '小苹果', 'xiao ping guo': '小苹果',
+  
+  // ---- 电影节目词条 ----
+  '地道战': '地道战', 'di dao zhan': '地道战',
+  '铁道游击队': '铁道游击队', '铁道': '铁道游击队',
+  'tie dao you ji dui': '铁道游击队',
+  '英雄儿女': '英雄儿女', '英雄': '英雄儿女',
+  '向我开炮': '英雄儿女',
+  '人到中年': '人到中年', '中年': '人到中年',
+  '庐山恋': '庐山恋', '庐山': '庐山恋', 'lu shan lian': '庐山恋',
+  
+  // ---- 闽南话常用词（称谓） ----
+  '阿公': '爷爷', '阿嬷': '奶奶', '阿婆': '外婆', '阿祖': '祖先',
+  '阿兄': '哥哥', '阿姊': '姐姐', '小弟': '弟弟', '小妹': '妹妹',
+  '翁': '老公', '某': '老婆', '后生': '年轻人', '囡仔': '小孩',
+  '查某囡': '女孩', '查埔囡': '男孩', '头家': '老板', '先生': '老师',
+  
+  // ---- 闽南话常用词（动词） ----
+  '食': '吃', '啉': '喝', '行': '走', '走': '跑', '看': '看',
+  '讲': '说', '话': '说', '做': '做', '鬭': '玩', '迌': '玩',
+  '睏': '睡觉', '起来': '起床', '洗身躯': '洗澡',
+  '穿衫': '穿衣服', '戴帽': '戴帽子',
+  '去买': '去买', '去': '去', '倒来': '回来', '出来': '出来',
+  '咧': '正在', '欲': '要', '袂': '不', '毋': '不', '呣': '不',
+  '袂使': '不可以', '毋通': '不可以',
+  '有': '有', '无': '没有', '犹未': '还没',
+  '唱戏': '唱戏', '看戏': '看戏', '听戏': '听戏', '做戏': '演戏',
+  '点戏': '点戏', '拣戏': '选戏',
+  
+  // ---- 闽南话常用词（名词） ----
+  '戏': '戏', '戏台': '戏台', '戏棚': '戏台', '戏班': '戏班',
+  '人': '人', '侬': '人', '厝': '家', '门口': '门口',
+  '学堂': '学校', '溪': '河', '山': '山', '水': '水', '日头': '太阳',
+  '落雨': '下雨', '起风': '刮风', '天时': '天气',
+  '歌仔': '歌仔戏', '歌子戏': '歌仔戏',
+  
+  // ---- 闽南话常用词（形容词） ----
+  '好': '好', '歹': '坏', '大': '大', '细': '小', '长': '长',
+  '美': '美', '丑': '丑', '新': '新', '旧': '旧',
+  '红': '红', '白': '白', '乌': '黑', '青': '蓝', '黄': '黄',
+  '欢喜': '高兴', '悲哀': '伤心', '幼秀': '漂亮',
+  '厉害': '厉害', '古意': '老实', '勤力': '勤劳',
+  
+  // ---- 闽南话情感/场景 ----
+  '想': '想', '爱': '爱', '欢喜': '喜欢', '心痛': '心疼',
+  '哭': '哭', '笑': '笑', '眼泪': '眼泪', '忧愁': '忧愁',
+  '快乐': '快乐', '烦恼': '烦恼', '相思': '相思',
+  '皇帝': '皇帝', '娘娘': '皇后', '妃子': '妃子', '状元': '状元',
+  '将军': '将军', '才子': '才子', '佳人': '佳人',
+  '丫鬟': '丫鬟', '小姐': '小姐', '书生': '书生',
+  
+  // ---- 闽南话整句映射 ----
+  '我想看戏': '我想看戏', '我要看戏': '我要看戏',
+  '给我看': '给我看', '汝讲啥': '你说什么',
+  '汝欲看啥戏': '你要看什么戏', '想看什么戏': '想看什么戏',
+  '什么戏': '什么戏', '看什么戏': '看什么戏',
+  '汝爱看': '你想看', '我欲听': '我要听',
+  '会使得': '可以', '真好听': '真好听',
+  '真好看': '真好看', '诚好看': '真好看',
+  '来去看戏': '一起去看戏', '去看戏': '去看戏',
+  '听一段': '听一段', '放来听': '播放来听',
+  '这出好': '这出戏好', '彼出好': '那出戏好',
+  '这出': '这出', '彼出': '那出', '这曲': '这首', '彼曲': '那首',
+}
 
 // =============================================
 // 多发音语库（拼音近似、谐音、常见误识别）
@@ -2798,82 +2912,11 @@ function buildKedaAuthUrl() {
   return Promise.resolve(null);
 }
 
-function buildFunasrHotwords() {
-  var hotwords = {};
-  if (typeof operaDB !== 'undefined') {
-    operaDB.forEach(function(opera) {
-      if (!opera.hidden && opera.title) hotwords[opera.title] = 30;
-      (opera.keywords || []).forEach(function(keyword) {
-        if (keyword) hotwords[keyword] = 20;
-      });
-    });
-  }
-  // Add dialect-specific hotwords based on current language
-  if (currentLang === 'minnanhua') {
-    Object.keys(minnanDict || {}).forEach(function(key) {
-      hotwords[key] = 25;
-      hotwords[minnanDict[key]] = 25;
-    });
-    // Add pronunciation variants
-    Object.keys(minnanPronunciationDict || {}).forEach(function(title) {
-      (minnanPronunciationDict[title] || []).forEach(function(variant) {
-        if (variant) hotwords[variant] = 22;
-      });
-    });
-  } else if (currentLang === 'puxianhua') {
-    Object.keys(puxianDict || {}).forEach(function(key) {
-      hotwords[key] = 25;
-      hotwords[puxianDict[key]] = 25;
-    });
-    // Add pronunciation variants
-    Object.keys(puxianPronunciationDict || {}).forEach(function(title) {
-      (puxianPronunciationDict[title] || []).forEach(function(variant) {
-        if (variant) hotwords[variant] = 22;
-      });
-    });
-  } else {
-    // Chinese mode: add both for completeness
-    Object.keys(minnanDict || {}).forEach(function(key) {
-      hotwords[key] = 15;
-      hotwords[minnanDict[key]] = 15;
-    });
-    Object.keys(puxianDict || {}).forEach(function(key) {
-      hotwords[key] = 15;
-      hotwords[puxianDict[key]] = 15;
-    });
-  }
-  return JSON.stringify(hotwords);
-}
 
-function downsampleTo16k(float32Buffer, inputSampleRate) {
-  var outputSampleRate = 16000;
-  if (inputSampleRate === outputSampleRate) return float32Buffer;
-  var ratio = inputSampleRate / outputSampleRate;
-  var outputLength = Math.floor(float32Buffer.length / ratio);
-  var output = new Float32Array(outputLength);
-  for (var i = 0; i < outputLength; i++) {
-    var start = Math.floor(i * ratio);
-    var end = Math.floor((i + 1) * ratio);
-    var sum = 0;
-    var count = 0;
-    for (var j = start; j < end && j < float32Buffer.length; j++) {
-      sum += float32Buffer[j];
-      count++;
-    }
-    output[i] = count ? sum / count : 0;
-  }
-  return output;
-}
 
-function floatToPcm16(float32Buffer) {
-  var buffer = new ArrayBuffer(float32Buffer.length * 2);
-  var view = new DataView(buffer);
-  for (var i = 0; i < float32Buffer.length; i++) {
-    var sample = Math.max(-1, Math.min(1, float32Buffer[i]));
-    view.setInt16(i * 2, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
-  }
-  return buffer;
-}
+
+
+
 
 function stopFunasrRecognition(options) {
   options = options || {};
@@ -3050,9 +3093,6 @@ function startFunasrRecognition(options) {
   };
 }
 
-function startFunasrMinnanRecognition() {
-  startFunasrRecognition({ statusPrefix: '【本地】' });
-}
 
 function startFunasrPublicRecognition(options) {
   options = options || {};
@@ -3399,225 +3439,7 @@ let _isRecognizing = false;
 let _isRecording = false;
 let _recordingAutoStopTimer = null;
 
-// =============================================
-// Smart Voice Recognition with fallback chain
-// Google SpeechRecognition -> FunASR Public -> Keda Xunfei -> Type input hint
-// =============================================
-function startSmartVoiceRecognition(options) {
-  options = options || {};
-  var targetInput = options.targetInput || userInput;
-  var targetMicBtn = options.targetMicBtn || micBtn;
-  var onResult = options.onResult;
-  var onDone = options.onDone;
-  var onError = options.onError;
-  var stage = options.stage || 0;
-
-  function setListening(listening) {
-    _isRecognizing = listening;
-    if (listening) {
-      targetMicBtn.classList.add('listening');
-      targetMicBtn.innerHTML = '&#9724; 停止';
-    } else {
-      targetMicBtn.classList.remove('listening');
-      targetMicBtn.innerHTML = '&#127908;<span class="ripple"></span>';
-    }
-  }
-
-  function stopAll() {
-    options._userStopped = true;
-    try { if (recognition) recognition.stop(); } catch(e) {}
-    stopFunasrRecognition();
-    stopKedaRecognition();
-    setListening(false);
-  }
-
-  // Check if user clicked stop
-  if (_isRecognizing) {
-    stopAll();
-    return;
-  }
-
-  // Stage 0: Browser SpeechRecognition
-  if (stage === 0) {
-    var SpeechRecognition = getSpeechRecognitionCtor();
-    if (SpeechRecognition && recognition && !options.skipBrowser) {
-      if (currentLang === 'chinese') {
-        recognition.lang = 'zh-CN';
-      } else {
-        recognition.lang = 'zh-CN';
-      }
-      var origOnResult = recognition.onresult;
-      var origOnError = recognition.onerror;
-      var origOnEnd = recognition.onend;
-
-      recognition.onresult = function(event) {
-        var transcript = '';
-        var isFinal = false;
-        for (var i = event.resultIndex; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
-          if (event.results[i].isFinal) isFinal = true;
-        }
-        if (onResult) {
-          onResult(transcript, isFinal);
-        } else {
-          userInput.value = transcript;
-          userInput.style.color = '';
-          var pinyinApprox = toPinyinApprox(transcript);
-          if (pinyinApprox && transcript.trim()) {
-            showStatus('result', '识别结果：' + escapeHtml(transcript) + '<br><span style="font-size:1.05em;color:var(--text-muted);">拼音近似：' + escapeHtml(pinyinApprox) + '</span>');
-          }
-        }
-        if (isFinal && transcript.trim()) {
-          setListening(false);
-          setTimeout(function() {
-            recognition.onresult = origOnResult;
-            recognition.onerror = origOnError;
-            recognition.onend = origOnEnd;
-            if (!onDone) startSearch();
-            else if (onDone) onDone(transcript);
-          }, 300);
-        }
-      };
-
-      recognition.onerror = function(event) {
-        setListening(false);
-        recognition.onresult = origOnResult;
-        recognition.onerror = origOnError;
-        recognition.onend = origOnEnd;
-        if (event.error === 'network' || event.error === 'no-speech' || event.error === 'audio-capture') {
-          showStatus('result', '浏览器语音识别不可用，正在尝试 FunASR 公共服务...');
-          setTimeout(function() {
-            startSmartVoiceRecognition(Object.assign({}, options, { stage: 1, skipBrowser: true }));
-          }, 600);
-        } else {
-          var msg = getSpeechErrorMessage(event);
-          if (onError) onError(msg);
-          else showStatus('result', msg);
-        }
-      };
-
-      recognition.onend = function() {
-        setListening(false);
-        recognition.onresult = origOnResult;
-        recognition.onerror = origOnError;
-        recognition.onend = origOnEnd;
-        if (!options._userStopped && !userInput.value.trim() && !options.skipBrowser) {
-          showStatus('result', '浏览器语音识别未收到内容，正在尝试 FunASR 公共服务...');
-          setTimeout(function() {
-            startSmartVoiceRecognition(Object.assign({}, options, { stage: 1, skipBrowser: true }));
-          }, 600);
-        }
-      };
-
-      setListening(true);
-      showStatus('listening', '正在听您说话' + (currentLang === 'chinese' ? '（中文模式）...' : '（请用普通话读戏名）...'));
-      startSpeechRecognizer(recognition, function() {
-        setListening(false);
-        recognition.onresult = origOnResult;
-        recognition.onerror = origOnError;
-        recognition.onend = origOnEnd;
-        showStatus('result', '浏览器语音识别启动失败，正在尝试 FunASR 公共服务...');
-        setTimeout(function() {
-          startSmartVoiceRecognition(Object.assign({}, options, { stage: 1, skipBrowser: true }));
-        }, 600);
-      });
-      return;
-    }
-    // No browser SR, skip to stage 1
-    stage = 1;
-  }
-
-  // Stage 1: FunASR Public Service
-  if (stage === 1) {
-    startFunasrPublicRecognition({
-      onResult: function(text, isFinal) {
-        if (onResult) onResult(text, isFinal);
-        else {
-          userInput.value = text;
-          userInput.style.color = '';
-          showStatus('result', 'FunASR(公共)识别结果：' + escapeHtml(text));
-        }
-      },
-      onDone: function(text) {
-        setListening(false);
-        if (text) {
-          if (onDone) onDone(text);
-          else {
-            userInput.value = text;
-            showStatus('result', 'FunASR(公共)最终结果：' + escapeHtml(text));
-            setTimeout(startSearch, 500);
-          }
-        } else {
-          showStatus('result', 'FunASR 公共识别无结果，正在尝试科大讯飞...');
-          setTimeout(function() {
-            startSmartVoiceRecognition(Object.assign({}, options, { stage: 2 }));
-          }, 600);
-        }
-      },
-      onError: function(msg) {
-        setListening(false);
-        showStatus('result', 'FunASR 公共识别失败，正在尝试科大讯飞...');
-        setTimeout(function() {
-          startSmartVoiceRecognition(Object.assign({}, options, { stage: 2 }));
-        }, 600);
-      },
-      onFallback: function() {
-        setListening(false);
-        setTimeout(function() {
-          startSmartVoiceRecognition(Object.assign({}, options, { stage: 2 }));
-        }, 400);
-      }
-    });
-    return;
-  }
-
-  // Stage 2: Keda Xunfei
-  if (stage === 2) {
-    startKedaRecognition({
-      onResult: function(text, isFinal) {
-        if (onResult) onResult(text, isFinal);
-        else {
-          userInput.value = text;
-          userInput.style.color = '';
-          showStatus('result', '科大讯飞识别结果：' + escapeHtml(text));
-        }
-      },
-      onDone: function(text) {
-        setListening(false);
-        if (text) {
-          if (onDone) onDone(text);
-          else {
-            userInput.value = text;
-            showStatus('result', '科大讯飞最终结果：' + escapeHtml(text));
-            setTimeout(startSearch, 500);
-          }
-        } else {
-          if (onError) onError('语音识别均不可用');
-          else showStatus('result', '语音识别暂时都无法使用，请直接打字输入节目名');
-        }
-      },
-      onError: function(msg) {
-        setListening(false);
-        if (onError) onError(msg);
-        else showStatus('result', msg + '，请直接打字输入');
-      },
-      onFallback: function() {
-        setListening(false);
-        if (onError) onError('语音识别均不可用');
-        else showStatus('result', '语音识别暂时都无法使用，请直接打字输入节目名');
-      }
-    });
-    return;
-  }
-}
-
-micBtn.addEventListener('click', function() {
-  if (_isRecording) {
-    stopRecordingMode();
-    return;
-  }
-  startSmartVoiceRecognition();
-});
+micBtn.addEventListener('click', () => { startVoiceWithFallback() });
 
 function startRecordingMode() {
   if (_isRecording) return;
@@ -4923,6 +4745,184 @@ if (origTranslateMinnan) {
     // Then apply built-in dict
     return origTranslateMinnan(modified);
   };
+}
+
+// =============================================
+// [新增] 4 层语音识别降级（阿里云 FC 百度→讯飞 → Google → FunASR）
+// =============================================
+// 请在部署阿里云 FC 后，将下面的地址替换为实际地址
+const FC_PROXY_URL = 'https://your-fc-id.cn-shanghai.fc.aliyuncs.com/api/asr-proxy';
+const FC_FUNASR_URL = 'wss://your-fc-id.cn-shanghai.fc.aliyuncs.com/ws';
+
+async function callAliyunFcProxy(audioBlob) {
+  const buffer = await audioBlob.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  const audioBase64 = btoa(binary);
+  
+  const resp = await fetch(FC_PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ audio_base64: audioBase64, format: 'webm' }),
+    signal: AbortSignal.timeout(8000)
+  });
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error);
+  return data.text || null;
+}
+
+function tryGoogleRecognition() {
+  return new Promise((resolve, reject) => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { reject(new Error('not supported')); return; }
+    const recog = new SR();
+    recog.lang = 'zh-CN';
+    recog.interimResults = false;
+    recog.maxAlternatives = 1;
+    const timeoutId = setTimeout(() => { try { recog.stop(); } catch(e) {} reject(new Error('timeout')); }, 6000);
+    recog.onresult = e => { clearTimeout(timeoutId); resolve(e.results[0][0].transcript); };
+    recog.onerror = e => { clearTimeout(timeoutId); reject(e); };
+    recog.onend = () => { clearTimeout(timeoutId); };
+    recog.start();
+  });
+}
+
+async function tryFunasrWithBlob(webmBlob) {
+  const arrayBuffer = await webmBlob.arrayBuffer();
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+  const pcmData = audioBuffer.getChannelData(0);
+  
+  const targetRate = 16000;
+  const srcRate = audioBuffer.sampleRate;
+  const ratio = srcRate / targetRate;
+  const outputLength = Math.floor(pcmData.length / ratio);
+  const pcm16 = new Int16Array(outputLength);
+  for (let i = 0; i < outputLength; i++) {
+    const srcIdx = Math.floor(i * ratio);
+    const sample = Math.max(-1, Math.min(1, pcmData[srcIdx]));
+    pcm16[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+  }
+  
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(FC_FUNASR_URL);
+    let finalText = '';
+    const timeout = setTimeout(() => { try { ws.close(); } catch(e) {} reject(new Error('timeout')); }, 10000);
+    
+    ws.onopen = () => {
+      ws.send(JSON.stringify({
+        mode: '2pass', chunk_size: [5, 10, 5],
+        chunk_interval: 10, wav_name: 'ama-channel',
+        is_speaking: true, itn: true
+      }));
+      const frameSize = 640;
+      for (let i = 0; i < pcm16.length; i += frameSize) {
+        ws.send(pcm16.slice(i, i + frameSize).buffer);
+      }
+      ws.send(JSON.stringify({ is_speaking: false }));
+    };
+    
+    ws.onmessage = e => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.text) finalText = data.text;
+        if (data.is_final || data.mode === '2pass-offline') {
+          clearTimeout(timeout); ws.close();
+          resolve(finalText || null);
+        }
+      } catch(e) {}
+    };
+    
+    ws.onerror = () => { clearTimeout(timeout); reject(new Error('FunASR 连接失败')); };
+    ws.onclose = () => { clearTimeout(timeout); resolve(finalText || null); };
+  });
+}
+
+async function startVoiceWithFallback() {
+  if (typeof _isRecording !== 'undefined' && _isRecording) {
+    if (typeof stopRecordingMode === 'function') stopRecordingMode();
+    return;
+  }
+  
+  if (!navigator.mediaDevices?.getUserMedia) {
+    if (typeof showStatus === 'function') showStatus('result', '当前设备不支持录音，请打字输入');
+    return;
+  }
+  
+  const micBtn = document.getElementById('micBtn');
+  let stream, mediaRecorder, chunks = [];
+  
+  try {
+    // 更新 UI 状态
+    if (micBtn) { micBtn.classList.add('listening'); micBtn.innerHTML = '&#9724; 停止'; }
+    if (typeof showStatus === 'function') showStatus('listening', '正在录音，请说出节目名（5 秒自动结束）...');
+    
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+    
+    mediaRecorder.start();
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    if (mediaRecorder.state === 'recording') mediaRecorder.stop();
+    await new Promise(resolve => { mediaRecorder.onstop = resolve; });
+    
+    stream.getTracks().forEach(t => t.stop());
+    
+    // 恢复 UI
+    if (micBtn) { micBtn.classList.remove('listening'); micBtn.innerHTML = '&#127908;<span class="ripple"></span>'; }
+    
+    if (chunks.length === 0) {
+      if (typeof showStatus === 'function') showStatus('result', '录音失败，请重试或打字输入');
+      return;
+    }
+    
+    const blob = new Blob(chunks, { type: 'audio/webm' });
+    
+    // ─── 第 1 层：阿里云 FC（百度→讯飞） ───
+    if (typeof showStatus === 'function') showStatus('listening', '正在识别（第 1 层：百度/讯飞）...');
+    let text = null;
+    try {
+      text = await callAliyunFcProxy(blob);
+      if (text && text.trim()) {
+        if (typeof handleRecognitionResult === 'function') handleRecognitionResult(text);
+        else { document.getElementById('userInput').value = text; if (typeof startSearch === 'function') startSearch(); }
+        return;
+      }
+    } catch(e) { console.log('FC 代理不可用:', e.message); }
+    
+    // ─── 第 2 层：Google Web Speech ───
+    if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+      if (typeof showStatus === 'function') showStatus('listening', '正在识别（第 2 层：Google 语音）...');
+      try {
+        text = await tryGoogleRecognition();
+        if (text && text.trim()) {
+          if (typeof handleRecognitionResult === 'function') handleRecognitionResult(text);
+          else { document.getElementById('userInput').value = text; if (typeof startSearch === 'function') startSearch(); }
+          return;
+        }
+      } catch(e) { console.log('Google 不可用:', e.message); }
+    }
+    
+    // ─── 第 3 层：FunASR on 阿里云 FC ───
+    if (typeof showStatus === 'function') showStatus('listening', '正在识别（第 3 层：FunASR）...');
+    try {
+      text = await tryFunasrWithBlob(blob);
+      if (text && text.trim()) {
+        if (typeof handleRecognitionResult === 'function') handleRecognitionResult(text);
+        else { document.getElementById('userInput').value = text; if (typeof startSearch === 'function') startSearch(); }
+        return;
+      }
+    } catch(e) { console.log('FunASR 不可用:', e.message); }
+    
+    // ─── 全部失败 ───
+    if (typeof showStatus === 'function') showStatus('result', '语音识别暂时不可用，请打字输入节目名');
+    
+  } catch(e) {
+    if (micBtn) { micBtn.classList.remove('listening'); micBtn.innerHTML = '&#127908;<span class="ripple"></span>'; }
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    if (typeof showStatus === 'function') showStatus('result', '录音出错，请打字输入节目名');
+  }
 }
 </script>
 
