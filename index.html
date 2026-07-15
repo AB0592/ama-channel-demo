@@ -5538,78 +5538,115 @@ if (origTranslateMinnan) {
 const FC_PROXY_URL = 'https://ama-channel-qtsdkdknbc.cn-shanghai.fcapp.run';
 const FC_FUNASR_URL = 'wss://funasr-igkajrakfs.cn-shanghai.fcapp.run';
 
+// 将识别结果填入搜索框并触发搜索
+function applyRecognitionResult(text) {
+  if (!text || !text.trim()) return false;
+  var inputEl = document.getElementById('userInput');
+  if (!inputEl) return false;
+  inputEl.value = text.trim();
+  if (typeof showStatus === 'function') showStatus('result', '识别结果：' + text.trim());
+  if (typeof startSearch === 'function') { setTimeout(function(){ startSearch(); }, 100); }
+  return true;
+}
+
+// WebM → 16kHz PCM base64
+async function webmToPcmBase64(webmBlob) {
+  var arrayBuffer = await webmBlob.arrayBuffer();
+  var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  var audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+  var pcmData = audioBuffer.getChannelData(0);
+  var targetRate = 16000;
+  var srcRate = audioBuffer.sampleRate;
+  var ratio = srcRate / targetRate;
+  var outputLength = Math.floor(pcmData.length / ratio);
+  var pcm16 = new Int16Array(outputLength);
+  for (var i = 0; i < outputLength; i++) {
+    var srcIdx = Math.floor(i * ratio);
+    var sample = Math.max(-1, Math.min(1, pcmData[srcIdx]));
+    pcm16[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+  }
+  // PCM16 → base64
+  var bytes = new Uint8Array(pcm16.buffer);
+  var binary = '';
+  var chunk = 8192;
+  for (var j = 0; j < bytes.length; j += chunk) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(j, Math.min(j + chunk, bytes.length)));
+  }
+  audioCtx.close();
+  return btoa(binary);
+}
+
+// 第 1 层：Google Web Speech（实时识别，最直接）
+function tryGoogleRecognition() {
+  return new Promise(function(resolve, reject) {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { reject(new Error('not supported')); return; }
+    var recog = new SR();
+    recog.lang = 'zh-CN';
+    recog.interimResults = false;
+    recog.maxAlternatives = 1;
+    var done = false;
+    var timeoutId = setTimeout(function() {
+      if (done) return; done = true;
+      try { recog.stop(); } catch(e) {}
+      reject(new Error('timeout'));
+    }, 6000);
+    recog.onresult = function(e) {
+      if (done) return; done = true; clearTimeout(timeoutId);
+      resolve(e.results[0][0].transcript);
+    };
+    recog.onerror = function(e) {
+      if (done) return; done = true; clearTimeout(timeoutId);
+      reject(e);
+    };
+    recog.onend = function() {
+      if (!done) { done = true; clearTimeout(timeoutId); reject(new Error('no result')); }
+    };
+    try { recog.start(); } catch(e) { reject(e); }
+  });
+}
+
+// 第 2 层：阿里云 FC 代理（百度→讯飞），发送 PCM base64
 async function callAliyunFcProxy(audioBlob) {
-  const buffer = await audioBlob.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  const audioBase64 = btoa(binary);
-  
-  const resp = await fetch(FC_PROXY_URL, {
+  var pcmBase64 = await webmToPcmBase64(audioBlob);
+  var resp = await fetch(FC_PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ audio_base64: audioBase64, format: 'webm' }),
+    body: JSON.stringify({ audio_base64: pcmBase64, format: 'pcm' }),
     signal: AbortSignal.timeout(8000)
   });
-  const data = await resp.json();
+  var data = await resp.json();
   if (data.error) throw new Error(data.error);
   return data.text || null;
 }
 
-function tryGoogleRecognition() {
-  return new Promise((resolve, reject) => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { reject(new Error('not supported')); return; }
-    const recog = new SR();
-    recog.lang = 'zh-CN';
-    recog.interimResults = false;
-    recog.maxAlternatives = 1;
-    const timeoutId = setTimeout(() => { try { recog.stop(); } catch(e) {} reject(new Error('timeout')); }, 6000);
-    recog.onresult = e => { clearTimeout(timeoutId); resolve(e.results[0][0].transcript); };
-    recog.onerror = e => { clearTimeout(timeoutId); reject(e); };
-    recog.onend = () => { clearTimeout(timeoutId); };
-    recog.start();
-  });
-}
-
+// 第 3 层：FunASR WebSocket
 async function tryFunasrWithBlob(webmBlob) {
-  const arrayBuffer = await webmBlob.arrayBuffer();
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-  const pcmData = audioBuffer.getChannelData(0);
-  
-  const targetRate = 16000;
-  const srcRate = audioBuffer.sampleRate;
-  const ratio = srcRate / targetRate;
-  const outputLength = Math.floor(pcmData.length / ratio);
-  const pcm16 = new Int16Array(outputLength);
-  for (let i = 0; i < outputLength; i++) {
-    const srcIdx = Math.floor(i * ratio);
-    const sample = Math.max(-1, Math.min(1, pcmData[srcIdx]));
-    pcm16[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+  var pcmBase64 = await webmToPcmBase64(webmBlob);
+  var pcm16 = new Int16Array(atob(pcmBase64).length / 2);
+  var raw = atob(pcmBase64);
+  for (var i = 0; i < raw.length; i += 2) {
+    pcm16[i / 2] = (raw.charCodeAt(i + 1) << 8) | raw.charCodeAt(i);
   }
-  
-  return new Promise((resolve, reject) => {
-    const ws = new WebSocket(FC_FUNASR_URL);
-    let finalText = '';
-    const timeout = setTimeout(() => { try { ws.close(); } catch(e) {} reject(new Error('timeout')); }, 10000);
-    
-    ws.onopen = () => {
+  return new Promise(function(resolve, reject) {
+    var ws = new WebSocket(FC_FUNASR_URL);
+    var finalText = '';
+    var timeout = setTimeout(function() { try { ws.close(); } catch(e) {} reject(new Error('timeout')); }, 10000);
+    ws.onopen = function() {
       ws.send(JSON.stringify({
         mode: '2pass', chunk_size: [5, 10, 5],
         chunk_interval: 10, wav_name: 'ama-channel',
         is_speaking: true, itn: true
       }));
-      const frameSize = 640;
-      for (let i = 0; i < pcm16.length; i += frameSize) {
+      var frameSize = 640;
+      for (var i = 0; i < pcm16.length; i += frameSize) {
         ws.send(pcm16.slice(i, i + frameSize).buffer);
       }
       ws.send(JSON.stringify({ is_speaking: false }));
     };
-    
-    ws.onmessage = e => {
+    ws.onmessage = function(e) {
       try {
-        const data = JSON.parse(e.data);
+        var data = JSON.parse(e.data);
         if (data.text) finalText = data.text;
         if (data.is_final || data.mode === '2pass-offline') {
           clearTimeout(timeout); ws.close();
@@ -5617,94 +5654,93 @@ async function tryFunasrWithBlob(webmBlob) {
         }
       } catch(e) {}
     };
-    
-    ws.onerror = () => { clearTimeout(timeout); reject(new Error('FunASR 连接失败')); };
-    ws.onclose = () => { clearTimeout(timeout); resolve(finalText || null); };
+    ws.onerror = function() { clearTimeout(timeout); reject(new Error('FunASR 连接失败')); };
+    ws.onclose = function() { clearTimeout(timeout); resolve(finalText || null); };
   });
 }
 
 async function startVoiceWithFallback() {
+  // 如果正在录音/识别，再次点击则取消
   if (typeof _isRecording !== 'undefined' && _isRecording) {
     if (typeof stopRecordingMode === 'function') stopRecordingMode();
     return;
   }
-  
-  if (!navigator.mediaDevices?.getUserMedia) {
-    if (typeof showStatus === 'function') showStatus('result', '当前设备不支持录音，请打字输入');
+
+  var micBtn = document.getElementById('micBtn');
+  if (!micBtn) return;
+
+  // ─── 第 1 层：Google Web Speech（实时，最直接） ───
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR) {
+    if (typeof showStatus === 'function') showStatus('listening', '正在听，请说出节目名...');
+    micBtn.classList.add('listening');
+    micBtn.innerHTML = '&#9724; 停止';
+    try {
+      var text = await tryGoogleRecognition();
+      micBtn.classList.remove('listening');
+      micBtn.innerHTML = '&#127908;<span class="ripple"></span>';
+      if (applyRecognitionResult(text)) return;
+    } catch(e) {
+      console.log('Google 识别失败:', e.message || e.error);
+      micBtn.classList.remove('listening');
+      micBtn.innerHTML = '&#127908;<span class="ripple"></span>';
+    }
+  }
+
+  // ─── Google 失败 → 录音 5 秒，走 FC 代理/FunASR ───
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (typeof showStatus === 'function') showStatus('result', '语音识别不可用，请打字输入节目名');
     return;
   }
-  
-  const micBtn = document.getElementById('micBtn');
-  let stream, mediaRecorder, chunks = [];
-  
+
+  var stream, mediaRecorder, chunks = [];
   try {
-    // 更新 UI 状态
-    if (micBtn) { micBtn.classList.add('listening'); micBtn.innerHTML = '&#9724; 停止'; }
+    micBtn.classList.add('listening');
+    micBtn.innerHTML = '&#9724; 停止';
     if (typeof showStatus === 'function') showStatus('listening', '正在录音，请说出节目名（5 秒自动结束）...');
-    
+
     stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
-    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-    
+    mediaRecorder.ondataavailable = function(e) { if (e.data.size > 0) chunks.push(e.data); };
+
     mediaRecorder.start();
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await new Promise(function(r) { setTimeout(r, 5000); });
     if (mediaRecorder.state === 'recording') mediaRecorder.stop();
-    await new Promise(resolve => { mediaRecorder.onstop = resolve; });
-    
-    stream.getTracks().forEach(t => t.stop());
-    
-    // 恢复 UI
-    if (micBtn) { micBtn.classList.remove('listening'); micBtn.innerHTML = '&#127908;<span class="ripple"></span>'; }
-    
+    await new Promise(function(r) { mediaRecorder.onstop = r; });
+    stream.getTracks().forEach(function(t) { t.stop(); });
+
+    micBtn.classList.remove('listening');
+    micBtn.innerHTML = '&#127908;<span class="ripple"></span>';
+
     if (chunks.length === 0) {
       if (typeof showStatus === 'function') showStatus('result', '录音失败，请重试或打字输入');
       return;
     }
-    
-    const blob = new Blob(chunks, { type: 'audio/webm' });
-    
-    // ─── 第 1 层：阿里云 FC（百度→讯飞） ───
-    if (typeof showStatus === 'function') showStatus('listening', '正在识别（第 1 层：百度/讯飞）...');
-    let text = null;
+
+    var blob = new Blob(chunks, { type: 'audio/webm' });
+
+    // ─── 第 2 层：阿里云 FC（百度→讯飞），PCM 格式 ───
+    if (typeof showStatus === 'function') showStatus('listening', '正在识别（百度/讯飞）...');
+    var text2 = null;
     try {
-      text = await callAliyunFcProxy(blob);
-      if (text && text.trim()) {
-        if (typeof handleRecognitionResult === 'function') handleRecognitionResult(text);
-        else { document.getElementById('userInput').value = text; if (typeof startSearch === 'function') startSearch(); }
-        return;
-      }
+      text2 = await callAliyunFcProxy(blob);
+      if (applyRecognitionResult(text2)) return;
     } catch(e) { console.log('FC 代理不可用:', e.message); }
-    
-    // ─── 第 2 层：Google Web Speech ───
-    if (window.SpeechRecognition || window.webkitSpeechRecognition) {
-      if (typeof showStatus === 'function') showStatus('listening', '正在识别（第 2 层：Google 语音）...');
-      try {
-        text = await tryGoogleRecognition();
-        if (text && text.trim()) {
-          if (typeof handleRecognitionResult === 'function') handleRecognitionResult(text);
-          else { document.getElementById('userInput').value = text; if (typeof startSearch === 'function') startSearch(); }
-          return;
-        }
-      } catch(e) { console.log('Google 不可用:', e.message); }
-    }
-    
-    // ─── 第 3 层：FunASR on 阿里云 FC ───
-    if (typeof showStatus === 'function') showStatus('listening', '正在识别（第 3 层：FunASR）...');
+
+    // ─── 第 3 层：FunASR ───
+    if (typeof showStatus === 'function') showStatus('listening', '正在识别（FunASR）...');
     try {
-      text = await tryFunasrWithBlob(blob);
-      if (text && text.trim()) {
-        if (typeof handleRecognitionResult === 'function') handleRecognitionResult(text);
-        else { document.getElementById('userInput').value = text; if (typeof startSearch === 'function') startSearch(); }
-        return;
-      }
+      var text3 = await tryFunasrWithBlob(blob);
+      if (applyRecognitionResult(text3)) return;
     } catch(e) { console.log('FunASR 不可用:', e.message); }
-    
+
     // ─── 全部失败 ───
     if (typeof showStatus === 'function') showStatus('result', '语音识别暂时不可用，请打字输入节目名');
-    
+
   } catch(e) {
-    if (micBtn) { micBtn.classList.remove('listening'); micBtn.innerHTML = '&#127908;<span class="ripple"></span>'; }
-    if (stream) stream.getTracks().forEach(t => t.stop());
+    micBtn.classList.remove('listening');
+    micBtn.innerHTML = '&#127908;<span class="ripple"></span>';
+    if (stream) stream.getTracks().forEach(function(t) { t.stop(); });
     if (typeof showStatus === 'function') showStatus('result', '录音出错，请打字输入节目名');
   }
 }
