@@ -4307,6 +4307,115 @@ function showStatus(type, text) {
   statusText.innerHTML = text;
 }
 
+// =============================================
+// 通用语音识别降级链（供录入弹窗和主搜索共用）
+// =============================================
+function startSmartVoiceRecognition(options) {
+  var onResult = options.onResult || function() {};
+  var onDone = options.onDone || function() {};
+  var onError = options.onError || function() {};
+  var micBtn = options.targetMicBtn;
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var fullText = '';
+
+  // ─── 第 1 层：浏览器 Web Speech API ───
+  if (SR) {
+    try {
+      var rec = new SR();
+      rec.lang = 'zh-CN';
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.maxAlternatives = 1;
+
+      rec.onresult = function(e) {
+        var t = '';
+        for (var i = e.resultIndex; i < e.results.length; i++) {
+          t += e.results[i][0].transcript;
+        }
+        fullText = t;
+        onResult(t, false);
+      };
+      rec.onend = function() {
+        onDone(fullText);
+      };
+      rec.onerror = function(e) {
+        if (e.error === 'no-speech' || e.error === 'aborted') {
+          onDone(fullText);
+        } else {
+          console.log('SmartVoice WebSpeech error:', e.error);
+          // WebSpeech 失败，降级到 FC
+          fallbackToFcProxy(options, fullText);
+        }
+      };
+
+      startSpeechRecognizer(rec, function() {
+        // start 失败，降级到 FC
+        fallbackToFcProxy(options, '');
+      });
+      return;
+    } catch(e) {
+      console.log('SmartVoice WebSpeech exception:', e);
+    }
+  }
+
+  // 没有 WebSpeech，直接走 FC
+  fallbackToFcProxy(options, '');
+}
+
+async function fallbackToFcProxy(options, preliminaryText) {
+  var onDone = options.onDone || function() {};
+  var onError = options.onError || function() {};
+  var onResult = options.onResult || function() {};
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    onError('浏览器不支持录音，请直接打字输入');
+    return;
+  }
+
+  try {
+    var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    var chunks = [];
+    var mr = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+    mr.ondataavailable = function(e) { if (e.data.size > 0) chunks.push(e.data); };
+    mr.start();
+    await new Promise(function(r) { setTimeout(r, 5000); });
+    if (mr.state === 'recording') mr.stop();
+    await new Promise(function(r) { mr.onstop = r; });
+    stream.getTracks().forEach(function(t) { t.stop(); });
+
+    if (chunks.length === 0) {
+      onError('录音失败，请重试或直接打字输入');
+      return;
+    }
+
+    var blob = new Blob(chunks, { type: 'audio/webm' });
+
+    // 走阿里云 FC 代理（百度→讯飞）
+    try {
+      var text = await callAliyunFcProxy(blob);
+      if (text && text.trim()) {
+        onResult(text, false);
+        onDone(text);
+        return;
+      }
+    } catch(e) { console.log('SmartVoice FC error:', e.message); }
+
+    // 走 FunASR
+    try {
+      var text3 = await tryFunasrWithBlob(blob);
+      if (text3 && text3.trim()) {
+        onResult(text3, false);
+        onDone(text3);
+        return;
+      }
+    } catch(e) { console.log('SmartVoice FunASR error:', e.message); }
+
+    onError('语音识别暂时不可用，请直接打字输入');
+  } catch(e) {
+    onError('录音出错，请直接打字输入');
+  }
+}
+
 function setupDialectDictMic(options) {
   var button = document.getElementById(options.buttonId);
   var statusEl = document.getElementById(options.statusId);
