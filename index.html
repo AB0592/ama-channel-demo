@@ -3956,7 +3956,14 @@ let originalInput = ''; // 保存原始方言输入
 function startSearch() {
   const rawInput = userInput.value.trim();
   if (!rawInput) return;
-  originalInput = rawInput;
+  // 口语清洗：去掉常见前缀表达
+  var cleanedInput = rawInput
+    .replace(/^(我要看|我想看|我要听|我想听|帮我找|帮我搜|帮我放|播放一下|给我放|我要播|我想播|请播|请放|搜索|查找|播放|播一下|放一下|来点|来一个|有没有|有没有什么|什么是|给我来|给我整个|整个|来个)\s*/, '')
+    .replace(/\s*(节目|电视|戏曲|戏|电影|音乐|歌|歌曲|视频|片子|片)$/, '');
+  if (cleanedInput && cleanedInput !== rawInput) {
+    userInput.value = cleanedInput;
+  }
+  originalInput = cleanedInput || rawInput;
 
   // 先停止任何正在播放的内容，清理状态
   stopCurrentPlayback();
