@@ -4316,35 +4316,46 @@ function startSmartVoiceRecognition(options) {
   var onError = options.onError || function() {};
   var micBtn = options.targetMicBtn;
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  var fullText = '';
+  var finalTranscript = '';
 
   // ─── 第 1 层：浏览器 Web Speech API ───
   if (SR) {
     try {
       var rec = new SR();
       rec.lang = 'zh-CN';
-      rec.continuous = true;
+      rec.continuous = false;   // 识别一段就自动结束，避免多段累积重复
       rec.interimResults = true;
       rec.maxAlternatives = 1;
 
       rec.onresult = function(e) {
-        var t = '';
+        var interim = '';
         for (var i = e.resultIndex; i < e.results.length; i++) {
-          t += e.results[i][0].transcript;
+          var result = e.results[i];
+          if (result.isFinal) {
+            finalTranscript += result[0].transcript;
+          } else {
+            interim += result[0].transcript;
+          }
         }
-        fullText = t;
-        onResult(t, false);
+        // 只显示最终结果 + 当前临时结果，不会重复累积
+        onResult(finalTranscript + interim, false);
       };
+
       rec.onend = function() {
-        onDone(fullText);
+        onDone(finalTranscript);
       };
+
       rec.onerror = function(e) {
         if (e.error === 'no-speech' || e.error === 'aborted') {
-          onDone(fullText);
+          onDone(finalTranscript);
         } else {
           console.log('SmartVoice WebSpeech error:', e.error);
-          // WebSpeech 失败，降级到 FC
-          fallbackToFcProxy(options, fullText);
+          // 若已有部分识别结果，直接返回；否则降级到 FC
+          if (finalTranscript.trim()) {
+            onDone(finalTranscript);
+          } else {
+            fallbackToFcProxy(options, '');
+          }
         }
       };
 
