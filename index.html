@@ -5088,10 +5088,13 @@ const FC_FUNASR_URL = 'wss://funasr-igkajrakfs.cn-shanghai.fcapp.run';
 // 将识别结果填入搜索框并触发搜索
 function applyRecognitionResult(text) {
   if (!text || !text.trim()) return false;
+  // 清洗语音识别结果中的标点符号和空格
+  var cleaned = text.trim().replace(/[。，、；：？！,.!?;:…·~\s]/g, '');
+  if (!cleaned) return false;
   var inputEl = document.getElementById('userInput');
   if (!inputEl) return false;
-  inputEl.value = text.trim();
-  if (typeof showStatus === 'function') showStatus('result', '识别结果：' + text.trim());
+  inputEl.value = cleaned;
+  if (typeof showStatus === 'function') showStatus('result', '识别结果：' + cleaned);
   if (typeof startSearch === 'function') { setTimeout(function(){ startSearch(); }, 100); }
   return true;
 }
