@@ -52,11 +52,13 @@ def recognize_baidu(audio_pcm_base64):
     token = get_baidu_token()
     audio_bytes = base64.b64decode(audio_pcm_base64)
     cuid = 'ama-channel-' + uuid.uuid4().hex[:8]
-    url = 'https://vop.baidu.com/server_api?access_token=%s&cuid=%s' % (token, cuid)
+    url = 'https://vop.baidu.com/server_api'
     body = {
         'format': 'pcm',
         'rate': 16000,
         'channel': 1,
+        'cuid': cuid,
+        'token': token,
         'len': len(audio_bytes),
         'speech': audio_pcm_base64
     }
