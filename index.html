@@ -3422,7 +3422,6 @@ let currentLang = 'puxianhua'; // Default: Puxian dialect
 // ===== Language Selector =====
 document.querySelectorAll('.lang-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    stopFunasrRecognition();
     document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentLang = btn.dataset.lang;
@@ -3647,54 +3646,6 @@ function startSpeechRecognizer(recognizer, onFailure) {
   }
 }
 
-const FUNASR_DEFAULT_WS_URL = 'ws://127.0.0.1:10095';
-const FUNASR_PUBLIC_WS_URL = 'wss://www.funasr.com:10095/';
-let funasrSession = null;
-
-function getFunasrWsUrl() {
-  return localStorage.getItem('funasrWsUrl') || FUNASR_DEFAULT_WS_URL;
-}
-
-// =============================================
-// 科大讯飞语音听写配置
-// =============================================
-function getKedaConfig() {
-  return {
-    appId: localStorage.getItem('kedaAppId') || '',
-    apiKey: localStorage.getItem('kedaApiKey') || '',
-    apiSecret: localStorage.getItem('kedaApiSecret') || ''
-  };
-}
-
-function buildKedaAuthUrl() {
-  var cfg = getKedaConfig();
-  if (!cfg.appId || !cfg.apiKey || !cfg.apiSecret) return Promise.resolve(null);
-  var host = 'iat-api.xfyun.cn';
-  var path = '/v2/iat';
-  var date = new Date().toUTCString();
-  var signatureOrigin = 'host: ' + host + '\n';
-  signatureOrigin += 'date: ' + date + '\n';
-  signatureOrigin += 'GET ' + path + ' HTTP/1.1';
-
-  // Use SubtleCrypto if available (requires HTTPS or localhost)
-  if (typeof crypto !== 'undefined' && crypto.subtle) {
-    var encoder = new TextEncoder();
-    var keyData = encoder.encode(cfg.apiSecret);
-    var msgData = encoder.encode(signatureOrigin);
-    return crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
-      .then(function(cryptoKey) {
-        return crypto.subtle.sign('HMAC', cryptoKey, msgData);
-      })
-      .then(function(signature) {
-        var b64 = btoa(String.fromCharCode.apply(null, new Uint8Array(signature)));
-        var authorizationOrigin = 'api_key="' + cfg.apiKey + '", algorithm="hmac-sha256", headers="host date request-line", signature="' + b64 + '"';
-        var authorization = btoa(authorizationOrigin);
-        return 'wss://' + host + path + '?authorization=' + encodeURIComponent(authorization) + '&date=' + encodeURIComponent(date) + '&host=' + encodeURIComponent(host);
-      });
-  }
-  // Fallback: cannot generate auth without crypto.subtle
-  return Promise.resolve(null);
-}
 
 
 
@@ -3702,604 +3653,10 @@ function buildKedaAuthUrl() {
 
 
 
-function stopFunasrRecognition(options) {
-  options = options || {};
-  if (!funasrSession) return;
-  var session = funasrSession;
-  funasrSession = null;
-  try {
-    if (session.autoStopTimer) clearTimeout(session.autoStopTimer);
-    if (session.processor) session.processor.disconnect();
-    if (session.source) session.source.disconnect();
-    if (session.stream) session.stream.getTracks().forEach(function(track) { track.stop(); });
-    if (session.ws && session.ws.readyState === WebSocket.OPEN) {
-      session.ws.send(JSON.stringify({ is_speaking: false }));
-      if (options.close !== false) setTimeout(function() { try { session.ws.close(); } catch(e) {} }, 300);
-    }
-    if (session.audioContext) session.audioContext.close();
-  } catch(e) {}
-  _isRecognizing = false;
-  micBtn.classList.remove('listening');
-  micBtn.innerHTML = '&#127908;<span class="ripple"></span>';
-}
-
-function startFunasrRecognition(options) {
-  options = options || {};
-  var wsUrl = options.wsUrl || getFunasrWsUrl();
-  var isPublic = options.isPublic || false;
-  var onResult = options.onResult || function(text, isFinal) {
-    userInput.value = text;
-    userInput.style.color = '';
-    showStatus('result', (isPublic ? 'FunASR(公共)' : 'FunASR') + '识别结果：' + escapeHtml(text));
-  };
-  var onDone = options.onDone || function(text) {
-    if (text) {
-      userInput.value = text;
-      showStatus('result', (isPublic ? 'FunASR(公共)' : 'FunASR') + '最终结果：' + escapeHtml(text));
-      setTimeout(startSearch, 500);
-    } else {
-      showStatus('result', 'FunASR 未返回识别结果，请再试一次或直接打字输入');
-    }
-  };
-  var onError = options.onError || function(msg) {
-    showStatus('result', msg);
-  };
-  var statusPrefix = options.statusPrefix || '';
-
-  if (funasrSession) {
-    stopFunasrRecognition();
-    return;
-  }
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.WebSocket) {
-    onError('当前浏览器无法连接 FunASR，请使用 Chrome / Edge 或直接打字输入');
-    if (options.onFallback) options.onFallback();
-    return;
-  }
-
-  var ws;
-  try {
-    ws = new WebSocket(wsUrl);
-  } catch(e) {
-    onError('FunASR 地址无效：' + escapeHtml(wsUrl));
-    if (options.onFallback) options.onFallback();
-    return;
-  }
-
-  var finalText = '';
-  var lastText = '';
-  var startedAudio = false;
-  _isRecognizing = true;
-  micBtn.classList.add('listening');
-  micBtn.innerHTML = '&#9724; 停止';
-  showStatus('listening', statusPrefix + '正在连接 FunASR...');
-
-  funasrSession = { ws: ws };
-
-  ws.onopen = function() {
-    var config = {
-      mode: '2pass',
-      chunk_size: [5, 10, 5],
-      chunk_interval: 10,
-      wav_name: 'ama-channel-' + (currentLang || 'zh'),
-      is_speaking: true,
-      hotwords: buildFunasrHotwords(),
-      itn: true
-    };
-    var funasrLanguage = localStorage.getItem('funasrLanguage');
-    if (funasrLanguage) {
-      config.language = funasrLanguage;
-    } else if (currentLang === 'minnanhua') {
-      config.language = 'minnan';
-    } else if (currentLang === 'puxianhua') {
-      config.language = 'zh';
-    } else {
-      config.language = 'zh';
-    }
-    ws.send(JSON.stringify(config));
-    showStatus('listening', statusPrefix + 'FunASR 已连接，正在听...');
-
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(function(stream) {
-        if (!funasrSession || funasrSession.ws !== ws) {
-          stream.getTracks().forEach(function(track) { track.stop(); });
-          return;
-        }
-        var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-        var audioContext = new AudioContextCtor();
-        var source = audioContext.createMediaStreamSource(stream);
-        var processor = audioContext.createScriptProcessor(4096, 1, 1);
-        funasrSession.stream = stream;
-        funasrSession.audioContext = audioContext;
-        funasrSession.source = source;
-        funasrSession.processor = processor;
-        startedAudio = true;
-
-        // Auto stop after 8 seconds if no result
-        funasrSession.autoStopTimer = setTimeout(function() {
-          if (funasrSession && funasrSession.ws === ws && ws.readyState === WebSocket.OPEN) {
-            try { ws.send(JSON.stringify({ is_speaking: false })); } catch(e) {}
-            setTimeout(function() { try { ws.close(); } catch(e) {} }, 300);
-          }
-        }, 8000);
-
-        processor.onaudioprocess = function(event) {
-          if (!funasrSession || funasrSession.ws !== ws || ws.readyState !== WebSocket.OPEN) return;
-          var input = event.inputBuffer.getChannelData(0);
-          var pcm = floatToPcm16(downsampleTo16k(input, audioContext.sampleRate));
-          ws.send(pcm);
-        };
-        source.connect(processor);
-        processor.connect(audioContext.destination);
-      })
-      .catch(function(err) {
-        if (funasrSession && funasrSession.autoStopTimer) clearTimeout(funasrSession.autoStopTimer);
-        showStatus('result', '无法访问麦克风：' + escapeHtml(err.message || err));
-        stopFunasrRecognition();
-        if (options.onFallback) options.onFallback();
-      });
-  };
-
-  ws.onmessage = function(event) {
-    var data;
-    try { data = JSON.parse(event.data); } catch(e) { return; }
-    var text = String(data.text || data.result || '').trim();
-    if (!text) return;
-    lastText = text;
-    var isFinal = data.mode === '2pass-offline' || data.is_final || data.is_final === true;
-    if (isFinal) {
-      finalText = text;
-      if (funasrSession && funasrSession.autoStopTimer) clearTimeout(funasrSession.autoStopTimer);
-      // Close connection after final result
-      setTimeout(function() {
-        if (funasrSession && funasrSession.ws === ws && ws.readyState === WebSocket.OPEN) {
-          try { ws.send(JSON.stringify({ is_speaking: false })); } catch(e) {}
-          setTimeout(function() { try { ws.close(); } catch(e) {} }, 300);
-        }
-      }, 500);
-    }
-    onResult(finalText || lastText, isFinal);
-  };
-
-  ws.onerror = function() {
-    var msg = '无法连接 FunASR 服务：' + escapeHtml(wsUrl);
-    if (!isPublic) {
-      msg += '<br><span style="font-size:0.95em;color:var(--text-muted);">请确认 FunASR-Realtime 已启动，或用 localStorage.setItem("funasrWsUrl", "ws://你的地址") 修改地址。</span>';
-    }
-    onError(msg);
-    stopFunasrRecognition({ close: false });
-    if (options.onFallback) options.onFallback();
-  };
-
-  ws.onclose = function() {
-    var text = (finalText || lastText || userInput.value || '').trim();
-    stopFunasrRecognition({ close: false });
-    onDone(text);
-  };
-}
 
 
-function startFunasrPublicRecognition(options) {
-  options = options || {};
-  options.wsUrl = FUNASR_PUBLIC_WS_URL;
-  options.isPublic = true;
-  options.statusPrefix = options.statusPrefix || '【公共】';
-  startFunasrRecognition(options);
-}
-
-
-// =============================================
-// 科大讯飞语音听写（WebSocket）
-// =============================================
-let kedaSession = null;
-
-function stopKedaRecognition() {
-  if (!kedaSession) return;
-  var session = kedaSession;
-  kedaSession = null;
-  try {
-    if (session.autoStop) clearTimeout(session.autoStop);
-    if (session.processor) session.processor.disconnect();
-    if (session.source) session.source.disconnect();
-    if (session.stream) session.stream.getTracks().forEach(function(track) { track.stop(); });
-    if (session.ws && session.ws.readyState === WebSocket.OPEN) {
-      session.ws.send(JSON.stringify({ end: true }));
-      setTimeout(function() { try { session.ws.close(); } catch(e) {} }, 300);
-    }
-    if (session.audioContext) session.audioContext.close();
-  } catch(e) {}
-  _isRecognizing = false;
-  micBtn.classList.remove('listening');
-  micBtn.innerHTML = '&#127908;<span class="ripple"></span>';
-}
-
-function startKedaRecognition(options) {
-  options = options || {};
-  var onResult = options.onResult || function(text, isFinal) {
-    userInput.value = text;
-    userInput.style.color = '';
-    showStatus('result', '科大讯飞识别结果：' + escapeHtml(text));
-  };
-  var onDone = options.onDone || function(text) {
-    if (text) {
-      userInput.value = text;
-      showStatus('result', '科大讯飞最终结果：' + escapeHtml(text));
-      setTimeout(startSearch, 500);
-    } else {
-      showStatus('result', '科大讯飞未返回识别结果，请直接打字输入');
-    }
-  };
-  var onError = options.onError || function(msg) {
-    showStatus('result', msg);
-  };
-
-  var cfg = getKedaConfig();
-  if (!cfg.appId || !cfg.apiKey || !cfg.apiSecret) {
-    onError('科大讯飞未配置，请在设置中填写 AppID / APIKey / APISecret');
-    if (options.onFallback) options.onFallback();
-    return;
-  }
-
-  if (kedaSession) {
-    stopKedaRecognition();
-    return;
-  }
-
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.WebSocket) {
-    onError('当前浏览器无法使用科大讯飞语音，请使用 Chrome / Edge 或直接打字输入');
-    if (options.onFallback) options.onFallback();
-    return;
-  }
-
-  _isRecognizing = true;
-  micBtn.classList.add('listening');
-  micBtn.innerHTML = '&#9724; 停止';
-  showStatus('listening', '正在连接科大讯飞语音识别...');
-
-  buildKedaAuthUrl().then(function(authUrl) {
-    if (!authUrl) {
-      onError('科大讯飞鉴权失败，请检查配置');
-      stopKedaRecognition();
-      if (options.onFallback) options.onFallback();
-      return;
-    }
-
-    var ws;
-    try {
-      ws = new WebSocket(authUrl);
-    } catch(e) {
-      onError('科大讯飞连接失败：' + escapeHtml(e.message || ''));
-      stopKedaRecognition();
-      if (options.onFallback) options.onFallback();
-      return;
-    }
-
-    var finalText = '';
-    var lastText = '';
-    kedaSession = { ws: ws };
-
-    ws.onopen = function() {
-      var business = {
-        language: currentLang === 'minnanhua' ? 'minnan' : 'zh_cn',
-        domain: 'iat',
-        accent: currentLang === 'minnanhua' ? 'minnan' : 'mandarin',
-        vad_eos: 3000,
-        dwa: 'wpgs'
-      };
-      var common = { app_id: cfg.appId };
-      var data = { status: 0, format: 'audio/L16;rate=16000', audio: '', encoding: 'raw' };
-      ws.send(JSON.stringify({ common: common, business: business, data: data }));
-      showStatus('listening', '科大讯飞已连接，正在听...');
-
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(function(stream) {
-          if (!kedaSession || kedaSession.ws !== ws) {
-            stream.getTracks().forEach(function(track) { track.stop(); });
-            return;
-          }
-          var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-          var audioContext = new AudioContextCtor();
-          var source = audioContext.createMediaStreamSource(stream);
-          var processor = audioContext.createScriptProcessor(4096, 1, 1);
-          kedaSession.stream = stream;
-          kedaSession.audioContext = audioContext;
-          kedaSession.source = source;
-          kedaSession.processor = processor;
-
-          processor.onaudioprocess = function(event) {
-            if (!kedaSession || kedaSession.ws !== ws || ws.readyState !== WebSocket.OPEN) return;
-            var input = event.inputBuffer.getChannelData(0);
-            var pcm = floatToPcm16(downsampleTo16k(input, audioContext.sampleRate));
-            var chunkData = {
-              status: 1,
-              format: 'audio/L16;rate=16000',
-              audio: btoa(String.fromCharCode.apply(null, new Uint8Array(pcm))),
-              encoding: 'raw'
-            };
-            ws.send(JSON.stringify({ data: chunkData }));
-          };
-          source.connect(processor);
-          processor.connect(audioContext.destination);
-
-          // Auto stop after 8 seconds
-          kedaSession.autoStop = setTimeout(function() {
-            if (kedaSession && kedaSession.ws === ws && ws.readyState === WebSocket.OPEN) {
-              var endData = { status: 2, format: 'audio/L16;rate=16000', audio: '', encoding: 'raw' };
-              ws.send(JSON.stringify({ data: endData }));
-            }
-          }, 8000);
-        })
-        .catch(function(err) {
-          showStatus('result', '无法访问麦克风：' + escapeHtml(err.message || err));
-          stopKedaRecognition();
-          if (options.onFallback) options.onFallback();
-        });
-    };
-
-    ws.onmessage = function(event) {
-      var data;
-      try { data = JSON.parse(event.data); } catch(e) { return; }
-      if (data.code !== 0) {
-        var errMsg = '科大讯飞错误：' + (data.message || data.code);
-        if (data.code === 11200) errMsg = '科大讯飞服务调用超限（11200），请直接打字输入';
-        onError(errMsg);
-        stopKedaRecognition();
-        if (options.onFallback) options.onFallback();
-        return;
-      }
-      if (data.data && data.data.result && data.data.result.ws) {
-        var text = '';
-        data.data.result.ws.forEach(function(w) {
-          w.cw.forEach(function(c) { text += c.w; });
-        });
-        lastText = text;
-        var isFinal = data.data.result.ls === true;
-        if (isFinal) finalText = text;
-        onResult(finalText || lastText, isFinal);
-      }
-    };
-
-    ws.onerror = function(e) {
-      onError('科大讯飞连接出错，请检查网络或配置');
-      stopKedaRecognition();
-      if (options.onFallback) options.onFallback();
-    };
-
-    ws.onclose = function() {
-      var text = (finalText || lastText || '').trim();
-      stopKedaRecognition();
-      onDone(text);
-    };
-  }).catch(function(e) {
-    onError('科大讯飞鉴权失败：' + escapeHtml(e.message || ''));
-    stopKedaRecognition();
-    if (options.onFallback) options.onFallback();
-  });
-}
-
-// =============================================
-// Speech Recognition
-// =============================================
-function initSpeechRecognition() {
-  const SpeechRecognition = getSpeechRecognitionCtor();
-  if (!SpeechRecognition) {
-    micBtn.title = '当前浏览器不支持语音识别，将尝试其他识别服务';
-    langHint.textContent = '浏览器语音不可用，将尝试云端识别';
-    return;
-  }
-
-  recognition = new SpeechRecognition();
-  recognition.continuous = false;
-  recognition.interimResults = true;
-  recognition.maxAlternatives = 3;
-
-  recognition.onresult = function(event) {
-    var transcript = '';
-    var isFinal = false;
-    for (var i = event.resultIndex; i < event.results.length; i++) {
-      transcript += event.results[i][0].transcript;
-      if (event.results[i].isFinal) isFinal = true;
-    }
-    userInput.value = transcript;
-    userInput.style.color = '';
-
-    var pinyinApprox = toPinyinApprox(transcript);
-    if (pinyinApprox && transcript.trim()) {
-      showStatus('result', '识别结果：' + escapeHtml(transcript) + '<br><span style="font-size:1.05em;color:var(--text-muted);">拼音近似：' + escapeHtml(pinyinApprox) + '</span>');
-    }
-
-    if (isFinal && transcript.trim()) {
-      micBtn.classList.remove('listening');
-      clearTimeout(window._recogTimeout);
-
-      var translated = transcript;
-      var changed = false;
-      if (currentLang === 'puxianhua') {
-        var sortedKeys = Object.keys(puxianDict).sort(function(a, b) { return b.length - a.length; });
-        for (var k = 0; k < sortedKeys.length; k++) {
-          var key = sortedKeys[k];
-          if (translated.indexOf(key) !== -1) {
-            translated = translated.split(key).join(puxianDict[key]);
-            if (puxianDict[key] !== key) changed = true;
-          }
-        }
-      } else if (currentLang === 'minnanhua') {
-        var sortedKeys2 = Object.keys(minnanDict).sort(function(a, b) { return b.length - a.length; });
-        for (var k2 = 0; k2 < sortedKeys2.length; k2++) {
-          var key2 = sortedKeys2[k2];
-          if (translated.indexOf(key2) !== -1) {
-            translated = translated.split(key2).join(minnanDict[key2]);
-            if (minnanDict[key2] !== key2) changed = true;
-          }
-        }
-      }
-      if (changed) {
-        showStatus('result', '识别结果：' + escapeHtml(transcript) + '<br><span style="font-size:1.05em;color:var(--accent-green,#2E7D32);">方言翻译：' + escapeHtml(translated) + '</span><br><span style="font-size:1.05em;color:var(--text-muted,#7A6B5D);">拼音近似：' + escapeHtml(pinyinApprox) + '</span>');
-      }
-
-      setTimeout(function() {
-        try { recognition.stop(); } catch(e) {}
-        startSearch();
-      }, 1200);
-    }
-  };
-
-  recognition.onstart = function() {
-    _isRecognizing = true;
-    activeSpeechRecognizer = recognition;
-    micBtn.classList.add('listening');
-    if (currentLang === 'chinese') {
-      showStatus('listening', '正在听您说话（中文模式）...');
-    } else {
-      showStatus('listening', '正在听您说话（请用普通话读戏名）...');
-    }
-    clearTimeout(window._recogTimeout);
-    window._recogTimeout = setTimeout(() => {
-      try { recognition.stop(); } catch(e) {}
-    }, 8000);
-  };
-
-  recognition.onend = function() {
-    _isRecognizing = false;
-    if (activeSpeechRecognizer === recognition) activeSpeechRecognizer = null;
-    micBtn.classList.remove('listening');
-    clearTimeout(window._recogTimeout);
-    if (!userInput.value.trim()) {
-      recogStatus.classList.remove('active');
-      showStatus('result', '没有听清，请再试一次或直接打字输入');
-    }
-  };
-
-  recognition.onerror = function(event) {
-    _isRecognizing = false;
-    if (activeSpeechRecognizer === recognition) activeSpeechRecognizer = null;
-    micBtn.classList.remove('listening');
-    clearTimeout(window._recogTimeout);
-    if (event.error === 'no-speech') {
-      showStatus('result', '没有听到声音，请再试一次');
-    } else if (event.error === 'not-allowed') {
-      showStatus('result', '请允许使用麦克风（点击地址栏左侧锁图标开启）');
-    } else if (event.error === 'audio-capture') {
-      showStatus('result', '找不到麦克风，请检查设备');
-    } else if (event.error === 'network') {
-      _voiceFallbackMode = true;
-      // Auto play default: 春草闯堂
-      var defaultOpera = operaDB.find(function(o) { return o.title === '春草闯堂'; });
-      if (defaultOpera) {
-        showStatus('result', '网络不可用，语音识别暂时无法使用。已为您播放《春草闯堂》。');
-        setTimeout(function() {
-          currentOpera = defaultOpera;
-          startPlayback(defaultOpera);
-        }, 800);
-      } else {
-        showStatus('result', '网络不可用，语音识别暂时无法使用。请直接打字输入或点击海报选台。');
-      }
-    } else {
-      showStatus('result', getSpeechErrorMessage(event));
-    }
-  };
-
-  // Timeout
-  recognition.ontimeout = function() {
-    _isRecognizing = false;
-    micBtn.classList.remove('listening');
-    showStatus('result', '识别超时，请再试一次或直接打字输入');
-  };
-
-  // Test if recognition actually works
-  window._speechAvailable = true;
-  recognition.onnomatch = function() {
-    // no match, but recognition works
-  };
-}
-
-// =============================================
-// Smart Voice Input: try recognition, fallback to recording
-// =============================================
-let _voiceFallbackMode = false;
-let _mediaRecorder = null;
-let _recordedChunks = [];
-let _testTimeout = null;
-let _isRecognizing = false;
-let _isRecording = false;
-let _recordingAutoStopTimer = null;
 
 micBtn.addEventListener('click', () => { startVoiceWithFallback() });
-
-function startRecordingMode() {
-  if (_isRecording) return;
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
-    showStatus('result', '当前浏览器无法语音识别或录音，请使用 Chrome / Edge，或直接打字输入节目名');
-    return;
-  }
-
-  _isRecording = true;
-  micBtn.classList.add('listening');
-  micBtn.innerHTML = '&#9724; 停止';
-  showStatus('listening', '正在录音，请直接说节目名，5秒后自动结束...');
-
-  navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
-      _recordedChunks = [];
-      _mediaRecorder = new MediaRecorder(stream);
-
-      _mediaRecorder.ondataavailable = function(e) {
-        if (e.data.size > 0) _recordedChunks.push(e.data);
-      };
-
-      _mediaRecorder.onstop = function() {
-        clearTimeout(_recordingAutoStopTimer);
-        _recordingAutoStopTimer = null;
-        stream.getTracks().forEach(t => t.stop());
-        _isRecording = false;
-        micBtn.classList.remove('listening');
-        micBtn.innerHTML = '&#127908;<span class="ripple"></span>';
-
-        if (_recordedChunks.length > 0) {
-          const blob = new Blob(_recordedChunks, { type: 'audio/webm' });
-          const url = URL.createObjectURL(blob);
-          const audio = new Audio(url);
-          audio.play();
-
-          showStatus('result', '已录完并开始回放。当前浏览器不能把这段录音自动转成文字，请在输入框输入节目名后点播。');
-          // Set a placeholder
-          if (!userInput.value.trim()) {
-            userInput.value = '（请在此输入您想看的节目名）';
-            userInput.style.color = 'var(--text-muted)';
-            userInput.addEventListener('focus', function handler() {
-              if (userInput.value === '（请在此输入您想看的节目名）') {
-                userInput.value = '';
-                userInput.style.color = '';
-              }
-              userInput.removeEventListener('focus', handler);
-            });
-          }
-        } else {
-          showStatus('result', '录音失败，请直接打字输入');
-        }
-      };
-
-      _mediaRecorder.start();
-      _recordingAutoStopTimer = setTimeout(function() {
-        stopRecordingMode();
-      }, 5000);
-    })
-    .catch(err => {
-      clearTimeout(_recordingAutoStopTimer);
-      _recordingAutoStopTimer = null;
-      _isRecording = false;
-      micBtn.classList.remove('listening');
-      micBtn.innerHTML = '&#127908;<span class="ripple"></span>';
-      showStatus('result', '无法访问麦克风：' + err.message + '。请直接打字输入。');
-    });
-}
-
-function stopRecordingMode() {
-  clearTimeout(_recordingAutoStopTimer);
-  _recordingAutoStopTimer = null;
-  if (_mediaRecorder && _mediaRecorder.state === 'recording') {
-    _mediaRecorder.stop();
-  }
-}
 
 function showStatus(type, text) {
   recogStatus.className = 'recognition-status active ' + (type === 'listening' ? 'listening-status' : 'result-status');
@@ -4308,75 +3665,126 @@ function showStatus(type, text) {
 }
 
 // =============================================
-// 通用语音识别降级链（供录入弹窗和主搜索共用）
+// 主麦克风入口：录音 → FC(百度→讯飞) → Google → 提示
 // =============================================
-function startSmartVoiceRecognition(options) {
-  var onResult = options.onResult || function() {};
-  var onDone = options.onDone || function() {};
-  var onError = options.onError || function() {};
-  var micBtn = options.targetMicBtn;
-  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  var finalTranscript = '';
+let _isRecording = false;
 
-  // ─── 第 1 层：浏览器 Web Speech API ───
-  if (SR) {
-    try {
-      var rec = new SR();
-      rec.lang = 'zh-CN';
-      rec.continuous = false;   // 识别一段就自动结束，避免多段累积重复
-      rec.interimResults = true;
-      rec.maxAlternatives = 1;
-
-      rec.onresult = function(e) {
-        var interim = '';
-        for (var i = e.resultIndex; i < e.results.length; i++) {
-          var result = e.results[i];
-          if (result.isFinal) {
-            finalTranscript += result[0].transcript;
-          } else {
-            interim += result[0].transcript;
-          }
-        }
-        // 只显示最终结果 + 当前临时结果，不会重复累积
-        onResult(finalTranscript + interim, false);
-      };
-
-      rec.onend = function() {
-        onDone(finalTranscript);
-      };
-
-      rec.onerror = function(e) {
-        if (e.error === 'no-speech' || e.error === 'aborted') {
-          onDone(finalTranscript);
-        } else {
-          console.log('SmartVoice WebSpeech error:', e.error);
-          // 若已有部分识别结果，直接返回；否则降级到 FC
-          if (finalTranscript.trim()) {
-            onDone(finalTranscript);
-          } else {
-            fallbackToFcProxy(options, '');
-          }
-        }
-      };
-
-      startSpeechRecognizer(rec, function() {
-        // start 失败，降级到 FC
-        fallbackToFcProxy(options, '');
-      });
-      return;
-    } catch(e) {
-      console.log('SmartVoice WebSpeech exception:', e);
-    }
+async function startVoiceWithFallback() {
+  var micBtn = document.getElementById('micBtn');
+  if (!micBtn) return;
+  
+  // 如果正在录音，点击则取消
+  if (_isRecording) {
+    _isRecording = false;
+    micBtn.classList.remove('listening');
+    micBtn.innerHTML = '&#127908;<span class="ripple"></span>';
+    if (typeof showStatus === 'function') showStatus('result', '已取消录音');
+    return;
   }
 
-  // 没有 WebSpeech，直接走 FC
-  fallbackToFcProxy(options, '');
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (typeof showStatus === 'function') showStatus('result', '浏览器不支持录音，请使用 Chrome/Edge 或直接打字输入');
+    return;
+  }
+
+  _isRecording = true;
+  micBtn.classList.add('listening');
+  micBtn.innerHTML = '&#9724; 停止';
+  if (typeof showStatus === 'function') showStatus('listening', '正在录音，请说出节目名（4 秒自动结束）...');
+
+  var stream, mediaRecorder, chunks = [];
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+    mediaRecorder.ondataavailable = function(e) { if (e.data.size > 0) chunks.push(e.data); };
+    mediaRecorder.start();
+    
+    // 录音 4 秒
+    await new Promise(function(r) { setTimeout(r, 4000); });
+    
+    // 如果用户提前取消了
+    if (!_isRecording) {
+      if (mediaRecorder.state === 'recording') mediaRecorder.stop();
+      stream.getTracks().forEach(function(t) { t.stop(); });
+      return;
+    }
+    
+    if (mediaRecorder.state === 'recording') mediaRecorder.stop();
+    await new Promise(function(r) { mediaRecorder.onstop = r; });
+    stream.getTracks().forEach(function(t) { t.stop(); });
+    _isRecording = false;
+    micBtn.classList.remove('listening');
+    micBtn.innerHTML = '&#127908;<span class="ripple"></span>';
+
+    if (chunks.length === 0) {
+      if (typeof showStatus === 'function') showStatus('result', '录音失败，请重试或打字输入');
+      return;
+    }
+
+    var blob = new Blob(chunks, { type: 'audio/webm' });
+
+    // ─── 第 1 层：阿里云 FC（百度→讯飞），国内优先 ───
+    if (typeof showStatus === 'function') showStatus('listening', '正在识别（百度/讯飞）...');
+    try {
+      var text = await callAliyunFcProxy(blob);
+      if (text && text.trim()) {
+        if (typeof applyRecognitionResult === 'function') applyRecognitionResult(text);
+        return;
+      }
+    } catch(e) { console.log('FC 不可用:', e.message); }
+
+    // ─── 第 2 层：FunASR 容器 ───
+    if (typeof showStatus === 'function') showStatus('listening', '正在识别（FunASR）...');
+    try {
+      var text2 = await tryFunasrWithBlob(blob);
+      if (text2 && text2.trim()) {
+        if (typeof applyRecognitionResult === 'function') applyRecognitionResult(text2);
+        return;
+      }
+    } catch(e) { console.log('FunASR 不可用:', e.message); }
+
+    // ─── 第 3 层：Google Web Speech（备选，国外/VPN 可用）───
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SR) {
+      if (typeof showStatus === 'function') showStatus('listening', '正在识别（Google）...');
+      try {
+        var text3 = await new Promise(function(resolve, reject) {
+          var rec = new SR();
+          rec.lang = 'zh-CN';
+          rec.interimResults = false;
+          rec.maxAlternatives = 1;
+          var tid = setTimeout(function() { try { rec.stop(); } catch(e) {} reject(new Error('timeout')); }, 6000);
+          rec.onresult = function(e) { clearTimeout(tid); resolve(e.results[0][0].transcript); };
+          rec.onerror = function(e) { clearTimeout(tid); reject(e); };
+          rec.onend = function() { clearTimeout(tid); reject(new Error('no result')); };
+          rec.start();
+        });
+        if (text3 && text3.trim()) {
+          if (typeof applyRecognitionResult === 'function') applyRecognitionResult(text3);
+          return;
+        }
+      } catch(e) { console.log('Google 不可用:', e.message || e.error); }
+    }
+
+    // ─── 全部失败 ───
+    if (typeof showStatus === 'function') showStatus('result', '语音识别暂时不可用，请打字输入或点击节目海报');
+
+  } catch(e) {
+    _isRecording = false;
+    micBtn.classList.remove('listening');
+    micBtn.innerHTML = '&#127908;<span class="ripple"></span>';
+    if (stream) stream.getTracks().forEach(function(t) { t.stop(); });
+    if (typeof showStatus === 'function') showStatus('result', '录音出错，请打字输入');
+  }
 }
 
-async function fallbackToFcProxy(options, preliminaryText) {
+// =============================================
+// 通用语音识别降级链（供录入弹窗使用）
+// =============================================
+async function startSmartVoiceRecognition(options) {
+  var onResult = options.onResult || function() {};
   var onDone = options.onDone || function() {};
   var onError = options.onError || function() {};
-  var onResult = options.onResult || function() {};
 
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     onError('浏览器不支持录音，请直接打字输入');
@@ -4389,7 +3797,7 @@ async function fallbackToFcProxy(options, preliminaryText) {
     var mr = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
     mr.ondataavailable = function(e) { if (e.data.size > 0) chunks.push(e.data); };
     mr.start();
-    await new Promise(function(r) { setTimeout(r, 5000); });
+    await new Promise(function(r) { setTimeout(r, 4000); });
     if (mr.state === 'recording') mr.stop();
     await new Promise(function(r) { mr.onstop = r; });
     stream.getTracks().forEach(function(t) { t.stop(); });
@@ -4401,7 +3809,7 @@ async function fallbackToFcProxy(options, preliminaryText) {
 
     var blob = new Blob(chunks, { type: 'audio/webm' });
 
-    // 走阿里云 FC 代理（百度→讯飞）
+    // 第 1 层：FC 百度/讯飞
     try {
       var text = await callAliyunFcProxy(blob);
       if (text && text.trim()) {
@@ -4411,15 +3819,38 @@ async function fallbackToFcProxy(options, preliminaryText) {
       }
     } catch(e) { console.log('SmartVoice FC error:', e.message); }
 
-    // 走 FunASR
+    // 第 2 层：FunASR
     try {
-      var text3 = await tryFunasrWithBlob(blob);
-      if (text3 && text3.trim()) {
-        onResult(text3, false);
-        onDone(text3);
+      var text2 = await tryFunasrWithBlob(blob);
+      if (text2 && text2.trim()) {
+        onResult(text2, false);
+        onDone(text2);
         return;
       }
     } catch(e) { console.log('SmartVoice FunASR error:', e.message); }
+
+    // 第 3 层：Google Web Speech
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SR) {
+      try {
+        var text3 = await new Promise(function(resolve, reject) {
+          var rec = new SR();
+          rec.lang = 'zh-CN';
+          rec.interimResults = false;
+          rec.maxAlternatives = 1;
+          var tid = setTimeout(function() { try { rec.stop(); } catch(e) {} reject(new Error('timeout')); }, 6000);
+          rec.onresult = function(e) { clearTimeout(tid); resolve(e.results[0][0].transcript); };
+          rec.onerror = function(e) { clearTimeout(tid); reject(e); };
+          rec.onend = function() { clearTimeout(tid); reject(new Error('no result')); };
+          rec.start();
+        });
+        if (text3 && text3.trim()) {
+          onResult(text3, false);
+          onDone(text3);
+          return;
+        }
+      } catch(e) { console.log('SmartVoice Google error:', e.message || e.error); }
+    }
 
     onError('语音识别暂时不可用，请直接打字输入');
   } catch(e) {
@@ -4491,8 +3922,6 @@ function setupDialectDictMic(options) {
       try {
         if (activeSpeechRecognizer && activeSpeechRecognizer !== recognition) activeSpeechRecognizer.stop();
       } catch(e) {}
-      stopFunasrRecognition();
-      stopKedaRecognition();
       setListening(false);
       return;
     }
@@ -5103,8 +4532,6 @@ document.querySelectorAll('.cat-btn').forEach(btn => {
   });
 });
 
-initSpeechRecognition();
-
 // =============================================
 // Scroll: hide topbar on scroll down, show on scroll up
 // =============================================
@@ -5696,35 +5123,6 @@ async function webmToPcmBase64(webmBlob) {
   return btoa(binary);
 }
 
-// 第 1 层：Google Web Speech（实时识别，最直接）
-function tryGoogleRecognition() {
-  return new Promise(function(resolve, reject) {
-    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { reject(new Error('not supported')); return; }
-    var recog = new SR();
-    recog.lang = 'zh-CN';
-    recog.interimResults = false;
-    recog.maxAlternatives = 1;
-    var done = false;
-    var timeoutId = setTimeout(function() {
-      if (done) return; done = true;
-      try { recog.stop(); } catch(e) {}
-      reject(new Error('timeout'));
-    }, 6000);
-    recog.onresult = function(e) {
-      if (done) return; done = true; clearTimeout(timeoutId);
-      resolve(e.results[0][0].transcript);
-    };
-    recog.onerror = function(e) {
-      if (done) return; done = true; clearTimeout(timeoutId);
-      reject(e);
-    };
-    recog.onend = function() {
-      if (!done) { done = true; clearTimeout(timeoutId); reject(new Error('no result')); }
-    };
-    try { recog.start(); } catch(e) { reject(e); }
-  });
-}
 
 // 第 2 层：阿里云 FC 代理（百度→讯飞），发送 PCM base64
 async function callAliyunFcProxy(audioBlob) {
@@ -5779,91 +5177,6 @@ async function tryFunasrWithBlob(webmBlob) {
   });
 }
 
-async function startVoiceWithFallback() {
-  // 如果正在录音/识别，再次点击则取消
-  if (typeof _isRecording !== 'undefined' && _isRecording) {
-    if (typeof stopRecordingMode === 'function') stopRecordingMode();
-    return;
-  }
-
-  var micBtn = document.getElementById('micBtn');
-  if (!micBtn) return;
-
-  // ─── 第 1 层：Google Web Speech（实时，最直接） ───
-  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (SR) {
-    if (typeof showStatus === 'function') showStatus('listening', '正在听，请说出节目名...');
-    micBtn.classList.add('listening');
-    micBtn.innerHTML = '&#9724; 停止';
-    try {
-      var text = await tryGoogleRecognition();
-      micBtn.classList.remove('listening');
-      micBtn.innerHTML = '&#127908;<span class="ripple"></span>';
-      if (applyRecognitionResult(text)) return;
-    } catch(e) {
-      console.log('Google 识别失败:', e.message || e.error);
-      micBtn.classList.remove('listening');
-      micBtn.innerHTML = '&#127908;<span class="ripple"></span>';
-    }
-  }
-
-  // ─── Google 失败 → 录音 5 秒，走 FC 代理/FunASR ───
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    if (typeof showStatus === 'function') showStatus('result', '语音识别不可用，请打字输入节目名');
-    return;
-  }
-
-  var stream, mediaRecorder, chunks = [];
-  try {
-    micBtn.classList.add('listening');
-    micBtn.innerHTML = '&#9724; 停止';
-    if (typeof showStatus === 'function') showStatus('listening', '正在录音，请说出节目名（5 秒自动结束）...');
-
-    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
-    mediaRecorder.ondataavailable = function(e) { if (e.data.size > 0) chunks.push(e.data); };
-
-    mediaRecorder.start();
-    await new Promise(function(r) { setTimeout(r, 5000); });
-    if (mediaRecorder.state === 'recording') mediaRecorder.stop();
-    await new Promise(function(r) { mediaRecorder.onstop = r; });
-    stream.getTracks().forEach(function(t) { t.stop(); });
-
-    micBtn.classList.remove('listening');
-    micBtn.innerHTML = '&#127908;<span class="ripple"></span>';
-
-    if (chunks.length === 0) {
-      if (typeof showStatus === 'function') showStatus('result', '录音失败，请重试或打字输入');
-      return;
-    }
-
-    var blob = new Blob(chunks, { type: 'audio/webm' });
-
-    // ─── 第 2 层：阿里云 FC（百度→讯飞），PCM 格式 ───
-    if (typeof showStatus === 'function') showStatus('listening', '正在识别（百度/讯飞）...');
-    var text2 = null;
-    try {
-      text2 = await callAliyunFcProxy(blob);
-      if (applyRecognitionResult(text2)) return;
-    } catch(e) { console.log('FC 代理不可用:', e.message); }
-
-    // ─── 第 3 层：FunASR ───
-    if (typeof showStatus === 'function') showStatus('listening', '正在识别（FunASR）...');
-    try {
-      var text3 = await tryFunasrWithBlob(blob);
-      if (applyRecognitionResult(text3)) return;
-    } catch(e) { console.log('FunASR 不可用:', e.message); }
-
-    // ─── 全部失败 ───
-    if (typeof showStatus === 'function') showStatus('result', '语音识别暂时不可用，请打字输入节目名');
-
-  } catch(e) {
-    micBtn.classList.remove('listening');
-    micBtn.innerHTML = '&#127908;<span class="ripple"></span>';
-    if (stream) stream.getTracks().forEach(function(t) { t.stop(); });
-    if (typeof showStatus === 'function') showStatus('result', '录音出错，请打字输入节目名');
-  }
-}
 </script>
 
 
