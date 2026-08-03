@@ -1446,13 +1446,13 @@ input[type="text"], input[type="search"], textarea { font-size: clamp(22px, 5vw,
   <div class="voice-section">
     <div class="lang-selector">
       <label>&#127760; 选择语言：</label>
-      <button class="lang-btn active" data-lang="puxianhua">莆仙话</button>
+      <button class="lang-btn active" data-lang="puxianhua">莆仙话（实验版）</button>
       <button class="lang-btn" data-lang="minnanhua">闽南话</button>
       <button class="lang-btn" data-lang="chinese">中文</button>
       <span class="lang-hint" id="langHint">语音请用普通话读戏名</span>
     </div>
     <div class="input-area">
-      <input type="text" class="text-input" id="userInput" placeholder="用莆仙话说戏名、节目名..." />
+      <input type="text" class="text-input" id="userInput" placeholder="用莆仙话说戏名、节目名... [实验版]" />
       <button class="mic-btn" id="micBtn" title="按住说话">
         &#127908;
         <span class="ripple"></span>
@@ -3459,9 +3459,9 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
       if (flowHeader) flowHeader.innerHTML = '&#127760; 闽南话翻译流程';
       langHint.textContent = '语音请用普通话读戏名';
     } else {
-      userInput.placeholder = '用莆仙话说戏名、节目名...';
-      if (flowHeader) flowHeader.innerHTML = '&#127760; 莆仙话翻译流程';
-      langHint.textContent = '语音请用普通话读戏名';
+      userInput.placeholder = '用莆仙话说戏名、节目名... [实验版]';
+      if (flowHeader) flowHeader.innerHTML = '&#127760; 莆仙话识别实验版（普通话识别 → 莆仙话词典匹配）';
+      langHint.textContent = '⚠ 实验版：当前为普通话识别 + 莆仙话词典匹配，莆仙话独立ASR待接入';
     }
     // 同步更新语音识别语言
     if (recognition) {
@@ -3748,47 +3748,17 @@ async function startVoiceWithFallback() {
 
     var blob = new Blob(chunks, { type: 'audio/webm' });
 
-    // ─── 第 1 层：阿里云 FC（百度→讯飞），国内优先 ───
-    if (typeof showStatus === 'function') showStatus('listening', '正在识别（百度/讯飞）...');
-    try {
-      var text = await callAliyunFcProxy(blob);
-      if (text && text.trim()) {
-        if (typeof applyRecognitionResult === 'function') applyRecognitionResult(text);
-        return;
-      }
-    } catch(e) { console.log('FC 不可用:', e.message); }
-
-    // ─── 第 2 层：FunASR 容器 ───
-    if (typeof showStatus === 'function') showStatus('listening', '正在识别（FunASR）...');
-    try {
-      var text2 = await tryFunasrWithBlob(blob);
-      if (text2 && text2.trim()) {
-        if (typeof applyRecognitionResult === 'function') applyRecognitionResult(text2);
-        return;
-      }
-    } catch(e) { console.log('FunASR 不可用:', e.message); }
-
-    // ─── 第 3 层：Google Web Speech（备选，国外/VPN 可用）───
-    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SR) {
-      if (typeof showStatus === 'function') showStatus('listening', '正在识别（Google）...');
-      try {
-        var text3 = await new Promise(function(resolve, reject) {
-          var rec = new SR();
-          rec.lang = 'zh-CN';
-          rec.interimResults = false;
-          rec.maxAlternatives = 1;
-          var tid = setTimeout(function() { try { rec.stop(); } catch(e) {} reject(new Error('timeout')); }, 6000);
-          rec.onresult = function(e) { clearTimeout(tid); resolve(e.results[0][0].transcript); };
-          rec.onerror = function(e) { clearTimeout(tid); reject(e); };
-          rec.onend = function() { clearTimeout(tid); reject(new Error('no result')); };
-          rec.start();
-        });
-        if (text3 && text3.trim()) {
-          if (typeof applyRecognitionResult === 'function') applyRecognitionResult(text3);
-          return;
+    // ─── 走通用 Provider 链（FC→FunASR→Google；莆仙话模式+配置URL时自动插莆仙ASR到链首）───
+    var asrResult = await runASRChain(blob, {
+      onProgress: function(providerName, idx, total) {
+        if (typeof showStatus === 'function') {
+          showStatus('listening', '正在识别（' + providerName + '）...');
         }
-      } catch(e) { console.log('Google 不可用:', e.message || e.error); }
+      }
+    });
+    if (asrResult && asrResult.text) {
+      if (typeof applyRecognitionResult === 'function') applyRecognitionResult(asrResult.text);
+      return;
     }
 
     // ─── 全部失败 ───
@@ -3834,47 +3804,12 @@ async function startSmartVoiceRecognition(options) {
 
     var blob = new Blob(chunks, { type: 'audio/webm' });
 
-    // 第 1 层：FC 百度/讯飞
-    try {
-      var text = await callAliyunFcProxy(blob);
-      if (text && text.trim()) {
-        onResult(text, false);
-        onDone(text);
-        return;
-      }
-    } catch(e) { console.log('SmartVoice FC error:', e.message); }
-
-    // 第 2 层：FunASR
-    try {
-      var text2 = await tryFunasrWithBlob(blob);
-      if (text2 && text2.trim()) {
-        onResult(text2, false);
-        onDone(text2);
-        return;
-      }
-    } catch(e) { console.log('SmartVoice FunASR error:', e.message); }
-
-    // 第 3 层：Google Web Speech
-    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SR) {
-      try {
-        var text3 = await new Promise(function(resolve, reject) {
-          var rec = new SR();
-          rec.lang = 'zh-CN';
-          rec.interimResults = false;
-          rec.maxAlternatives = 1;
-          var tid = setTimeout(function() { try { rec.stop(); } catch(e) {} reject(new Error('timeout')); }, 6000);
-          rec.onresult = function(e) { clearTimeout(tid); resolve(e.results[0][0].transcript); };
-          rec.onerror = function(e) { clearTimeout(tid); reject(e); };
-          rec.onend = function() { clearTimeout(tid); reject(new Error('no result')); };
-          rec.start();
-        });
-        if (text3 && text3.trim()) {
-          onResult(text3, false);
-          onDone(text3);
-          return;
-        }
-      } catch(e) { console.log('SmartVoice Google error:', e.message || e.error); }
+    // ─── 走通用 Provider 链（行为与旧版一致：FC→FunASR→Google）───
+    var asrResult = await runASRChain(blob);
+    if (asrResult && asrResult.text) {
+      onResult(asrResult.text, false);
+      onDone(asrResult.text);
+      return;
     }
 
     onError('语音识别暂时不可用，请直接打字输入');
@@ -5116,6 +5051,148 @@ if (origTranslateMinnan) {
 // 请在部署阿里云 FC 后，将下面的地址替换为实际地址
 const FC_PROXY_URL = 'https://ama-channel-qtsdkdknbc.cn-shanghai.fcapp.run';
 const FC_FUNASR_URL = 'wss://funasr-igkajrakfs.cn-shanghai.fcapp.run';
+
+// ===== Puxian Dialect ASR 预留配置（API 未完成时保持空字符串即可）=====
+// 以后接入独立的 puxian-dialect-asr API 时填入实际 URL
+const PUXIAN_ASR_API_URL = '';
+// API 版本号（预留，对接时按实际修改）
+const PUXIAN_ASR_API_VERSION = 'v1';
+// 请求超时（毫秒）
+const PUXIAN_ASR_TIMEOUT = 10000;
+
+// =============================================
+// ASR Provider 可切换抽象层（为后续接入 Puxian Dialect ASR 做准备）
+// =============================================
+const ASRProviders = Object.freeze({
+  FC_BAIDU_XUNFEI: 'fc_baidu_xunfei',   // 现有：阿里云 FC（百度→讯飞降级）
+  FUNASR: 'funasr',                     // 现有：FunASR WebSocket
+  GOOGLE_WEBSPEECH: 'google_webspeech', // 现有：浏览器内置 Web Speech
+  PUXIAN_DIALECT_ASR: 'puxian_asr'      // 预留：莆仙话独立 ASR API
+});
+
+// 默认 Provider 执行链（顺序 = 优先级从高到低，失败自动走下一个）
+// 说明：PUXIAN_DIALECT_ASR 默认不加入默认链，只有 PUXIAN_ASR_API_URL 配置后且当前为
+//       莆仙话模式时，才会在 runASRChain 内部动态插入到链首
+let activeASRChain = [
+  ASRProviders.FC_BAIDU_XUNFEI,
+  ASRProviders.FUNASR,
+  ASRProviders.GOOGLE_WEBSPEECH
+];
+
+// Provider → 中文显示名（用于 showStatus 提示）
+const ASRProviderNames = {
+  [ASRProviders.FC_BAIDU_XUNFEI]: '百度/讯飞',
+  [ASRProviders.FUNASR]: 'FunASR',
+  [ASRProviders.GOOGLE_WEBSPEECH]: 'Google',
+  [ASRProviders.PUXIAN_DIALECT_ASR]: '莆仙话ASR(实验)'
+};
+
+// ---- Provider 实现 ----
+// Google Web Speech 封装成与其他 Provider 相同的 async (blob) => text 接口
+async function tryGoogleWebSpeech(audioBlob) {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) throw new Error('WEBSPEECH_NOT_SUPPORTED');
+  return await new Promise(function(resolve, reject) {
+    var rec = new SR();
+    rec.lang = 'zh-CN';
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    var tid = setTimeout(function() { try { rec.stop(); } catch(e) {} reject(new Error('timeout')); }, 6000);
+    rec.onresult = function(e) { clearTimeout(tid); resolve(e.results[0][0].transcript); };
+    rec.onerror = function(e) { clearTimeout(tid); reject(e); };
+    rec.onend = function() { clearTimeout(tid); reject(new Error('no result')); };
+    // 注意：Web Speech API 不接受 blob，它通过麦克风实时采集；这里的 blob 参数忽略，
+    // 但保留接口统一，调用时会重新触发一次麦克风采集（行为与旧版一致）
+    try { rec.start(); } catch(e) { clearTimeout(tid); reject(e); }
+  });
+}
+
+// 预留：莆仙话方言 ASR Provider（API 未完成时直接抛错，走下一个降级）
+async function callPuxianDialectASR(audioBlob) {
+  if (!PUXIAN_ASR_API_URL) {
+    throw new Error('PUXIAN_ASR_API_NOT_CONFIGURED');
+  }
+  var pcmBase64;
+  try {
+    pcmBase64 = await webmToPcmBase64(audioBlob);
+  } catch(e) {
+    throw new Error('PUXIAN_PCM_CONVERT_FAILED');
+  }
+  try {
+    var resp = await fetch(PUXIAN_ASR_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        audio_base64: pcmBase64,
+        format: 'pcm',
+        dialect: 'puxian',
+        version: PUXIAN_ASR_API_VERSION
+      }),
+      signal: AbortSignal && AbortSignal.timeout ? AbortSignal.timeout(PUXIAN_ASR_TIMEOUT) : undefined
+    });
+    var data = await resp.json();
+    if (data && (data.error || data.err_msg)) throw new Error(data.error || data.err_msg);
+    var t = (data && (data.text || data.result)) ? (data.text || data.result) : '';
+    if (typeof t === 'object' && Array.isArray(t)) t = t[0] || '';
+    if (!t || !String(t).trim()) throw new Error('PUXIAN_EMPTY_RESULT');
+    return String(t).trim();
+  } catch(e) {
+    if (e && e.name === 'AbortError') throw new Error('PUXIAN_TIMEOUT');
+    throw e;
+  }
+}
+
+// Provider 注册表：每个 Provider 都必须是 async (blob) => string|null 接口
+const ASRProviderImpl = {
+  [ASRProviders.FC_BAIDU_XUNFEI]: callAliyunFcProxy,
+  [ASRProviders.FUNASR]: tryFunasrWithBlob,
+  [ASRProviders.GOOGLE_WEBSPEECH]: tryGoogleWebSpeech,
+  [ASRProviders.PUXIAN_DIALECT_ASR]: callPuxianDialectASR
+};
+
+/**
+ * 通用 ASR 链式执行器：按顺序尝试 Provider，第一个成功返回非空文本即结束
+ * @param {Blob} audioBlob - webm/opus 录音 Blob
+ * @param {Object} [opts] - 可选参数
+ * @param {string[]} [opts.overrideChain] - 覆盖默认执行链
+ * @param {Function} [opts.onProgress] - (providerName, index, total) => void，每个 Provider 开始前回调
+ * @returns {Promise<{text:string, provider:string}|null>} 成功返回 {text, provider}，全部失败返回 null
+ */
+async function runASRChain(audioBlob, opts) {
+  opts = opts || {};
+  // 1. 构建本次实际执行链
+  var chain = (opts.overrideChain && opts.overrideChain.length) ? opts.overrideChain.slice() : activeASRChain.slice();
+  // 2. 莆仙话模式 + 已配置 PUXIAN_ASR_API_URL → 自动把 PuxianASR 插到链首
+  if (typeof currentLang !== 'undefined' && currentLang === 'puxianhua' && PUXIAN_ASR_API_URL) {
+    if (chain.indexOf(ASRProviders.PUXIAN_DIALECT_ASR) === -1) {
+      chain.unshift(ASRProviders.PUXIAN_DIALECT_ASR);
+    }
+  }
+  var total = chain.length;
+  for (var i = 0; i < total; i++) {
+    var p = chain[i];
+    var impl = ASRProviderImpl[p];
+    if (!impl) {
+      console.log('[ASR] 跳过未知 Provider:', p);
+      continue;
+    }
+    if (typeof opts.onProgress === 'function') {
+      opts.onProgress(ASRProviderNames[p] || p, i, total);
+    }
+    try {
+      var result = await impl(audioBlob);
+      if (result && String(result).trim()) {
+        var text = String(result).trim();
+        console.log('[ASR] Provider ' + p + ' 成功:', text);
+        return { text: text, provider: p };
+      }
+    } catch(e) {
+      var msg = (e && e.message) ? e.message : String(e);
+      console.log('[ASR] Provider ' + p + ' 失败:', msg);
+    }
+  }
+  return null;
+}
 
 // 将识别结果填入搜索框并触发搜索
 function applyRecognitionResult(text) {
