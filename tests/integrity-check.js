@@ -382,6 +382,316 @@ section('[8] 密钥 / Token 安全检查（前端零密钥）');
   }
 }
 
+section('[9] 搜索词规范化幂等性回归（方言翻译 + normalizeSpokenQuery）');
+{
+  // ---- 从 HTML 中提取 operaDB、puxianDict、minnanDict、spokenAliasMap、四个规范化函数 ----
+  function extractConst(name) {
+    const re = new RegExp('const\\s+' + name + '\\s*=\\s*', 'g');
+    const matches = [];
+    let mm;
+    while ((mm = re.exec(HTML)) !== null) matches.push(mm.index);
+    if (matches.length === 0) throw new Error('找不到 const ' + name + ' = ... 的起始位置');
+    const startIdx = matches[0];
+    const afterEq = HTML.indexOf('=', startIdx) + 1;
+    // 找到对应终止符（[ 或 { 的匹配对）
+    let i = afterEq;
+    while (i < HTML.length && /\s/.test(HTML[i])) i++;
+    const open = HTML[i];
+    const close = open === '{' ? '}' : (open === '[' ? ']' : null);
+    if (!close) throw new Error('const ' + name + ' 非对象/数组');
+    let depth = 1, j = i + 1, inStr = null, escape = false;
+    for (; j < HTML.length; j++) {
+      const c = HTML[j];
+      if (inStr) {
+        if (escape) escape = false;
+        else if (c === '\\') escape = true;
+        else if (c === inStr) inStr = null;
+        continue;
+      }
+      if (c === '"' || c === "'" || c === '`') { inStr = c; continue; }
+      if (c === open) depth++;
+      else if (c === close) { depth--; if (depth === 0) break; }
+    }
+    const body = HTML.substring(i, j + 1);
+    const vm = require('vm');
+    const ctx = { module: { exports: {} }, exports: {} };
+    vm.createContext(ctx);
+    const code = 'var ' + name + ' = ' + body + '; module.exports = ' + name + ';';
+    vm.runInContext(code, ctx);
+    return ctx.module.exports;
+  }
+
+  function extractFunction(fname) {
+    const re = new RegExp('function\\s+' + fname + '\\s*\\(', 'g');
+    const matches = [];
+    let mm;
+    while ((mm = re.exec(HTML)) !== null) matches.push(mm.index);
+    if (matches.length === 0) throw new Error('找不到 function ' + fname);
+    const startIdx = matches[0];
+    // 找到函数开 {
+    let i = startIdx;
+    while (i < HTML.length && HTML[i] !== '{') i++;
+    if (i >= HTML.length) throw new Error('function ' + fname + ' 无开括号');
+    let depth = 1, j = i + 1, inStr = null, escape = false;
+    for (; j < HTML.length; j++) {
+      const c = HTML[j];
+      if (inStr) {
+        if (escape) escape = false;
+        else if (c === '\\') escape = true;
+        else if (c === inStr) inStr = null;
+        continue;
+      }
+      if (c === '"' || c === "'" || c === '`') { inStr = c; continue; }
+      if (c === '{') depth++;
+      else if (c === '}') { depth--; if (depth === 0) break; }
+    }
+    const funcSrc = HTML.substring(startIdx, j + 1);
+    return funcSrc;
+  }
+
+  const operaDB = (typeof extractOperaDB === 'function') ? extractOperaDB() : (function(){
+    const m = HTML.match(/const\s+operaDB\s*=\s*\[([\s\S]*?)\n\]\s*;/);
+    if (!m) throw new Error('找不到 operaDB');
+    const vm = require('vm');
+    const ctx = { module: { exports: {} }, exports: {} };
+    vm.createContext(ctx);
+    vm.runInContext('var operaDB = [' + m[1] + '\n]; module.exports = operaDB;', ctx);
+    return ctx.module.exports;
+  })();
+
+  const puxianDict = extractConst('puxianDict');
+  const minnanDict = extractConst('minnanDict');
+
+  // 构造 canonicalSet（从 operaDB 动态）+ maxTitleLen
+  const canonicalSet = new Set(operaDB.filter(o => !o.hidden && o.title).map(o => String(o.title)));
+  const titles = [...canonicalSet];
+  const maxTitleLen = Math.max(...titles.map(t => t.length));
+  check(`规范节目名集合 = ${titles.length} 个，程序计算的最大标题长度 = ${maxTitleLen}`,
+    titles.length > 0 && maxTitleLen > 0,
+    `最长标题: ` + titles.reduce((a, b) => a.length > b.length ? a : b, '') + ` (${maxTitleLen} 字符)`);
+
+  // ---- 提取辅助函数 _buildCanonicalSet _cleanRawInput _resolveOnce _getSpokenAliasMap 和 3 个目标函数 ----
+  // 简化：直接把函数体取出后在 vm 中组装
+  const vm = require('vm');
+  const sandbox = { window: {}, Set: Set, Object: Object, String: String, Math: Math, operaDB: operaDB, puxianDict: puxianDict, minnanDict: minnanDict };
+  vm.createContext(sandbox);
+  const helperFns = ['_buildCanonicalSet','_cleanRawInput','_cleanForSearchStart','_resolveOnce','_getSpokenAliasMap',
+                      'translateMinnan','translatePuxian','normalizeSpokenQuery'];
+  const fnSrcBundle = helperFns.map(extractFunction).join('\n\n');
+  // operaDB 等上面的 sandbox 已经提供
+  vm.runInContext(fnSrcBundle, sandbox);
+
+  const translatePuxian = sandbox.translatePuxian;
+  const translateMinnan = sandbox.translateMinnan;
+  const normalizeSpokenQuery = sandbox.normalizeSpokenQuery;
+
+  // 重点词（用户指定 10 个）+ 所有规范节目名
+  const keyWords = ['春草闯堂','春草闯唐','梁山伯','祝英台','三国','水浒','西游','射雕','英雄','猪八戒'];
+  const allInputs = [...new Set([...keyWords, ...titles])];
+
+  // 9A: normalizeSpokenQuery 幂等
+  let badNSQ = 0;
+  allInputs.forEach(w => {
+    const f1 = normalizeSpokenQuery(w);
+    const f2 = normalizeSpokenQuery(f1);
+    const f3 = normalizeSpokenQuery(f2);
+    if (f1 !== f2 || f2 !== f3 || String(f1).length > maxTitleLen) badNSQ++;
+  });
+  check(`[9A] normalizeSpokenQuery(${allInputs.length} 个输入) 幂等 f(f(x))=f(x) 且长度≤最大标题长度`,
+    badNSQ === 0, `失败数量=${badNSQ}`);
+
+  // 9B: translatePuxian 幂等（方言函数返回 {translated,changed}）
+  let badPu = 0;
+  allInputs.forEach(w => {
+    const f1 = translatePuxian(w).translated;
+    const f2 = translatePuxian(f1).translated;
+    const f3 = translatePuxian(f2).translated;
+    if (f1 !== f2 || f2 !== f3 || String(f1).length > maxTitleLen) badPu++;
+  });
+  check(`[9B] translatePuxian(${allInputs.length} 个输入) 幂等 且长度≤最大标题长度`,
+    badPu === 0, `失败数量=${badPu}`);
+
+  // 9C: translateMinnan 幂等
+  let badMn = 0;
+  allInputs.forEach(w => {
+    const f1 = translateMinnan(w).translated;
+    const f2 = translateMinnan(f1).translated;
+    const f3 = translateMinnan(f2).translated;
+    if (f1 !== f2 || f2 !== f3 || String(f1).length > maxTitleLen) badMn++;
+  });
+  check(`[9C] translateMinnan(${allInputs.length} 个输入) 幂等 且长度≤最大标题长度`,
+    badMn === 0, `失败数量=${badMn}`);
+
+  // 9D: 对 10 个重点词，三种 currentLang 模式下，buildSearchCandidates 的 candidates[0] 首项在 f→ff→fff 下不增长
+  // 组装 buildSearchCandidates（需要 getTranslatedSearchText）
+  const fnSrcExtra = ['getTranslatedSearchText','buildSearchCandidates','toPinyinApprox','getPronunciationVariants','minnanPronunciationDict','puxianPronunciationDict']
+    .filter(n => { try { extractFunction(n); return true; } catch(e) { return false; } })
+    .map(n => { try { return extractFunction(n); } catch(e) { return null; } }).filter(Boolean).join('\n\n');
+  // 需要的两个 pronunciation dict 如果是 const 形式，也提取
+  let extraDictSrc = '';
+  try {
+    const mpd = extractConst('minnanPronunciationDict');
+    const ppd = extractConst('puxianPronunciationDict');
+    extraDictSrc = 'var minnanPronunciationDict = ' + JSON.stringify(mpd) + ';\nvar puxianPronunciationDict = ' + JSON.stringify(ppd) + ';';
+  } catch(e) {}
+  if (fnSrcExtra) {
+    vm.runInContext(extraDictSrc + '\n' + fnSrcExtra, sandbox);
+    const buildSC = sandbox.buildSearchCandidates;
+    if (typeof buildSC === 'function') {
+      const langs = ['chinese','puxianhua','minnanhua'];
+      let badTri = 0;
+      langs.forEach(L => {
+        sandbox.currentLang = L;
+        keyWords.forEach(w => {
+          const c1 = buildSC(w)[0];
+          const c2 = buildSC(c1)[0];
+          const c3 = buildSC(c2)[0];
+          if (String(c1).length !== String(c2).length || String(c2).length !== String(c3).length) badTri++;
+        });
+      });
+      check(`[9D] 三语言 × 10 重点词 candidates[0] 连续三轮长度稳定`,
+        badTri === 0, `失败数量=${badTri}`);
+    }
+  }
+
+  // 9E: 已确认的 2 个爆炸案例输入输出长度上限
+  const explodeCases = [
+    ['春草闯唐', '春草闯堂'],
+    ['梁山伯',   '梁山伯与祝英台'],
+    ['祝英台',   '梁山伯与祝英台'],
+    ['三国',     '三国演义'],
+    ['水浒',     '水浒传'],
+    ['西游',     '西游记'],
+    ['射雕',     '射雕英雄传'],
+    ['英雄',     '英雄儿女'],
+  ];
+  let badExp = 0;
+  explodeCases.forEach(([input, expected]) => {
+    const out = normalizeSpokenQuery(input);
+    if (String(out) !== expected) badExp++;
+    const pu = translatePuxian(input).translated;
+    const mn = translateMinnan(input).translated;
+    if (String(pu).length > maxTitleLen) badExp++;
+    if (String(mn).length > maxTitleLen) badExp++;
+  });
+  check(`[9E] 8 个已确认别名 → 规范名映射正确 & 方言翻译长度不超过上限`,
+    badExp === 0, `失败数量=${badExp}`);
+
+  // 9F: 跨词典别名冲突精确白名单扫描
+  // 规则：扫描 puxianDict / minnanDict / spokenAliasMap 三张表中，
+  // 同一个别名 key（value 都是规范节目名）在 ≥2 张表中映射到不同节目的情况。
+  // 除精确白名单外，其他任何冲突都必须使测试失败。
+  // 白名单同时断言两个目标值都是规范节目名，防止节目库变动后白名单静默失效。
+  {
+    function mkCollect(dict, label, canonicalSet) {
+      const out = {};
+      Object.entries(dict || {}).forEach(([k, v]) => {
+        if (typeof v !== 'string') return;
+        if (!canonicalSet.has(v)) return; // 只统计"别名→规范节目名"的条目，方言普通词跳过
+        (out[k] = out[k] || []).push({ label, value: v });
+      });
+      return out;
+    }
+    // 从已提取的三表构造（sandbox 中 spokenAliasMap 已通过 _getSpokenAliasMap 注册，取 window 上的）
+    const spokenMapExtracted = sandbox.window.__spokenAliasMap || (function(){
+      // 兜底：若 sandbox.window 上尚未缓存，按 m['x']='y' 模式从 index.html 重新解析 spokenAliasMap
+      const fnStart = HTML.search(/function\s+_getSpokenAliasMap\s*\(\s*\)\s*\{/);
+      if (fnStart < 0) return {};
+      let depth = 0, start = -1, i = fnStart;
+      while (i < HTML.length) {
+        if (HTML[i] === '{') { depth++; if (start<0) start = i; }
+        else if (HTML[i] === '}') { depth--; if (start>0 && depth===0) break; }
+        i++;
+      }
+      const fnBody = HTML.substring(start+1, i);
+      const out = {};
+      const re = /m\s*\[\s*(['"`])(.*?)\1\s*\]\s*=\s*(['"`])(.*?)\3\s*;/g;
+      let mm; while ((mm = re.exec(fnBody)) !== null) out[mm[2]] = mm[4];
+      return out;
+    })();
+    const pu = mkCollect(puxianDict, 'puxianDict', canonicalSet);
+    const mn = mkCollect(minnanDict, 'minnanDict', canonicalSet);
+    const sp = mkCollect(spokenMapExtracted, 'spokenAliasMap', canonicalSet);
+    const merged = {};
+    [pu, mn, sp].forEach(col => Object.entries(col).forEach(([k, list]) => {
+      merged[k] = (merged[k] || []).concat(list);
+    }));
+    const conflicts = [];
+    Object.entries(merged).forEach(([key, list]) => {
+      const sources = new Set(list.map(x=>x.label));
+      const values  = new Set(list.map(x=>x.value));
+      if (sources.size >= 2 && values.size >= 2) {
+        conflicts.push({
+          key,
+          sources: [...sources].sort(),
+          values:  [...values].sort(),
+          bySource: list.slice().sort((a,b)=>a.label.localeCompare(b.label))
+        });
+      }
+    });
+    // 精确白名单：唯一允许的 1 条冲突（调用链路分离，不构成歧义）
+    //   别名   = 状元
+    //   来源   = minnanDict / puxianDict / spokenAliasMap
+    //   映射值 = 吕蒙正 / 状元与乞丐
+    //   理由   = puxianDict/minnanDict 用于方言翻译链路（currentLang = puxianhua / minnanhua）；
+    //            spokenAliasMap 用于 normalizeSpokenQuery 中文/语音链路。两条链路在运行时互斥触发，
+    //            同一请求不会同时应用两张表。因此"状元"这一别名虽然跨表映射不同节目，但不会在
+    //            同一个 aliasMap 内部自相矛盾，属于预期的分工。
+    const ALLOWED = [{
+      key: '状元',
+      sources: ['minnanDict', 'puxianDict', 'spokenAliasMap'].sort(),
+      values:  ['吕蒙正', '状元与乞丐'].sort(),
+      assertCanonical: ['吕蒙正', '状元与乞丐'], // 必须都在 canonicalSet 中
+      reason: '调用链路分离：方言翻译(currentLang=puxianhua/minnanhua)使用 puxianDict/minnanDict→吕蒙正；'
+            + 'normalizeSpokenQuery(中文/语音链路)使用 spokenAliasMap→状元与乞丐。两条链路在运行时互斥，'
+            + '同一请求不会在同一 aliasMap 内命中两次不同 value，因此不构成运行时歧义。'
+    }];
+    // 1) 断言白名单中的两个目标值都是规范节目名（避免节目库变化后白名单指向的节目已被删除/改名）
+    let badCanonical = 0;
+    ALLOWED.forEach((rule, i) => {
+      rule.assertCanonical.forEach(t => {
+        if (!canonicalSet.has(t)) {
+          console.log(`   ✗ [9F] 白名单[${i}] key="${rule.key}" 断言值 "${t}" 不在 canonicalSet，节目库可能已变更`);
+          badCanonical++;
+        }
+      });
+    });
+    check(`[9F-1] 精确白名单(${ALLOWED.length} 条)中所有断言目标值均为真实规范节目名`,
+      badCanonical === 0, `失败条目=${badCanonical}`);
+
+    // 2) 计算发现的冲突与白名单的差值
+    function matchRule(conflict, rule) {
+      if (conflict.key !== rule.key) return false;
+      if (JSON.stringify(conflict.sources) !== JSON.stringify(rule.sources)) return false;
+      if (JSON.stringify(conflict.values)  !== JSON.stringify(rule.values))  return false;
+      return true;
+    }
+    const unknown = [];
+    const matched = new Set();
+    conflicts.forEach(c => {
+      const idx = ALLOWED.findIndex(r => matchRule(c, r));
+      if (idx < 0) unknown.push(c); else matched.add(idx);
+    });
+    const unmatchedRules = ALLOWED.filter((_,i)=>!matched.has(i));
+    if (ALLOWED.length) {
+      check(`[9F-2] 精确白名单全部匹配 (${matched.size}/${ALLOWED.length})，白名单中不应有多余条目`,
+        unmatchedRules.length === 0,
+        unmatchedRules.length ? '未匹配的白名单条目：' + unmatchedRules.map(r=>`"${r.key}"->${JSON.stringify(r.values)}`).join(' | ') : '');
+    }
+    check(`[9F-3] 跨词典别名冲突 = 白名单内允许的 ${ALLOWED.length - unmatchedRules.length} 条；白名单外未知冲突 = ${unknown.length}（必须为0）`,
+      unknown.length === 0,
+      unknown.length ? ('未知冲突：' + unknown.map(c =>
+        `"${c.key}"[${c.sources.join(',')}] → ${c.values.join(' vs ')}`
+      ).join(' ； ')) : '');
+
+    // 3) 打印每条白名单的详细来源与值 + 理由（便于审计）
+    ALLOWED.forEach((rule, i) => {
+      console.log(`   · [9F] 白名单[${i}] alias="${rule.key}"  →  ${rule.sources.join(' / ')} 分别映射到 ${rule.values.join(' / ')}`);
+      console.log(`       理由：${rule.reason}`);
+    });
+  }
+}
+
 // ============================================================
 // 汇总
 // ============================================================

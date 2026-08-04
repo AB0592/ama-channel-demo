@@ -1387,164 +1387,193 @@ function getPronunciationVariants(title, lang) {
   return dict[title] || [];
 }
 
-// 闽南话翻译引擎
-function translateMinnan(input) {
-  if (!input) return { translated: '', changed: false };
-
-  const trimmed = input.trim();
-  let translated = trimmed;
-  let changed = false;
-
-  // 整句匹配
-  for (const [k, v] of Object.entries(minnanDict)) {
-    if (translated.includes(k) && k === v) continue;
-    if (translated.includes(k)) {
-      translated = translated.replaceAll(k, v);
-      if (v !== k) changed = true;
+// =============================================
+// 规范节目名解析（幂等，无 replaceAll 级联）
+// 核心：清理 → canonicalSet 短路 → 别名全等匹配一次 → 立即停止
+// =============================================
+function _buildCanonicalSet() {
+  if (!window.__canonicalSet) {
+    var s = new Set();
+    if (typeof operaDB !== 'undefined') {
+      for (var i = 0; i < operaDB.length; i++) {
+        var t = operaDB[i] && operaDB[i].title;
+        if (t) s.add(String(t));
+      }
     }
+    window.__canonicalSet = s;
   }
+  return window.__canonicalSet;
+}
 
-  // 逐字/逐词替换（按长度降序）
-  const sortedKeys = Object.keys(minnanDict).sort((a, b) => b.length - a.length);
-  for (const k of sortedKeys) {
-    if (translated.includes(k)) {
-      translated = translated.replaceAll(k, minnanDict[k]);
-      if (minnanDict[k] !== k) changed = true;
-    }
+function _cleanRawInput(input) {
+  if (input == null) return '';
+  return String(input)
+    .replace(/[，。！？、,.!?；;：:\s]/g, '')
+    .replace(/^(阿嬷|阿妈|奶奶|外婆|老人家)?(我想|我要|我爱|想要|想|要|帮我|给我|替我|请帮我|请给我)?(看一下|听一下|看|听|播放|放一下|放|打开|找一下|找|点播|点一下|点)?/g, '')
+    .replace(/(这个|一下|看看|听听|节目|视频|音频)$/g, '')
+    .trim();
+}
+
+function _cleanForSearchStart(input) {
+  if (input == null) return '';
+  return String(input)
+    .replace(/^(我要看|我想看|我要听|我想听|帮我找|帮我搜|帮我放|播放一下|给我放|我要播|我想播|请播|请放|搜索|查找|播放|播一下|放一下|来点|来一个|有没有|有没有什么|什么是|给我来|给我整个|整个|来个)\s*/, '')
+    .replace(/\s*(节目|电视|戏曲|戏|电影|音乐|歌|歌曲|视频|片子|片)$/, '')
+    .trim();
+}
+
+function _resolveOnce(text, aliasMap, canonicalSet) {
+  // 规则：
+  // 1) 已经是规范节目名 → 原样返回（幂等）
+  if (canonicalSet.has(text)) return text;
+  // 2) 整个输入全等匹配到别名 → 只映射一次，立即停止
+  if (Object.prototype.hasOwnProperty.call(aliasMap, text)) {
+    var mapped = aliasMap[text];
+    // 若别名映射的目标是节目规范名，直接返回；否则按映射值返回（不再递归）
+    if (canonicalSet.has(mapped)) return mapped;
+    // 非节目的别名（方言普通词）保持全等替换一次
+    return mapped;
   }
-
-  return { translated: translated.trim(), changed };
+  // 3) 否则不做任何子串拆分
+  return text;
 }
 
 // =============================================
-// 莆仙话翻译引擎
+// 闽南话翻译引擎（幂等版）
+// =============================================
+function translateMinnan(input) {
+  if (!input) return { translated: '', changed: false };
+
+  var trimmed = String(input).trim();
+  var canonicalSet = _buildCanonicalSet();
+  var cleaned = _cleanRawInput(trimmed);
+
+  var out;
+  if (canonicalSet.has(cleaned)) {
+    out = cleaned;
+  } else {
+    out = _resolveOnce(cleaned, minnanDict, canonicalSet);
+  }
+
+  var changed = (out !== cleaned);
+  return { translated: out, changed: changed };
+}
+
+// =============================================
+// =============================================
+// 莆仙话翻译引擎（幂等版）
 // =============================================
 function translatePuxian(input) {
   if (!input) return { translated: '', changed: false };
 
-  const trimmed = input.trim();
-  let translated = trimmed;
-  let changed = false;
+  var trimmed = String(input).trim();
+  var canonicalSet = _buildCanonicalSet();
+  var cleaned = _cleanRawInput(trimmed);
 
-  // 第一优先：整句匹配
-  for (const [k, v] of Object.entries(puxianDict)) {
-    if (translated.includes(k) && k === v) continue;
-    if (translated.includes(k)) {
-      translated = translated.replaceAll(k, v);
-      if (v !== k) changed = true;
-    }
+  var out;
+  if (canonicalSet.has(cleaned)) {
+    out = cleaned;
+  } else {
+    out = _resolveOnce(cleaned, puxianDict, canonicalSet);
   }
 
-  // 第二优先：逐字/逐词替换（按长度降序，避免短词覆盖长词）
-  const sortedKeys = Object.keys(puxianDict).sort((a, b) => b.length - a.length);
-  for (const k of sortedKeys) {
-    if (translated.includes(k)) {
-      translated = translated.replaceAll(k, puxianDict[k]);
-      if (puxianDict[k] !== k) changed = true;
-    }
-  }
+  var changed = (out !== cleaned);
+  return { translated: out, changed: changed };
+}
 
-  return { translated: translated.trim(), changed };
+// 把 fullNameFixes + shortNameFixes 合并为单一别名映射表（供 normalizeSpokenQuery 使用）
+// 缓存到 window.__spokenAliasMap 避免每轮 Object.keys 构造
+function _getSpokenAliasMap() {
+  if (!window.__spokenAliasMap) {
+    // 注意：以下映射表必须与原 fullNameFixes/shortNameFixes 的 key/value 集合一一对应
+    // 但不做 replaceAll，只做全等匹配
+    var m = Object.create(null);
+
+    // ---- fullNameFixes ----
+    // 莆仙戏
+    m['新品类'] = '新亭泪'; m['新品泪'] = '新亭泪'; m['新平泪'] = '新亭泪';
+    m['新听泪'] = '新亭泪'; m['新停泪'] = '新亭泪'; m['新亭类'] = '新亭泪';
+    m['新亭累'] = '新亭泪'; m['新庭泪'] = '新亭泪';
+    m['秋风词'] = '秋风辞';
+    m['状元乞丐'] = '状元与乞丐'; m['状元与乞丐'] = '状元与乞丐';
+    m['状员'] = '状元'; m['壮员'] = '状元'; m['状圆'] = '状元';
+    m['江梅飞'] = '江梅妃'; m['江美飞'] = '江梅妃';
+    m['春草闯唐'] = '春草闯堂'; m['春草闯汤'] = '春草闯堂';
+    m['春草窗堂'] = '春草闯堂';
+    // 歌仔戏
+    m['陈三五娘'] = '陈三五娘'; m['陈三无娘'] = '陈三五娘';
+    m['梁山伯'] = '梁山伯与祝英台';
+    m['祝英台'] = '梁山伯与祝英台'; m['祝影台'] = '梁山伯与祝英台';
+    m['吕蒙正'] = '吕蒙正'; m['绿蒙正'] = '吕蒙正';
+    m['薛平贵'] = '薛平贵与王宝钏'; m['王宝钏'] = '薛平贵与王宝钏';
+    m['王金龙'] = '王金龙与苏三'; m['苏三'] = '王金龙与苏三';
+    // 南音
+    m['八俊马'] = '八骏马'; m['八军马'] = '八骏马';
+    m['梅花操'] = '梅花操'; m['梅花草'] = '梅花操';
+    m['百鸟归巢'] = '百鸟归巢'; m['白鸟归巢'] = '百鸟归巢';
+    m['三千两金'] = '三千两金'; m['三钱两金'] = '三千两金';
+    m['直入花园'] = '直入花园'; m['只入花园'] = '直入花园';
+    m['小沙弥'] = '小沙弥下山'; m['小沙迷'] = '小沙弥下山';
+    m['驯猴'] = '驯猴'; m['训猴'] = '驯猴';
+    m['元宵乐'] = '元宵乐'; m['元霄乐'] = '元宵乐';
+    // 木偶戏
+    m['木偶系'] = '木偶戏'; m['木偶戏'] = '木偶戏';
+    m['大名府'] = '大名府'; m['大民府'] = '大名府';
+    m['雷文春'] = '雷文春大花';
+    m['岳飞传'] = '岳飞传'; m['岳飞'] = '岳飞传';
+    m['猪八戒'] = '猪八戒娶亲';
+    // 电视剧
+    m['射雕英雄'] = '射雕英雄传'; m['射雕'] = '射雕英雄传';
+    m['红楼梦'] = '红楼梦';
+    m['三国演义'] = '三国演义'; m['三国'] = '三国演义';
+    m['水浒传'] = '水浒传'; m['水浒'] = '水浒传';
+    m['西游记'] = '西游记'; m['西游'] = '西游记';
+    // 音乐
+    m['东方红'] = '东方红';
+    m['没有共产党'] = '没有共产党就没有新中国';
+    m['打靶归来'] = '打靶归来'; m['打把归来'] = '打靶归来';
+    m['最炫民族风'] = '最炫民族风'; m['最悬民族风'] = '最炫民族风';
+    m['小苹果'] = '小苹果';
+    // 电影
+    m['地道战'] = '地道战';
+    m['铁道游击队'] = '铁道游击队'; m['铁道'] = '铁道游击队';
+    m['英雄儿女'] = '英雄儿女'; m['英雄'] = '英雄儿女';
+    m['人到中年'] = '人到中年';
+    m['庐山恋'] = '庐山恋'; m['庐山'] = '庐山恋';
+
+    // ---- shortNameFixes（简称别名。cleaned 不在 canonicalSet 且未匹配上面的完整别名时，
+    // 若整个输入恰好等于以下简称，则一次性映射到规范节目名，立即停止，不再对结果做二次处理。）
+    m['春草'] = '春草闯堂';
+    m['状元'] = '状元与乞丐';
+    m['秋风'] = '秋风辞';
+    m['江梅'] = '江梅妃';
+    m['新亭'] = '新亭泪';
+
+    window.__spokenAliasMap = m;
+  }
+  return window.__spokenAliasMap;
 }
 
 function normalizeSpokenQuery(input) {
   if (!input) return '';
+  // 保留原有口语前后缀清理（与 _cleanRawInput 相同，但保持函数签名兼容）
   var text = String(input)
     .replace(/[，。！？、,.!?；;：:\s]/g, '')
     .replace(/^(阿嬷|阿妈|奶奶|外婆|老人家)?(我想|我要|我爱|想要|想|要|帮我|给我|替我|请帮我|请给我)?(看一下|听一下|看|听|播放|放一下|放|打开|找一下|找|点播|点一下|点)?/g, '')
     .replace(/(这个|一下|看看|听听|节目|视频|音频)$/g, '');
 
-  // 第一组：完整名称纠错（较长的关键词，优先匹配）
-  var fullNameFixes = {
-    // 莆仙戏
-    '新品类': '新亭泪', '新品泪': '新亭泪', '新平泪': '新亭泪',
-    '新听泪': '新亭泪', '新停泪': '新亭泪', '新亭类': '新亭泪',
-    '新亭累': '新亭泪', '新庭泪': '新亭泪',
-    '秋风词': '秋风辞',
-    '状元乞丐': '状元与乞丐', '状元与乞丐': '状元与乞丐',
-    '状员': '状元', '壮员': '状元', '状圆': '状元',
-    '江梅飞': '江梅妃', '江美飞': '江梅妃',
-    '春草闯唐': '春草闯堂', '春草闯汤': '春草闯堂',
-    '春草窗堂': '春草闯堂',
-    // 歌仔戏
-    '陈三五娘': '陈三五娘', '陈三无娘': '陈三五娘',
-    '梁山伯': '梁山伯与祝英台',
-    '祝英台': '梁山伯与祝英台', '祝影台': '梁山伯与祝英台',
-    '吕蒙正': '吕蒙正', '绿蒙正': '吕蒙正',
-    '薛平贵': '薛平贵与王宝钏', '王宝钏': '薛平贵与王宝钏',
-    '王金龙': '王金龙与苏三', '苏三': '王金龙与苏三',
-    // 南音
-    '八俊马': '八骏马', '八军马': '八骏马',
-    '梅花操': '梅花操', '梅花草': '梅花操',
-    '百鸟归巢': '百鸟归巢', '白鸟归巢': '百鸟归巢',
-    '三千两金': '三千两金', '三钱两金': '三千两金',
-    '直入花园': '直入花园', '只入花园': '直入花园',
-    '小沙弥': '小沙弥下山', '小沙迷': '小沙弥下山',
-    '驯猴': '驯猴', '训猴': '驯猴',
-    '元宵乐': '元宵乐', '元霄乐': '元宵乐',
-    // 木偶戏
-    '木偶系': '木偶戏', '木偶戏': '木偶戏',
-    '大名府': '大名府', '大民府': '大名府',
-    '雷文春': '雷文春大花',
-    '岳飞传': '岳飞传', '岳飞': '岳飞传',
-    '猪八戒': '猪八戒娶亲',
-    // 电视剧
-    '射雕英雄': '射雕英雄传', '射雕': '射雕英雄传',
-    '红楼梦': '红楼梦',
-    '三国演义': '三国演义', '三国': '三国演义',
-    '水浒传': '水浒传', '水浒': '水浒传',
-    '西游记': '西游记', '西游': '西游记',
-    // 音乐
-    '东方红': '东方红',
-    '没有共产党': '没有共产党就没有新中国',
-    '打靶归来': '打靶归来', '打把归来': '打靶归来',
-    '最炫民族风': '最炫民族风', '最悬民族风': '最炫民族风',
-    '小苹果': '小苹果',
-    // 电影
-    '地道战': '地道战',
-    '铁道游击队': '铁道游击队', '铁道': '铁道游击队',
-    '英雄儿女': '英雄儿女', '英雄': '英雄儿女',
-    '人到中年': '人到中年',
-    '庐山恋': '庐山恋', '庐山': '庐山恋'
-  };
+  var canonicalSet = _buildCanonicalSet();
+  var aliasMap = _getSpokenAliasMap();
+  var cleaned = text.trim();
 
-  // 第二组：简称扩展（仅在没有完整名称匹配时才使用）
-  var shortNameFixes = {
-    '春草': '春草闯堂',
-    '状元': '状元与乞丐',
-    '秋风': '秋风辞',
-    '江梅': '江梅妃',
-    '新亭': '新亭泪'
-  };
-
-  // 按关键词长度从长到短排序，确保长匹配优先
-  var sortedFullKeys = Object.keys(fullNameFixes).sort(function(a, b) {
-    return b.length - a.length;
-  });
-
-  var matchedFull = false;
-  for (var i = 0; i < sortedFullKeys.length; i++) {
-    var key = sortedFullKeys[i];
-    if (text.indexOf(key) !== -1) {
-      text = text.replaceAll(key, fullNameFixes[key]);
-      matchedFull = true;
-    }
+  var out;
+  if (canonicalSet.has(cleaned)) {
+    out = cleaned;
+  } else {
+    out = _resolveOnce(cleaned, aliasMap, canonicalSet);
   }
 
-  // 只有在没有完整名称匹配时，才进行简称扩展
-  if (!matchedFull) {
-    var sortedShortKeys = Object.keys(shortNameFixes).sort(function(a, b) {
-      return b.length - a.length;
-    });
-    for (var j = 0; j < sortedShortKeys.length; j++) {
-      var sKey = sortedShortKeys[j];
-      if (text.indexOf(sKey) !== -1) {
-        text = text.replaceAll(sKey, shortNameFixes[sKey]);
-      }
-    }
-  }
-
-  return text.trim();
+  return out.trim();
 }
 
 function getTranslatedSearchText(rawInput) {
