@@ -583,11 +583,14 @@ section('[9] 搜索词规范化幂等性回归（方言翻译 + normalizeSpokenQ
   // 除精确白名单外，其他任何冲突都必须使测试失败。
   // 白名单同时断言两个目标值都是规范节目名，防止节目库变动后白名单静默失效。
   {
-    function mkCollect(dict, label, canonicalSet) {
+    // === [9F] 强化：消除假通过盲区 ===
+    // 注意：mkCollect 不再先按 canonicalSet.has(v) 过滤。原因：授权【四-2/4/5】要求，
+    // 所有有效映射目标都必须是规范节目；目标缺失或非规范 → 必失败，不能跳过/只打印警告。
+    function mkCollect(dict, label) {
       const out = {};
       Object.entries(dict || {}).forEach(([k, v]) => {
         if (typeof v !== 'string') return;
-        if (!canonicalSet.has(v)) return; // 只统计"别名→规范节目名"的条目，方言普通词跳过
+        // 这里不再用 canonicalSet 过滤目标，改由 [9F-0] 统一断言。
         (out[k] = out[k] || []).push({ label, value: v });
       });
       return out;
@@ -609,9 +612,141 @@ section('[9] 搜索词规范化幂等性回归（方言翻译 + normalizeSpokenQ
       let mm; while ((mm = re.exec(fnBody)) !== null) out[mm[2]] = mm[4];
       return out;
     })();
-    const pu = mkCollect(puxianDict, 'puxianDict', canonicalSet);
-    const mn = mkCollect(minnanDict, 'minnanDict', canonicalSet);
-    const sp = mkCollect(spokenMapExtracted, 'spokenAliasMap', canonicalSet);
+    const puRaw = mkCollect(puxianDict, 'puxianDict');
+    const mnRaw = mkCollect(minnanDict, 'minnanDict');
+    const spRaw = mkCollect(spokenMapExtracted, 'spokenAliasMap');
+    // === [9F-0] 全量映射目标合法性检查（授权【四-1/2/3】）：
+    // 三张表中每一个"有效别名映射"的最终收敛目标都必须属于 canonicalSet（规范节目集合）。
+    // 不允许先用 canonicalSet.has(v) 过滤掉无效目标后再"假通过"（授权【四-4/5】）。
+    // —— 这里的关键是：别名表支持"二级链"，例如 状员→状元→状元与乞丐（最终=规范节目）。
+    //    对"直接 value ∈ canonicalSet"的条目：直接断言 value 合法。
+    //    对"value ∉ canonicalSet 但 key≠value"的条目：视为"二级别名中间值"，
+    //    做 DFS 图搜索要求最终必须能收敛到一个规范节目；若找不到路径则判失败。
+    //    "方言普通词"（key=value，通常不是节目名映射）不在别名映射链上，不纳入目标检查。
+    function classifyAndCollect(collect, canonicalSet, maxTitleLen) {
+      // out = { key: [{label, value, kind}] }  ; kind ∈ {'DIRECT','CHAIN','SKIP'}
+      const out = {};
+      Object.entries(collect).forEach(([k, list]) => {
+        list.forEach(entry => {
+          const v = entry.value;
+          if (typeof v !== 'string') return;
+          const isCanonical = canonicalSet.has(v);
+          const isReplace = (k !== v) && String(v).length <= maxTitleLen;
+          if (isCanonical) {
+            // 直接映射到规范节目 → 作为 DIRECT 条目
+            (out[k] = out[k] || []).push({ ...entry, kind: 'DIRECT' });
+          } else if (isReplace) {
+            // 替换到非规范节目 → 可能是"二级别名中间值"，需要能收敛到规范节目
+            (out[k] = out[k] || []).push({ ...entry, kind: 'CHAIN' });
+          }
+          // 否则：方言普通词（key==value 或 value过长）→ SKIP，不参与合法性断言
+        });
+      });
+      return out;
+    }
+    const puClassified = classifyAndCollect(puRaw, canonicalSet, maxTitleLen);
+    const mnClassified = classifyAndCollect(mnRaw, canonicalSet, maxTitleLen);
+    const spClassified = classifyAndCollect(spRaw, canonicalSet, maxTitleLen);
+    // 合并成一张"别名→所有可能value"的图（不区分词典，只做收敛性判断；同时为 CHAIN 条目记住 label）
+    const graph = {}; // key -> Array<{value, label, kind}>
+    function mergeIntoGraph(classified) {
+      Object.entries(classified).forEach(([k, list]) => {
+        list.forEach(e => {
+          (graph[k] = graph[k] || []).push(e);
+        });
+      });
+    }
+    mergeIntoGraph(puClassified);
+    mergeIntoGraph(mnClassified);
+    mergeIntoGraph(spClassified);
+    // DFS：给定 start，返回是否存在任意一条路径最终能到达 canonicalSet（带路径记忆避免环）
+    function convergesToCanonical(start, visitedPath, depthLimit) {
+      if (!depthLimit) depthLimit = 30; // 防御环
+      if (visitedPath.has(start)) return false; // 已在当前路径 → 环
+      const outs = graph[start];
+      if (!outs || outs.length === 0) return false;
+      visitedPath.add(start);
+      try {
+        for (const e of outs) {
+          if (canonicalSet.has(e.value)) return true;
+          if (depthLimit <= 1) continue;
+          if (convergesToCanonical(e.value, visitedPath, depthLimit - 1)) return true;
+        }
+        return false;
+      } finally {
+        visitedPath.delete(start);
+      }
+    }
+    // 收集 DIRECT + CHAIN 条目做目标合法性断言
+    const allForTargetCheck = [
+      ...Object.entries(puClassified).flatMap(([k, list]) => list.map(e => ({ key: k, ...e }))),
+      ...Object.entries(mnClassified).flatMap(([k, list]) => list.map(e => ({ key: k, ...e }))),
+      ...Object.entries(spClassified).flatMap(([k, list]) => list.map(e => ({ key: k, ...e })))
+    ];
+    let badTarget = 0;
+    allForTargetCheck.forEach(({ key, label, value, kind }) => {
+      if (kind === 'DIRECT') {
+        // DIRECT: value 应该就是规范节目；如果不是 → 直接失败（不跳过）
+        if (!canonicalSet.has(value)) {
+          console.log(`   ✗ [9F-0] ${label} 别名 "${key}" → "${value}" (DIRECT) 目标不在规范节目集合`);
+          badTarget++;
+        }
+      } else if (kind === 'CHAIN') {
+        // CHAIN: value 是中间值；要求"从 key 出发，至少有一条链路到达规范节目"
+        // （value 本身可能在其他词典里作为别名继续指向规范节目）
+        if (!convergesToCanonical(key, new Set())) {
+          console.log(`   ✗ [9F-0] ${label} 别名 "${key}" → "${value}" (CHAIN) 无法最终收敛到任何规范节目`);
+          badTarget++;
+        }
+      }
+    });
+    check(`[9F-0] 三张别名表中有效映射 DIRECT+CHAIN 共 ${allForTargetCheck.length} 条，全部可收敛到规范节目（失败=${badTarget}）`,
+      badTarget === 0, `非法映射条目=${badTarget}`);
+    // === [9F-5] 反向防护：隔离测试样例，验证"映射目标不存在 → 检测函数真的会判失败"
+    // （授权【四-11】：不改生产数据，在测试内部用隔离样例验证）
+    (function testBadTargetDetection_isolated() {
+      const fakeDict = { '不存在的别名1': '不存在的节目A', '不存在的别名2': '西游记' };
+      const fakeCollect = mkCollect(fakeDict, 'testDict');
+      const classified = classifyAndCollect(fakeCollect, canonicalSet, maxTitleLen);
+      const entries = Object.entries(classified).flatMap(([k, list]) => list.map(e => ({ key: k, ...e })));
+      let fakeBad = 0;
+      entries.forEach(({ key, label, value, kind }) => {
+        if (kind === 'DIRECT') {
+          if (!canonicalSet.has(value)) fakeBad++;
+        } else if (kind === 'CHAIN') {
+          // 简化构造：在 fakeDict 范围内图搜索（不依赖全局 graph），若全局 convergesToCanonical 能返回 false 也算检测到
+          // 这里用更严格的方式："CHAIN 且 value 不在 canonicalSet 且 value 不在 fakeCollect 中"视为无法收敛
+          const fGraph = {};
+          Object.entries(fakeCollect).forEach(([fk, flist]) => { (fGraph[fk] = []).push(...flist); });
+          function ok(s, vis) {
+            if (vis.has(s)) return false; vis.add(s);
+            const os = fGraph[s]; if (!os) return false;
+            for (const e of os) { if (canonicalSet.has(e.value)) return true; if (ok(e.value, vis)) return true; }
+            return false;
+          }
+          if (!ok(key, new Set())) fakeBad++;
+        }
+      });
+      const detected = (fakeBad >= 1);
+      check(`[9F-5] 反向防护：隔离样例中存在 1 个"目标非规范"映射，检测函数应识别到（避免假通过回归）`,
+        detected && entries.some(e => e.key === '不存在的别名1'),
+        `实际非法映射数=${fakeBad}，条目数=${entries.length}`);
+    })();
+    // 构造冲突扫描和猪八戒断言用的兼容结构 pu/mn/sp（只含 DIRECT+CHAIN，值={label,value}）
+    function stripKind(classified) {
+      const out = {};
+      Object.entries(classified).forEach(([k, list]) => {
+        list.forEach(e => {
+          if (e.kind === 'DIRECT' || e.kind === 'CHAIN') {
+            (out[k] = out[k] || []).push({ label: e.label, value: e.value });
+          }
+        });
+      });
+      return out;
+    }
+    const pu = stripKind(puClassified);
+    const mn = stripKind(mnClassified);
+    const sp = stripKind(spClassified);
     const merged = {};
     [pu, mn, sp].forEach(col => Object.entries(col).forEach(([k, list]) => {
       merged[k] = (merged[k] || []).concat(list);
@@ -658,6 +793,9 @@ section('[9] 搜索词规范化幂等性回归（方言翻译 + normalizeSpokenQ
     });
     check(`[9F-1] 精确白名单(${ALLOWED.length} 条)中所有断言目标值均为真实规范节目名`,
       badCanonical === 0, `失败条目=${badCanonical}`);
+    // === [9F-1-extra] 白名单数量只能为 1，防止未来悄悄扩展（授权【四-8】）
+    check(`[9F-1x] 精确白名单数量严格=1（当前=${ALLOWED.length}），不得自动扩展`,
+      ALLOWED.length === 1, `白名单数量=${ALLOWED.length}`);
 
     // 2) 计算发现的冲突与白名单的差值
     function matchRule(conflict, rule) {
@@ -683,6 +821,43 @@ section('[9] 搜索词规范化幂等性回归（方言翻译 + normalizeSpokenQ
       unknown.length ? ('未知冲突：' + unknown.map(c =>
         `"${c.key}"[${c.sources.join(',')}] → ${c.values.join(' vs ')}`
       ).join(' ； ')) : '');
+
+    // === [9F-4] 猪八戒专项回归断言（授权【四-10】）：三表有效映射全部指向《西游记》，
+    // 不得出现「猪八戒娶亲」；不得为「猪八戒」单独建白名单。
+    (function assertZhuBajieConsistency() {
+      const ZBJ_KEY = '猪八戒';
+      const EXPECTED = '西游记';
+      const MUST_NOT = '猪八戒娶亲';
+      // 从 pu/mn/sp 三张别名映射收集「猪八戒」对应的所有值
+      const fromThreeTables = [pu, mn, sp].flatMap(col => (col[ZBJ_KEY] || []).map(e => ({
+        source: e.label,
+        value:  e.value
+      })));
+      // 为确保 spokenAliasMap 提取函数覆盖完整，再从 sandbox.window.__spokenAliasMap 原始对象直接查
+      const rawFromSpoken = (typeof sandbox.window.__spokenAliasMap === 'object' && sandbox.window.__spokenAliasMap !== null)
+        ? sandbox.window.__spokenAliasMap[ZBJ_KEY] : undefined;
+      const valuesAll = [...fromThreeTables.map(x => x.value)];
+      if (rawFromSpoken !== undefined) valuesAll.push(rawFromSpoken);
+      const badValues = valuesAll.filter(v => v !== EXPECTED);
+      const goodCount = valuesAll.filter(v => v === EXPECTED).length;
+      // 断言：三表至少 3 个「西游记」
+      check(`[9F-4a] 猪八戒回归：三表+原始spokenAliasMap 中「猪八戒」映射全部=${EXPECTED}（至少3条有效映射）`,
+        badValues.length === 0 && goodCount >= 3,
+        `映射值集合=${JSON.stringify(valuesAll)}；异常值(≠${EXPECTED})=${JSON.stringify(badValues)}；goodCount=${goodCount}`);
+      // 反向：fromThreeTables + rawFromSpoken 中不得出现「猪八戒娶亲」
+      const hasForbidden = valuesAll.includes(MUST_NOT);
+      check(`[9F-4b] 猪八戒回归：任何有效路径都不得把「猪八戒」映射到「${MUST_NOT}」`,
+        !hasForbidden,
+        `已发现 "${MUST_NOT}" 出现在映射值中=${JSON.stringify(valuesAll)}`);
+      // 白名单中不得包含「猪八戒」
+      const zbjInWhitelist = ALLOWED.some(r => r.key === ZBJ_KEY);
+      check(`[9F-4c] 猪八戒回归：「猪八戒」没有被加入跨词典白名单（它不应该有冲突）`,
+        !zbjInWhitelist,
+        zbjInWhitelist ? '发现猪八戒在 ALLOWED 白名单中，违反方案 C 要求' : '');
+      // 打印方便审计
+      fromThreeTables.forEach(e => console.log('   · [9F-4] 猪八戒 ' + String(e.source).padEnd(16) + ' → "' + e.value + '"' + (e.value === EXPECTED ? ' ✓' : ' ✗')));
+      if (rawFromSpoken !== undefined) console.log('   · [9F-4] 猪八戒 sandbox.spoken   → "' + rawFromSpoken + '"' + (rawFromSpoken === EXPECTED ? ' ✓' : ' ✗'));
+    })();
 
     // 3) 打印每条白名单的详细来源与值 + 理由（便于审计）
     ALLOWED.forEach((rule, i) => {
