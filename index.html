@@ -30,7 +30,7 @@
       <button class="lang-btn active" data-lang="puxianhua">莆仙话（实验版）</button>
       <button class="lang-btn" data-lang="minnanhua">闽南话</button>
       <button class="lang-btn" data-lang="chinese">中文</button>
-      <span class="lang-hint" id="langHint">语音请用普通话读戏名</span>
+      <span class="lang-hint" id="langHint">⚠ 实验版：当前为普通话识别 + 莆仙话词典匹配，莆仙话独立ASR待接入</span>
     </div>
     <div class="input-area">
       <input type="text" class="text-input" id="userInput" placeholder="用莆仙话说戏名、节目名... [实验版]" />
@@ -462,8 +462,8 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
       langHint.textContent = '可直接说普通话';
     } else if (currentLang === 'minnanhua') {
       userInput.placeholder = '用闽南话说戏名、节目名...';
-      if (flowHeader) flowHeader.innerHTML = '&#127760; 闽南话翻译流程';
-      langHint.textContent = '语音请用普通话读戏名';
+      if (flowHeader) flowHeader.innerHTML = '&#127760; 闽南话语识别';
+      langHint.textContent = '可直接用闽南话说戏名';
     } else {
       userInput.placeholder = '用莆仙话说戏名、节目名... [实验版]';
       if (flowHeader) flowHeader.innerHTML = '&#127760; 莆仙话识别实验版（普通话识别 → 莆仙话词典匹配）';
@@ -2052,7 +2052,9 @@ if (origTranslateMinnan) {
 }
 
 // =============================================
-// [新增] 4 层语音识别降级（阿里云 FC 百度→讯飞 → Google → FunASR）
+// [新增] 4 层语音识别降级（阿里云 FC 百度/讯飞 → FunASR → Google）
+// 闽南话模式：FC 代理使用讯飞 accent='minnan' 进行真正的闽南语识别
+// 莆仙话模式：普通话识别 + 莆仙话词典匹配（实验版），独立ASR待接入
 // =============================================
 // 请在部署阿里云 FC 后，将下面的地址替换为实际地址
 const FC_PROXY_URL = 'https://ama-channel-qtsdkdknbc.cn-shanghai.fcapp.run';
@@ -2243,12 +2245,20 @@ async function webmToPcmBase64(webmBlob) {
 
 
 // 第 2 层：阿里云 FC 代理（百度→讯飞），发送 PCM base64
+// 闽南话模式自动发送 accent='minnan'，后端讯飞使用闽南语模型识别
 async function callAliyunFcProxy(audioBlob) {
   var pcmBase64 = await webmToPcmBase64(audioBlob);
+  // 根据 currentLang 选择 accent 参数
+  var accent = 'mandarin';
+  if (typeof currentLang !== 'undefined') {
+    if (currentLang === 'minnanhua') {
+      accent = 'minnan';
+    }
+  }
   var resp = await fetch(FC_PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ audio_base64: pcmBase64, format: 'pcm' }),
+    body: JSON.stringify({ audio_base64: pcmBase64, format: 'pcm', accent: accent }),
     signal: AbortSignal.timeout(8000)
   });
   var data = await resp.json();

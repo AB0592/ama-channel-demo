@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 阿里云 FC 3.0 Web 函数入口
-语音识别代理：百度语音 → 科大讯飞（自动降级）
+语音识别代理：支持普通话和方言识别（闽南语等）
+- 普通话模式：百度优先 → 讯飞备用
+- 方言模式：讯飞优先（支持 accent 参数）→ 百度备用（普通话降级）
 """
 import json
 import base64
@@ -88,7 +90,8 @@ def build_xunfei_url():
     authorization = base64.b64encode(authorization_origin.encode('utf-8')).decode('utf-8')
     return 'wss://%s/v2/iat?authorization=%s&date=%s&host=%s' % (host, quote(authorization, safe=''), quote(date, safe=''), host)
 
-def recognize_xunfei(audio_pcm_base64):
+def recognize_xunfei(audio_pcm_base64, accent='mandarin'):
+    """科大讯飞语音识别，accent 可选: mandarin(普通话), minnan(闽南语), cantonese(粤语), sichuanese(四川话)"""
     import asyncio
     import websockets
     ws_url = build_xunfei_url()
@@ -101,7 +104,7 @@ def recognize_xunfei(audio_pcm_base64):
                 'business': {
                     'language': 'zh_cn',
                     'domain': 'iat',
-                    'accent': 'mandarin',
+                    'accent': accent,
                     'vad_eos': 2000,
                     'dwa': 'wpgs'
                 }
@@ -182,22 +185,41 @@ def handler(event, context):
         audio_base64 = payload.get('audio_base64', '')
         if not audio_base64:
             return make_response(200, {'text': '', 'error': 'missing audio_base64'})
-        logger.info('Audio base64 len: %d' % len(audio_base64))
-        # ---- 第 1 层：百度语音 ----
-        try:
-            text = recognize_baidu(audio_base64)
-            if text and text.strip():
-                return make_response(200, {'text': text.strip(), 'provider': 'baidu'})
-        except Exception as e:
-            logger.warning('Baidu: %s' % str(e))
-        # ---- 第 2 层：科大讯飞 ----
-        if XUNFEI_APP_ID and XUNFEI_API_KEY and XUNFEI_API_SECRET:
+        # accent 参数：mandarin(默认普通话) / minnan(闽南语) / cantonese / sichuanese
+        accent = payload.get('accent', 'mandarin')
+        logger.info('Audio base64 len: %d, accent: %s' % (len(audio_base64), accent))
+
+        if accent != 'mandarin':
+            # ---- 方言模式：讯飞优先（支持方言），百度备用（仅普通话）----
+            if XUNFEI_APP_ID and XUNFEI_API_KEY and XUNFEI_API_SECRET:
+                try:
+                    text = recognize_xunfei(audio_base64, accent)
+                    if text and text.strip():
+                        return make_response(200, {'text': text.strip(), 'provider': 'xunfei', 'accent': accent})
+                except Exception as e:
+                    logger.warning('Xunfei(%s): %s' % (accent, str(e)))
+            # 百度备用（使用普通话模型，作为方言识别失败时的降级）
             try:
-                text = recognize_xunfei(audio_base64)
+                text = recognize_baidu(audio_base64)
                 if text and text.strip():
-                    return make_response(200, {'text': text.strip(), 'provider': 'xunfei'})
+                    return make_response(200, {'text': text.strip(), 'provider': 'baidu', 'accent': 'mandarin'})
             except Exception as e:
-                logger.warning('Xunfei: %s' % str(e))
+                logger.warning('Baidu: %s' % str(e))
+        else:
+            # ---- 普通话模式：百度优先，讯飞备用（保持原有逻辑）----
+            try:
+                text = recognize_baidu(audio_base64)
+                if text and text.strip():
+                    return make_response(200, {'text': text.strip(), 'provider': 'baidu', 'accent': 'mandarin'})
+            except Exception as e:
+                logger.warning('Baidu: %s' % str(e))
+            if XUNFEI_APP_ID and XUNFEI_API_KEY and XUNFEI_API_SECRET:
+                try:
+                    text = recognize_xunfei(audio_base64, 'mandarin')
+                    if text and text.strip():
+                        return make_response(200, {'text': text.strip(), 'provider': 'xunfei', 'accent': 'mandarin'})
+                except Exception as e:
+                    logger.warning('Xunfei: %s' % str(e))
         return make_response(200, {'text': '', 'error': 'all providers failed'})
     except Exception as e:
         logger.error('Handler: %s' % str(e))
