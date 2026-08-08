@@ -36,45 +36,82 @@ HOTWORDS = ("春草闯堂 状元与乞丐 江梅妃 新亭泪 秋风辞 射雕�
 # 百炼 DashScope 实时识别（paraformer-realtime-v2，带热词）
 # =============================================
 def recognize_dashscope(audio_pcm_base64):
-    """流式实时识别：PCM base64 → 文本。失败抛异常（上层降级）。"""
-    from dashscope.audio.asr import Recognition, RecognitionCallback
+    """流式实时识别：PCM base64 → 文本。手写 WebSocket 协议（零 dashscope SDK 依赖）。
+    协议逆向自 dashscope 1.26.6 源码，仅依赖纯 Python 的 websockets 库，无 .so 二进制。
+    失败抛异常（上层降级）。
+    """
+    import asyncio
+    import uuid
+    import websockets
     if not DASHSCOPE_API_KEY:
         raise Exception('DASHSCOPE_API_KEY missing')
     pcm = base64.b64decode(audio_pcm_base64)
-    out = []
+    ws_url = 'wss://dashscope.aliyuncs.com/api-ws/v1/inference'
 
-    class _CB(RecognitionCallback):
-        def on_error(self, result):
-            logger.warning('DashScope error: %s' % str(result)[:200])
+    async def _ws():
+        task_id = uuid.uuid4().hex
+        out = []
+        async with websockets.connect(
+            ws_url,
+            additional_headers={'Authorization': 'Bearer ' + DASHSCOPE_API_KEY},
+            max_size=None,
+            close_timeout=5,
+        ) as ws:
+            # 1. 启动任务
+            start = {
+                'header': {'action': 'run-task', 'task_id': task_id, 'streaming': 'duplex'},
+                'payload': {
+                    'model': 'paraformer-realtime-v2',
+                    'task_group': 'audio',
+                    'task': 'asr',
+                    'function': 'recognition',
+                    'parameters': {'format': 'pcm', 'sample_rate': 16000},
+                    'input': {}
+                }
+            }
+            await ws.send(json.dumps(start, ensure_ascii=False))
+            # 2. 等 task-started
+            while True:
+                msg = json.loads(await ws.recv())
+                ev = msg['header']['event']
+                if ev == 'task-started':
+                    break
+                if ev == 'task-failed':
+                    raise Exception('DASHSCOPE_START_FAILED: %s' % msg['header'].get('error_message'))
+            # 3. 发音频（二进制，任意分块）
+            frame = 4096
+            for i in range(0, len(pcm), frame):
+                await ws.send(pcm[i:i + frame])
+            # 4. 收尾
+            finish = {
+                'header': {'action': 'finish-task', 'task_id': task_id},
+                'payload': {'input': {}}
+            }
+            await ws.send(json.dumps(finish, ensure_ascii=False))
+            # 5. 收结果
+            while True:
+                msg = json.loads(await ws.recv())
+                ev = msg['header']['event']
+                if ev == 'result-generated':
+                    payload = msg.get('payload', {})
+                    output = payload.get('output', payload)
+                    sentence = output.get('sentence', {})
+                    text = sentence.get('text', '')
+                    if text and sentence.get('sentence_end') and text not in out:
+                        out.append(text)
+                elif ev == 'task-finished':
+                    break
+                elif ev == 'task-failed':
+                    raise Exception('DASHSCOPE_FAILED: %s' % msg['header'].get('error_message'))
+        return ''.join(out)
 
-        def on_event(self, result):
-            try:
-                s = result.get_sentence()
-                if isinstance(s, dict):
-                    # 只取最终句（sentence_end=True），跳过中间结果
-                    if s.get('sentence_end'):
-                        t = s.get('text', '')
-                        if t and t not in out:
-                            out.append(t)
-            except Exception:
-                pass
-
-    rec = Recognition(model='paraformer-realtime-v2', callback=_CB(),
-                      format='pcm', sample_rate=16000)
-    rec.start()
-    time.sleep(0.8)
-    chunk = 16000 * 2 * 2  # 2 秒 16k 16bit
-    for i in range(0, len(pcm), chunk):
-        rec.send_audio_frame(pcm[i:i + chunk])
-        time.sleep(0.05)
-    rec.stop()
-    # 等待回调线程收完结果
-    deadline = time.time() + 8
-    while time.time() < deadline:
-        if out:
-            break
-        time.sleep(0.5)
-    return ''.join(out).strip()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        result = loop.run_until_complete(_ws())
+    finally:
+        loop.close()
+    return result.strip()
 
 # =============================================
 # 百度语音识别
