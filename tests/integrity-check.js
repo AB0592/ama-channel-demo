@@ -51,13 +51,19 @@ const exists = (rel) => {
 };
 const read = (rel) => fs.readFileSync(p(rel), 'utf-8');
 
-// ---------- 加载 index.html ----------
+// ---------- 加载 index.html + 阶段3拆分后的外部 JS ----------
 const HTML = read('index.html');
+const DICTS_JS = exists('assets/js/dialect-dicts.js') ? read('assets/js/dialect-dicts.js') : '';
+const OPERA_DB_JS = exists('assets/js/opera-db.js') ? read('assets/js/opera-db.js') : '';
+const CSS_EXT = exists('assets/css/app.css') ? read('assets/css/app.css') : '';
+// 合并源码用于 const/function 提取（阶段3拆分后数据在外部文件中）
+const COMBINED = HTML + '\n' + DICTS_JS + '\n' + OPERA_DB_JS;
 
-// ---------- 工具: 从 HTML 中提取 operaDB (只认第一个 const operaDB = [...];) ----------
+// ---------- 工具: 从外部 opera-db.js 中提取 operaDB (只认第一个 const operaDB = [...];) ----------
 function extractOperaDB() {
-  // 用 Function 构造器把 operaDB 片段变成一个可导出的 JS 模块
-  const m = HTML.match(/const\s+operaDB\s*=\s*\[([\s\S]*?)\n\]\s*;/);
+  // 阶段3拆分后 operaDB 在 assets/js/opera-db.js 中
+  const src = OPERA_DB_JS || HTML;  // 兼容未拆分的情况
+  const m = src.match(/const\s+operaDB\s*=\s*\[([\s\S]*?)\n\]\s*;/);
   if (!m) throw new Error('找不到 const operaDB = [...] 定义');
   const sandbox = {};
   // 用 vm 更安全；Node 自带 vm 模块
@@ -199,10 +205,13 @@ section('[4] 网页资源引用完整性');
     if (/\$\{/.test(src)) continue;
     if (!exists(src)) badRefs.push(`<img src="${src}">`);
   }
-  // 提取 background: url("xxx") / background-image: url("xxx")（从 <style> 块提取，排除 <script>）
+  // 提取 background: url("xxx") / background-image: url("xxx")
+  // 阶段2拆分后 CSS 在外部 assets/css/app.css 中；兼容未拆分时从 <style> 提取
+  const cssSources = [];
   const styleMatch = HTML.match(/<style\b[^>]*>([\s\S]*?)<\/style>/i);
-  if (styleMatch) {
-    const css = styleMatch[1];
+  if (styleMatch) cssSources.push(styleMatch[1]);
+  if (CSS_EXT) cssSources.push(CSS_EXT);
+  cssSources.forEach(css => {
     const bgRE = /url\s*\(\s*["']?([^"')\s]+)["']?\s*\)/gi;
     while ((m = bgRE.exec(css)) !== null) {
       const src = m[1];
@@ -210,9 +219,15 @@ section('[4] 网页资源引用完整性');
       // 忽略 SVG 内部引用：url(#xxx)  /  url(#xxx) 转义
       if (/^#/.test(src)) continue;
       if (/\$\{/.test(src)) continue;
-      if (!exists(src)) badRefs.push(`CSS url("${src}")`);
+      // CSS 文件在 assets/css/ 子目录，需相对该目录解析路径
+      if (CSS_EXT && css === CSS_EXT) {
+        const resolved = path.normalize(path.join('assets/css', src));
+        if (!exists(resolved)) badRefs.push(`CSS url("${src}") (resolved: ${resolved})`);
+      } else {
+        if (!exists(src)) badRefs.push(`CSS url("${src}")`);
+      }
     }
-  }
+  });
   check(`HTML/CSS 静态资源引用悬空数 = 0 (实际: ${badRefs.length})`,
         badRefs.length === 0, badRefs.length ? badRefs.slice(0, 10).join('  /  ') : '');
   // 额外：operaDB 中引用综合（再次确认，给一个总计）
@@ -386,22 +401,24 @@ section('[9] 搜索词规范化幂等性回归（方言翻译 + normalizeSpokenQ
 {
   // ---- 从 HTML 中提取 operaDB、puxianDict、minnanDict、spokenAliasMap、四个规范化函数 ----
   function extractConst(name) {
+    // 阶段3拆分后数据在外部 JS 文件中，需搜索 COMBINED
+    const SRC = COMBINED;
     const re = new RegExp('const\\s+' + name + '\\s*=\\s*', 'g');
     const matches = [];
     let mm;
-    while ((mm = re.exec(HTML)) !== null) matches.push(mm.index);
+    while ((mm = re.exec(SRC)) !== null) matches.push(mm.index);
     if (matches.length === 0) throw new Error('找不到 const ' + name + ' = ... 的起始位置');
     const startIdx = matches[0];
-    const afterEq = HTML.indexOf('=', startIdx) + 1;
+    const afterEq = SRC.indexOf('=', startIdx) + 1;
     // 找到对应终止符（[ 或 { 的匹配对）
     let i = afterEq;
-    while (i < HTML.length && /\s/.test(HTML[i])) i++;
-    const open = HTML[i];
+    while (i < SRC.length && /\s/.test(SRC[i])) i++;
+    const open = SRC[i];
     const close = open === '{' ? '}' : (open === '[' ? ']' : null);
     if (!close) throw new Error('const ' + name + ' 非对象/数组');
     let depth = 1, j = i + 1, inStr = null, escape = false;
-    for (; j < HTML.length; j++) {
-      const c = HTML[j];
+    for (; j < SRC.length; j++) {
+      const c = SRC[j];
       if (inStr) {
         if (escape) escape = false;
         else if (c === '\\') escape = true;
@@ -412,7 +429,7 @@ section('[9] 搜索词规范化幂等性回归（方言翻译 + normalizeSpokenQ
       if (c === open) depth++;
       else if (c === close) { depth--; if (depth === 0) break; }
     }
-    const body = HTML.substring(i, j + 1);
+    const body = SRC.substring(i, j + 1);
     const vm = require('vm');
     const ctx = { module: { exports: {} }, exports: {} };
     vm.createContext(ctx);
@@ -422,19 +439,21 @@ section('[9] 搜索词规范化幂等性回归（方言翻译 + normalizeSpokenQ
   }
 
   function extractFunction(fname) {
+    // 阶段3拆分后部分函数在外部 JS 文件中，需搜索 COMBINED
+    const SRC = COMBINED;
     const re = new RegExp('function\\s+' + fname + '\\s*\\(', 'g');
     const matches = [];
     let mm;
-    while ((mm = re.exec(HTML)) !== null) matches.push(mm.index);
+    while ((mm = re.exec(SRC)) !== null) matches.push(mm.index);
     if (matches.length === 0) throw new Error('找不到 function ' + fname);
     const startIdx = matches[0];
     // 找到函数开 {
     let i = startIdx;
-    while (i < HTML.length && HTML[i] !== '{') i++;
-    if (i >= HTML.length) throw new Error('function ' + fname + ' 无开括号');
+    while (i < SRC.length && SRC[i] !== '{') i++;
+    if (i >= SRC.length) throw new Error('function ' + fname + ' 无开括号');
     let depth = 1, j = i + 1, inStr = null, escape = false;
-    for (; j < HTML.length; j++) {
-      const c = HTML[j];
+    for (; j < SRC.length; j++) {
+      const c = SRC[j];
       if (inStr) {
         if (escape) escape = false;
         else if (c === '\\') escape = true;
@@ -445,12 +464,13 @@ section('[9] 搜索词规范化幂等性回归（方言翻译 + normalizeSpokenQ
       if (c === '{') depth++;
       else if (c === '}') { depth--; if (depth === 0) break; }
     }
-    const funcSrc = HTML.substring(startIdx, j + 1);
+    const funcSrc = SRC.substring(startIdx, j + 1);
     return funcSrc;
   }
 
   const operaDB = (typeof extractOperaDB === 'function') ? extractOperaDB() : (function(){
-    const m = HTML.match(/const\s+operaDB\s*=\s*\[([\s\S]*?)\n\]\s*;/);
+    const src = OPERA_DB_JS || HTML;
+    const m = src.match(/const\s+operaDB\s*=\s*\[([\s\S]*?)\n\]\s*;/);
     if (!m) throw new Error('找不到 operaDB');
     const vm = require('vm');
     const ctx = { module: { exports: {} }, exports: {} };
@@ -597,16 +617,17 @@ section('[9] 搜索词规范化幂等性回归（方言翻译 + normalizeSpokenQ
     }
     // 从已提取的三表构造（sandbox 中 spokenAliasMap 已通过 _getSpokenAliasMap 注册，取 window 上的）
     const spokenMapExtracted = sandbox.window.__spokenAliasMap || (function(){
-      // 兜底：若 sandbox.window 上尚未缓存，按 m['x']='y' 模式从 index.html 重新解析 spokenAliasMap
-      const fnStart = HTML.search(/function\s+_getSpokenAliasMap\s*\(\s*\)\s*\{/);
+      // 兜底：若 sandbox.window 上尚未缓存，按 m['x']='y' 模式从源码重新解析 spokenAliasMap
+      const SRC = COMBINED;
+      const fnStart = SRC.search(/function\s+_getSpokenAliasMap\s*\(\s*\)\s*\{/);
       if (fnStart < 0) return {};
       let depth = 0, start = -1, i = fnStart;
-      while (i < HTML.length) {
-        if (HTML[i] === '{') { depth++; if (start<0) start = i; }
-        else if (HTML[i] === '}') { depth--; if (start>0 && depth===0) break; }
+      while (i < SRC.length) {
+        if (SRC[i] === '{') { depth++; if (start<0) start = i; }
+        else if (SRC[i] === '}') { depth--; if (start>0 && depth===0) break; }
         i++;
       }
-      const fnBody = HTML.substring(start+1, i);
+      const fnBody = SRC.substring(start+1, i);
       const out = {};
       const re = /m\s*\[\s*(['"`])(.*?)\1\s*\]\s*=\s*(['"`])(.*?)\3\s*;/g;
       let mm; while ((mm = re.exec(fnBody)) !== null) out[mm[2]] = mm[4];
