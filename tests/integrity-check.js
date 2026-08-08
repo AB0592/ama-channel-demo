@@ -293,22 +293,22 @@ section('[6] 关键 UI 控件：确认卡 & 播放器');
 // ---------- [7] 莆仙话「实验版」标注完整性（7 条正则，闽南话/中文不被误标） ----------
 section('[7] 莆仙话「实验版」标注完整性 & 闽南话/中文不被误标');
 {
-  // 必须出现的 7 条（来自 README 第四节要求）
+  // 必须出现的文案（复赛最终版）
   const positives = [
-    ['HTML 语言按钮：莆仙话（实验版）',
-     /data-lang\s*=\s*["']puxianhua["'][^>]*>莆仙话（实验版）/],
-    ['HTML 输入框默认 placeholder 含 [实验版]',
-     /id\s*=\s*["']userInput["'][^>]*placeholder\s*=\s*["'][^"']*\[实验版\][^"']*["']/],
-    ['JS 切到中文模式：flowHeader = 中文搜索流程（不含实验版）',
+    ['HTML 语言按钮：莆仙话',
+     /data-lang\s*=\s*["']puxianhua["'][^>]*>莆仙话</],
+    ['HTML 输入框默认 placeholder = 用莆仙话说戏名',
+     /id\s*=\s*["']userInput["'][^>]*placeholder\s*=\s*["']用莆仙话说戏名[^"']*["']/],
+    ['JS 切到中文模式：flowHeader = 中文搜索流程',
      /flowHeader\.innerHTML\s*=\s*["'][^"']*中文搜索流程[^"']*["']/],
-    ['JS 切到闽南话模式：flowHeader = 闽南话语识别（不含实验版）',
-     /flowHeader\.innerHTML\s*=\s*["'][^"']*闽南话语识别[^"']*["']/],
-    ['JS 切到莆仙话模式：flowHeader = 莆仙话识别实验版 + 闽南语识别 → 莆仙话词典匹配',
-     /flowHeader\.innerHTML\s*=\s*["'][^"']*莆仙话识别实验版（闽南语识别 → 莆仙话词典匹配）[^"']*["']/],
-    ['JS 切到莆仙话模式：placeholder 含 [实验版]',
-     /userInput\.placeholder\s*=\s*["'][^"']*\[实验版\][^"']*["']/],
-    ['JS 切到莆仙话模式：langHint = ⚠ 实验版 + 独立ASR待接入',
-     /langHint\.textContent\s*=\s*["'][^"']*独立ASR待接入[^"']*["']/],
+    ['JS 切到闽南话模式：flowHeader = 闽南话翻译流程',
+     /flowHeader\.innerHTML\s*=\s*["'][^"']*闽南话翻译流程[^"']*["']/],
+    ['JS 切到莆仙话模式：flowHeader = 莆仙话翻译流程',
+     /flowHeader\.innerHTML\s*=\s*["'][^"']*莆仙话翻译流程[^"']*["']/],
+    ['JS 切到莆仙话模式：langHint 含 先用闽南话引擎试识别',
+     /langHint\.textContent\s*=\s*["'][^"']*先用闽南话引擎试识别[^"']*["']/],
+    ['JS 切到莆仙话模式：langHint 含 同属闽语（诚实标注）',
+     /langHint\.textContent\s*=\s*["'][^"']*同属闽语[^"']*["']/],
   ];
   positives.forEach(([n, re]) => check(`【应存在】${n}`, re.test(HTML)));
 
@@ -327,10 +327,10 @@ section('[7] 莆仙话「实验版」标注完整性 & 闽南话/中文不被误
   ];
   negatives.forEach(([n, re]) => check(n, !re.test(HTML)));
 
-  // Provider 层面：PUXIAN_ASR_API_URL 为空（确保未接入）
-  check('PUXIAN_ASR_API_URL 当前 = 空字符串（未启用）',
-        /PUXIAN_ASR_API_URL\s*=\s*["']\s*["']\s*;/.test(HTML),
-        '未配置时 PuxianASRProvider 自动跳过');
+  // 诚实标注：不出现「莆仙话识别已支持」类表述
+  check('【应不存在】出现"莆仙话识别已支持"类虚假表述',
+        !/莆仙话识别已支持|莆仙话.*已.*支持.*识别/.test(HTML),
+        '诚实标注：只用闽南话引擎试识别+语音库匹配');
 }
 
 // ---------- [8] 源码不存在真实 API 密钥 ----------
@@ -490,15 +490,12 @@ section('[9] 搜索词规范化幂等性回归（方言翻译 + normalizeSpokenQ
     titles.length > 0 && maxTitleLen > 0,
     `最长标题: ` + titles.reduce((a, b) => a.length > b.length ? a : b, '') + ` (${maxTitleLen} 字符)`);
 
-  // ---- 提取辅助函数 _buildCanonicalSet _cleanRawInput _resolveOnce _getSpokenAliasMap 和 3 个目标函数 ----
-  // 简化：直接把函数体取出后在 vm 中组装
+  // ---- 提取目标函数（含 singlePassReplace 辅助函数） ----
   const vm = require('vm');
-  const sandbox = { window: {}, Set: Set, Object: Object, String: String, Math: Math, operaDB: operaDB, puxianDict: puxianDict, minnanDict: minnanDict };
+  const sandbox = { window: {}, Set: Set, Object: Object, String: String, Math: Math, RegExp: RegExp, operaDB: operaDB, puxianDict: puxianDict, minnanDict: minnanDict, _replaceRegexCache: {} };
   vm.createContext(sandbox);
-  const helperFns = ['_buildCanonicalSet','_cleanRawInput','_cleanForSearchStart','_resolveOnce','_getSpokenAliasMap',
-                      'translateMinnan','translatePuxian','normalizeSpokenQuery'];
+  const helperFns = ['singlePassReplace','translateMinnan','translatePuxian','normalizeSpokenQuery'];
   const fnSrcBundle = helperFns.map(extractFunction).join('\n\n');
-  // operaDB 等上面的 sandbox 已经提供
   vm.runInContext(fnSrcBundle, sandbox);
 
   const translatePuxian = sandbox.translatePuxian;
@@ -615,23 +612,46 @@ section('[9] 搜索词规范化幂等性回归（方言翻译 + normalizeSpokenQ
       });
       return out;
     }
-    // 从已提取的三表构造（sandbox 中 spokenAliasMap 已通过 _getSpokenAliasMap 注册，取 window 上的）
+    // 从 normalizeSpokenQuery 函数内的 fixes 对象提取 spokenAliasMap
     const spokenMapExtracted = sandbox.window.__spokenAliasMap || (function(){
-      // 兜底：若 sandbox.window 上尚未缓存，按 m['x']='y' 模式从源码重新解析 spokenAliasMap
       const SRC = COMBINED;
-      const fnStart = SRC.search(/function\s+_getSpokenAliasMap\s*\(\s*\)\s*\{/);
-      if (fnStart < 0) return {};
-      let depth = 0, start = -1, i = fnStart;
-      while (i < SRC.length) {
-        if (SRC[i] === '{') { depth++; if (start<0) start = i; }
-        else if (SRC[i] === '}') { depth--; if (start>0 && depth===0) break; }
-        i++;
+      // 在 normalizeSpokenQuery 函数体内查找 var fixes = { ... };
+      const fnMatch = SRC.match(/function\s+normalizeSpokenQuery\s*\([^)]*\)\s*\{/);
+      if (!fnMatch) return {};
+      const fnStart = fnMatch.index;
+      // 找到函数体的范围
+      let depth = 0, fnBodyStart = fnStart, i = fnStart;
+      while (i < SRC.length && SRC[i] !== '{') i++;
+      const openIdx = i;
+      depth = 1; i = openIdx + 1;
+      let inStr = null, escape = false;
+      for (; i < SRC.length; i++) {
+        const c = SRC[i];
+        if (inStr) { if (escape) escape = false; else if (c === '\\') escape = true; else if (c === inStr) inStr = null; continue; }
+        if (c === '"' || c === "'" || c === '`') { inStr = c; continue; }
+        if (c === '{') depth++;
+        else if (c === '}') { depth--; if (depth === 0) break; }
       }
-      const fnBody = SRC.substring(start+1, i);
-      const out = {};
-      const re = /m\s*\[\s*(['"`])(.*?)\1\s*\]\s*=\s*(['"`])(.*?)\3\s*;/g;
-      let mm; while ((mm = re.exec(fnBody)) !== null) out[mm[2]] = mm[4];
-      return out;
+      const fnBody = SRC.substring(openIdx + 1, i);
+      // 在函数体内查找 var fixes = { ... };
+      const fixesMatch = fnBody.match(/var\s+fixes\s*=\s*\{/);
+      if (!fixesMatch) return {};
+      const fStart = fixesMatch.index + fixesMatch[0].length - 1; // 指向 {
+      let fd = 1, j = fStart + 1;
+      inStr = null; escape = false;
+      for (; j < fnBody.length; j++) {
+        const c = fnBody[j];
+        if (inStr) { if (escape) escape = false; else if (c === '\\') escape = true; else if (c === inStr) inStr = null; continue; }
+        if (c === '"' || c === "'" || c === '`') { inStr = c; continue; }
+        if (c === '{') fd++;
+        else if (c === '}') { fd--; if (fd === 0) break; }
+      }
+      const fixesBody = fnBody.substring(fStart, j + 1);
+      const vm2 = require('vm');
+      const ctx2 = { module: { exports: {} }, exports: {} };
+      vm2.createContext(ctx2);
+      vm2.runInContext('var fixes = ' + fixesBody + '; module.exports = fixes;', ctx2);
+      return ctx2.module.exports || {};
     })();
     const puRaw = mkCollect(puxianDict, 'puxianDict');
     const mnRaw = mkCollect(minnanDict, 'minnanDict');

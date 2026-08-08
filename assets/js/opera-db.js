@@ -14,7 +14,7 @@ const operaDB = [
     title: '春草闯堂',
     description: '聪明机智的丫鬟春草，巧妙帮助小姐与薛玫庭，一段充满喜剧色彩的古代爱情故事。莆仙戏经典保留剧目。',
     poster: 'opera_images/chuncao.jpg',
-    keywords: ['春草', '闯堂', '丫鬟', '聪明', '小姐', '爱情', '喜剧', 'chuncao', 'chun cao', '小丫鬟', '春草闯堂', '好笑'],
+    keywords: ['春草', '闯堂', '丫鬟', '聪明', '小姐', '爱情', '喜剧', 'chuncao', 'chun cao', '小丫鬟', '春草闯堂', '好笑', '薛玫庭', '李千金'],
     category: '莆仙戏',
     media: 'opera_audio/chuncao.wav'
   },
@@ -210,7 +210,7 @@ const operaDB = [
     title: '英雄儿女',
     description: '1964年经典抗美援朝电影，志愿军战士王成坚守阵地英勇牺牲。"为了胜利，向我开炮！"震撼人心的经典台词。',
     poster: 'opera_images/dianying_yingxiongernv(1).jpg',
-    keywords: ['英雄儿女','抗美援朝','经典电影','志愿军','王成','老电影','dianying3'],
+    keywords: ['英雄儿女','抗美援朝','经典电影','志愿军','王成','老电影','dianying3','向我开炮'],
     category: '电影',
     media: 'opera_audio/yingxiongernv.wav'
   },

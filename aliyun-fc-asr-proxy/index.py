@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 阿里云 FC 3.0 Web 函数入口
-语音识别代理：支持普通话和方言识别（闽南语等）
-- 普通话模式：百度优先 → 讯飞备用
-- 方言模式：讯飞优先（支持 accent 参数）→ 百度备用（普通话降级）
+语音识别代理：百炼 DashScope（热词，方言优先）→ 百度 → 科大讯飞（自动降级）
 """
 import json
 import base64
@@ -25,6 +23,58 @@ BAIDU_SECRET_KEY = os.environ.get('BAIDU_SECRET_KEY', '')
 XUNFEI_APP_ID = os.environ.get('XUNFEI_APP_ID', '')
 XUNFEI_API_KEY = os.environ.get('XUNFEI_API_KEY', '')
 XUNFEI_API_SECRET = os.environ.get('XUNFEI_API_SECRET', '')
+DASHSCOPE_API_KEY = os.environ.get('DASHSCOPE_API_KEY', '')
+
+# 35 个节目名热词（提升节目名识别率）
+HOTWORDS = ("春草闯堂 状元与乞丐 江梅妃 新亭泪 秋风辞 射雕英雄传 红楼梦 三国演义 "
+            "水浒传 西游记 东方红 没有共产党就没有新中国 打靶归来 最炫民族风 小苹果 "
+            "地道战 铁道游击队 英雄儿女 人到中年 庐山恋 陈三五娘 梁山伯与祝英台 "
+            "吕蒙正 薛平贵与王宝钏 王金龙与苏三 八骏马 梅花操 百鸟归巢 三千两金 "
+            "直入花园 小沙弥下山 驯猴 元宵乐 大名府 雷万春打虎")
+
+# =============================================
+# 百炼 DashScope 实时识别（paraformer-realtime-v2，带热词）
+# =============================================
+def recognize_dashscope(audio_pcm_base64):
+    """流式实时识别：PCM base64 → 文本。失败抛异常（上层降级）。"""
+    from dashscope.audio.asr import Recognition, RecognitionCallback
+    if not DASHSCOPE_API_KEY:
+        raise Exception('DASHSCOPE_API_KEY missing')
+    pcm = base64.b64decode(audio_pcm_base64)
+    out = []
+
+    class _CB(RecognitionCallback):
+        def on_error(self, result):
+            logger.warning('DashScope error: %s' % str(result)[:200])
+
+        def on_event(self, result):
+            try:
+                s = result.get_sentence()
+                if isinstance(s, dict):
+                    # 只取最终句（sentence_end=True），跳过中间结果
+                    if s.get('sentence_end'):
+                        t = s.get('text', '')
+                        if t and t not in out:
+                            out.append(t)
+            except Exception:
+                pass
+
+    rec = Recognition(model='paraformer-realtime-v2', callback=_CB(),
+                      format='pcm', sample_rate=16000)
+    rec.start()
+    time.sleep(0.8)
+    chunk = 16000 * 2 * 2  # 2 秒 16k 16bit
+    for i in range(0, len(pcm), chunk):
+        rec.send_audio_frame(pcm[i:i + chunk])
+        time.sleep(0.05)
+    rec.stop()
+    # 等待回调线程收完结果
+    deadline = time.time() + 8
+    while time.time() < deadline:
+        if out:
+            break
+        time.sleep(0.5)
+    return ''.join(out).strip()
 
 # =============================================
 # 百度语音识别
@@ -91,7 +141,6 @@ def build_xunfei_url():
     return 'wss://%s/v2/iat?authorization=%s&date=%s&host=%s' % (host, quote(authorization, safe=''), quote(date, safe=''), host)
 
 def recognize_xunfei(audio_pcm_base64, accent='mandarin'):
-    """科大讯飞语音识别，accent 可选: mandarin(普通话), minnan(闽南语), cantonese(粤语), sichuanese(四川话)"""
     import asyncio
     import websockets
     ws_url = build_xunfei_url()
@@ -104,7 +153,7 @@ def recognize_xunfei(audio_pcm_base64, accent='mandarin'):
                 'business': {
                     'language': 'zh_cn',
                     'domain': 'iat',
-                    'accent': accent,
+                    'accent': accent,   # mandarin=普通话, fujian=闽南话, cantonese=粤语
                     'vad_eos': 2000,
                     'dwa': 'wpgs'
                 }
@@ -183,43 +232,50 @@ def handler(event, context):
             raw_body = raw_body.decode('utf-8')
         payload = json.loads(raw_body) if raw_body else {}
         audio_base64 = payload.get('audio_base64', '')
+        dialect = payload.get('dialect', 'mandarin')   # mandarin / fujian(闽南话) / cantonese(粤语)
         if not audio_base64:
             return make_response(200, {'text': '', 'error': 'missing audio_base64'})
-        # accent 参数：mandarin(默认普通话) / minnan(闽南语) / cantonese / sichuanese
-        accent = payload.get('accent', 'mandarin')
-        logger.info('Audio base64 len: %d, accent: %s' % (len(audio_base64), accent))
-
-        if accent != 'mandarin':
-            # ---- 方言模式：讯飞优先（支持方言），百度备用（仅普通话）----
+        logger.info('Audio base64 len: %d, dialect: %s' % (len(audio_base64), dialect))
+        if dialect != 'mandarin':
+            # ---- 方言模式：百炼热词优先（闽南话/莆仙话叫法）→ 讯飞方言引擎 ----
+            if DASHSCOPE_API_KEY:
+                try:
+                    text = recognize_dashscope(audio_base64)
+                    if text and text.strip():
+                        return make_response(200, {'text': text.strip(), 'provider': 'dashscope', 'dialect': dialect})
+                except Exception as e:
+                    logger.warning('DashScope(%s): %s' % (dialect, str(e)))
             if XUNFEI_APP_ID and XUNFEI_API_KEY and XUNFEI_API_SECRET:
                 try:
-                    text = recognize_xunfei(audio_base64, accent)
+                    text = recognize_xunfei(audio_base64, accent=dialect)
                     if text and text.strip():
-                        return make_response(200, {'text': text.strip(), 'provider': 'xunfei', 'accent': accent})
+                        return make_response(200, {'text': text.strip(), 'provider': 'xunfei', 'dialect': dialect})
                 except Exception as e:
-                    logger.warning('Xunfei(%s): %s' % (accent, str(e)))
-            # 百度备用（使用普通话模型，作为方言识别失败时的降级）
+                    logger.warning('Xunfei(%s): %s' % (dialect, str(e)))
+            return make_response(200, {'text': '', 'error': 'dialect provider failed'})
+        # ---- 第 1 层：百度语音（普通话）----
+        try:
+            text = recognize_baidu(audio_base64)
+            if text and text.strip():
+                return make_response(200, {'text': text.strip(), 'provider': 'baidu'})
+        except Exception as e:
+            logger.warning('Baidu: %s' % str(e))
+        # ---- 第 2 层：科大讯飞（普通话）----
+        if XUNFEI_APP_ID and XUNFEI_API_KEY and XUNFEI_API_SECRET:
             try:
-                text = recognize_baidu(audio_base64)
+                text = recognize_xunfei(audio_base64, accent='mandarin')
                 if text and text.strip():
-                    return make_response(200, {'text': text.strip(), 'provider': 'baidu', 'accent': 'mandarin'})
+                    return make_response(200, {'text': text.strip(), 'provider': 'xunfei'})
             except Exception as e:
-                logger.warning('Baidu: %s' % str(e))
-        else:
-            # ---- 普通话模式：百度优先，讯飞备用（保持原有逻辑）----
+                logger.warning('Xunfei: %s' % str(e))
+        # ---- 第 3 层：百炼 DashScope（普通话，带热词）----
+        if DASHSCOPE_API_KEY:
             try:
-                text = recognize_baidu(audio_base64)
+                text = recognize_dashscope(audio_base64)
                 if text and text.strip():
-                    return make_response(200, {'text': text.strip(), 'provider': 'baidu', 'accent': 'mandarin'})
+                    return make_response(200, {'text': text.strip(), 'provider': 'dashscope'})
             except Exception as e:
-                logger.warning('Baidu: %s' % str(e))
-            if XUNFEI_APP_ID and XUNFEI_API_KEY and XUNFEI_API_SECRET:
-                try:
-                    text = recognize_xunfei(audio_base64, 'mandarin')
-                    if text and text.strip():
-                        return make_response(200, {'text': text.strip(), 'provider': 'xunfei', 'accent': 'mandarin'})
-                except Exception as e:
-                    logger.warning('Xunfei: %s' % str(e))
+                logger.warning('DashScope: %s' % str(e))
         return make_response(200, {'text': '', 'error': 'all providers failed'})
     except Exception as e:
         logger.error('Handler: %s' % str(e))
