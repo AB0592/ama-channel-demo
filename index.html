@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>阿嬷的频道</title>
 <style>
+  /* @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap'); */
+
   :root {
     --gold: #B87520;
     --gold-light: #FFF1B8;
@@ -3618,7 +3620,7 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
     } else if (currentLang === 'minnanhua') {
       userInput.placeholder = '用闽南话说戏名、节目名...';
       if (flowHeader) flowHeader.innerHTML = '&#127760; 闽南话翻译流程';
-      langHint.textContent = '';
+      langHint.textContent = '优先方言识别，失败请用普通话';
     } else {
       userInput.placeholder = '用莆仙话说戏名、节目名...';
       if (flowHeader) flowHeader.innerHTML = '&#127760; 莆仙话翻译流程';
@@ -3790,8 +3792,6 @@ function getSpeechRecognitionCtor() {
 }
 
 // 通用 Google Web Speech 识别（闽南话用 nan-Hant-TW；任何失败返回 null 走降级链，不抛异常）
-// 注意：Chrome Web Speech 在国内无 VPN 环境下会走 Google 服务器，必然失败
-// 超时设为 3 秒快速失败，避免长时间挂起等待
 function recognizeWithGoogle(lang) {
   return new Promise(function(resolve) {
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -3802,25 +3802,15 @@ function recognizeWithGoogle(lang) {
     rec.interimResults = false;
     rec.maxAlternatives = 1;
     var done = false;
-    // 3 秒超时：国内网络无法访问 Google speech 服务，快速失败让降级链继续
-    var tid = setTimeout(function() {
-      if (done) return; done = true;
-      try { rec.stop(); } catch(e) {}
-      window.__chromeSpeechUnavailable = true;  // 标记 Google 语音不可用，跳过后续重试
-      console.log('Chrome Web Speech 超时（3秒），国内网络不可用，请直接打字输入');
-      resolve(null);
-    }, 3000);
+    var tid = setTimeout(function() { done = true; try { rec.stop(); } catch(e) {} resolve(null); }, 8000);
     rec.onresult = function(e) {
       if (done) return; done = true; clearTimeout(tid);
       var txt = '';
       try { txt = e.results[0][0].transcript || ''; } catch(err) {}
       resolve(txt || null);
     };
-    rec.onerror = function(err) {
-      if (done) return; done = true; clearTimeout(tid);
-      window.__chromeSpeechUnavailable = true;  // 标记 Google 语音不可用，跳过后续重试
-      console.log('Chrome Web Speech 出错:', (err && err.error) || err, '— 国内网络不可用');
-      resolve(null);
+    rec.onerror = function() {
+      if (done) return; done = true; clearTimeout(tid); resolve(null);
     };
     rec.onend = function() {
       if (done) return; done = true; clearTimeout(tid); resolve(null);
@@ -3917,7 +3907,7 @@ async function startVoiceWithFallback() {
   _isRecording = true;
   micBtn.classList.add('listening');
   micBtn.innerHTML = '&#9724; 停止';
-  if (typeof showStatus === 'function') showStatus('listening', '正在录音，请说出节目名（7 秒自动结束）...');
+  if (typeof showStatus === 'function') showStatus('listening', '正在录音，请说出节目名（4 秒自动结束）...');
 
   var stream, mediaRecorder, chunks = [];
   try {
@@ -3926,8 +3916,8 @@ async function startVoiceWithFallback() {
     mediaRecorder.ondataavailable = function(e) { if (e.data.size > 0) chunks.push(e.data); };
     mediaRecorder.start();
     
-    // 录音 7 秒
-    await new Promise(function(r) { setTimeout(r, 7000); });
+    // 录音 4 秒
+    await new Promise(function(r) { setTimeout(r, 4000); });
     
     // 如果用户提前取消了
     if (!_isRecording) {
@@ -3950,9 +3940,11 @@ async function startVoiceWithFallback() {
 
     var blob = new Blob(chunks, { type: 'audio/webm' });
 
-    // ─── 第 0 层：莆仙话 ASR v1 API（本地服务，仅莆仙话模式启用） ───
-    // 本地模型是莆仙话微调模型，仅适用于 puxianhua 模式
-    if (currentLang === 'puxianhua') {
+    // ─── 第 0 层：莆仙话 ASR v1 API（本地服务，优先）───
+    // 闽南话跳过：本地模型是莆仙话微调模型，不适用闽南话
+    if (currentLang === 'minnanhua') {
+      console.log('[第0层] 跳过本地 ASR：闽南话模式不使用莆仙话本地模型');
+    } else {
       if (typeof showStatus === 'function') showStatus('listening', '正在识别（本地 ASR 莆仙话训练模型）...');
       try {
         var v1Result = await callV1AsrTranscribe(blob);
@@ -3965,11 +3957,9 @@ async function startVoiceWithFallback() {
           return;
         }
       } catch(e) { console.log('本地 ASR 不可用:', e.message); }
-    } else {
-      console.log('[第0层] 跳过本地 ASR：currentLang=' + currentLang + '（仅 puxianhua 启用）');
     }
 
-    // ─── 第 1 层：阿里云 FC（讯飞闽南话引擎 accent=fujian → DashScope → 百度）───
+    // ─── 第 1 层：阿里云 FC（百度→讯飞，方言模式传 accent 走讯飞方言引擎）───
     if (typeof showStatus === 'function') showStatus('listening', currentLang === 'minnanhua' ? '正在识别（讯飞闽南话引擎）...' : '正在识别（讯飞方言引擎）...');
     try {
       var text = await callAliyunFcProxy(blob);
@@ -4000,13 +3990,9 @@ async function startVoiceWithFallback() {
     } catch(e) { console.log('FunASR 不可用:', e.message); }
 
     // ─── 第 3 层：Chrome 自带识别（最后一层兜底）───
-    // 注意：国内无 VPN 环境下 Chrome Web Speech 走 Google 服务器必然失败
-    // 首次失败后设标志位跳过第二次尝试，避免双倍超时等待
     if (typeof showStatus === 'function') showStatus('listening', '正在识别（浏览器）...');
     var text3 = await recognizeWithGoogle(window.__speechLang || 'zh-CN');
-    if (!text3 && (window.__speechLang || 'zh-CN') !== 'zh-CN' && !window.__chromeSpeechUnavailable) {
-      text3 = await recognizeWithGoogle('zh-CN');
-    }
+    if (!text3 && (window.__speechLang || 'zh-CN') !== 'zh-CN') text3 = await recognizeWithGoogle('zh-CN');
     if (text3 && text3.trim()) {
       if (typeof applyRecognitionResult === 'function') applyRecognitionResult(text3);
       return;
@@ -4043,7 +4029,7 @@ async function startSmartVoiceRecognition(options) {
     var mr = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
     mr.ondataavailable = function(e) { if (e.data.size > 0) chunks.push(e.data); };
     mr.start();
-    await new Promise(function(r) { setTimeout(r, 7000); });
+    await new Promise(function(r) { setTimeout(r, 4000); });
     if (mr.state === 'recording') mr.stop();
     await new Promise(function(r) { mr.onstop = r; });
     stream.getTracks().forEach(function(t) { t.stop(); });
@@ -4055,32 +4041,19 @@ async function startSmartVoiceRecognition(options) {
 
     var blob = new Blob(chunks, { type: 'audio/webm' });
 
-    // 第 0 层：本地 ASR v1 API（莆仙话训练模型，仅莆仙话模式启用）
-    // 本地模型是莆仙话微调模型，仅适用于 puxianhua 模式
-    if (currentLang === 'puxianhua') {
+    // 第 0 层：本地 ASR v1 API（莆仙话训练模型）
+    // 闽南话跳过：本地模型是莆仙话微调模型，不适用闽南话
+    if (currentLang === 'minnanhua') {
+      console.log('[SmartVoice][第0层] 跳过本地 ASR：闽南话模式不使用莆仙话本地模型');
+    } else {
       try {
         var v1Res = await callV1AsrTranscribe(blob);
         if (v1Res && v1Res.text && v1Res.text.trim()) {
-          // 用前端节目匹配验证：仅当能匹配到节目名 或 高置信度时才采用第 0 层结果
-          var displayText = v1Res.normalizedText || v1Res.text;
-          var matchCheck = findBestVoiceMatches(displayText);
-          var layer0Adopt = false;
-          if (matchCheck && matchCheck.results && matchCheck.results.length > 0) {
-            layer0Adopt = true;
-          } else if (v1Res.confidence >= 0.85) {
-            layer0Adopt = true;
-          }
-          if (layer0Adopt) {
-            onResult(displayText, v1Res.needsConfirmation);
-            onDone(displayText);
-            return;
-          }
-          console.log('[SmartVoice] 第0层文本未匹配到节目且置信度不足(' +
-            v1Res.confidence + ')，降级到第1层。text=' + v1Res.text);
+          onResult(v1Res.normalizedText || v1Res.text, v1Res.needsConfirmation);
+          onDone(v1Res.normalizedText || v1Res.text);
+          return;
         }
       } catch(e) { console.log('SmartVoice v1 ASR error:', e.message); }
-    } else {
-      console.log('[SmartVoice][第0层] 跳过本地 ASR：currentLang=' + currentLang + '（仅 puxianhua 启用）');
     }
 
     // 第 1 层：FC 百度/讯飞
@@ -4114,10 +4087,9 @@ async function startSmartVoiceRecognition(options) {
     } catch(e) { console.log('SmartVoice FunASR error:', e.message); }
 
     // 第 3 层：Google Web Speech（方言模式优先方言语言码，失败再普通话）
-    // 首次失败后设标志位跳过第二次尝试，避免双倍超时
     var _svLang = window.__speechLang || 'zh-CN';
     var _svText = await recognizeWithGoogle(_svLang);
-    if (!_svText && _svLang !== 'zh-CN' && !window.__chromeSpeechUnavailable) _svText = await recognizeWithGoogle('zh-CN');
+    if (!_svText && _svLang !== 'zh-CN') _svText = await recognizeWithGoogle('zh-CN');
     if (_svText && _svText.trim()) {
       onResult(_svText, false);
       onDone(_svText);
@@ -5422,7 +5394,6 @@ async function callV1AsrTranscribe(audioBlob) {
     text: data.text || '',
     normalizedText: data.normalized_text || null,
     needsConfirmation: data.needs_confirmation || false,
-    confidence: data.confidence || 0,
     recordingId: data.recording_id || null,
     recordingSaved: data.recording_saved || false
   };
@@ -5438,13 +5409,8 @@ async function callHotwordASR(blob) {
   var resp = await fetch(HOTWORD_ASR_URL, {
     method: 'POST',
     body: formData,
-    signal: AbortSignal.timeout(10000)
+    signal: AbortSignal.timeout(30000)
   });
-  // 404 快速跳过：热词服务未部署时不等超时
-  if (resp.status === 404) {
-    console.log('[热词ASR] 服务未部署 (404)，快速跳过');
-    return null;
-  }
   if (!resp.ok) throw new Error('热词识别 HTTP ' + resp.status);
   var data = await resp.json();
   if (data.success && data.text && data.text.trim()) {
@@ -5545,27 +5511,15 @@ async function callAliyunFcProxy(audioBlob) {
   var pcmBase64 = await webmToPcmBase64(audioBlob);
   // 闽南话/莆仙话同属闽语，先用讯飞闽南话引擎(accent=fujian)试识别
   var dialectParam = (currentLang === 'minnanhua' || currentLang === 'puxianhua') ? 'fujian' : 'mandarin';
-  var body = JSON.stringify({ audio_base64: pcmBase64, format: 'pcm', dialect: dialectParam });
-
-  // FC 请求：12s 超时 + 网络失败自动重试一次
-  var lastErr = null;
-  for (var attempt = 0; attempt < 2; attempt++) {
-    try {
-      var resp = await fetch(FC_PROXY_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: body,
-        signal: AbortSignal.timeout(12000)
-      });
-      var data = await resp.json();
-      if (data.error) throw new Error(data.error);
-      return data.text || null;
-    } catch(e) {
-      lastErr = e;
-      if (attempt === 0) console.log('[FC] 首次请求失败，重试中:', e.message);
-    }
-  }
-  throw lastErr;
+  var resp = await fetch(FC_PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ audio_base64: pcmBase64, format: 'pcm', dialect: dialectParam }),
+    signal: AbortSignal.timeout(8000)
+  });
+  var data = await resp.json();
+  if (data.error) throw new Error(data.error);
+  return data.text || null;
 }
 
 // 第 3 层：FunASR WebSocket
