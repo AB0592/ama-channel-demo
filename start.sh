@@ -67,7 +67,7 @@ fi
 
 # 启动前端
 echo ""
-echo -e "${BLUE}[2/2] 启动前端网页 (端口 8080)...${NC}"
+echo -e "${BLUE}[2/3] 启动前端网页 (端口 8080)...${NC}"
 if [ -n "$(check_port 8080)" ]; then
     echo -e "${YELLOW}  端口 8080 已被占用，前端可能已在运行${NC}"
 else
@@ -80,6 +80,23 @@ else
         echo -e "${GREEN}  前端启动成功${NC}"
     else
         echo -e "${RED}  前端启动失败${NC}"
+    fi
+fi
+
+# 启动反向代理（合并前端和 API 到一个端口，供公网隧道使用）
+echo ""
+echo -e "${BLUE}[3/3] 启动反向代理 (端口 9090)...${NC}"
+if [ -n "$(check_port 9090)" ]; then
+    echo -e "${YELLOW}  端口 9090 已被占用，反向代理可能已在运行${NC}"
+else
+    nohup python3 "$PARENT_DIR/puxian-dialect-training-system/scripts/reverse_proxy.py" > /tmp/puxian-proxy.log 2>&1 &
+    PROXY_PID=$!
+    echo "  代理 PID: $PROXY_PID"
+    sleep 1
+    if kill -0 $PROXY_PID 2>/dev/null; then
+        echo -e "${GREEN}  反向代理启动成功${NC}"
+    else
+        echo -e "${YELLOW}  反向代理启动失败（不影响本地使用，仅影响公网隧道）${NC}"
     fi
 fi
 
