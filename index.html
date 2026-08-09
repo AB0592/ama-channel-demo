@@ -3959,12 +3959,11 @@ async function startVoiceWithFallback() {
       try {
         var v1Result = await callV1AsrTranscribe(blob);
         if (v1Result && v1Result.text && v1Result.text.trim()) {
-          if (typeof applyRecognitionResult === 'function')
-            applyRecognitionResult(v1Result.text, {
-              normalizedText: v1Result.normalizedText,
-              needsConfirmation: v1Result.needsConfirmation
-            });
-          return;
+          if (typeof applyRecognitionResult === 'function' &&
+              applyRecognitionResult(v1Result.text, {
+                normalizedText: v1Result.normalizedText,
+                needsConfirmation: v1Result.needsConfirmation
+              })) return;
         }
       } catch(e) { console.log('[莆仙话] 本地 ASR 不可用:', e.message); }
 
@@ -3973,8 +3972,7 @@ async function startVoiceWithFallback() {
       try {
         var hotwordText = await callHotwordASR(blob);
         if (hotwordText && hotwordText.trim()) {
-          if (typeof applyRecognitionResult === 'function') applyRecognitionResult(hotwordText);
-          return;
+          if (typeof applyRecognitionResult === 'function' && applyRecognitionResult(hotwordText)) return;
         }
       } catch(e) { console.log('[莆仙话] 热词ASR 不可用:', e.message); }
 
@@ -3983,8 +3981,7 @@ async function startVoiceWithFallback() {
       try {
         var text = await callAliyunFcProxy(blob);
         if (text && text.trim()) {
-          if (typeof applyRecognitionResult === 'function') applyRecognitionResult(text);
-          return;
+          if (typeof applyRecognitionResult === 'function' && applyRecognitionResult(text)) return;
         }
       } catch(e) { console.log('[莆仙话] FC 不可用:', e.message); }
 
@@ -3993,8 +3990,7 @@ async function startVoiceWithFallback() {
       try {
         var text2 = await tryFunasrWithBlob(blob);
         if (text2 && text2.trim()) {
-          if (typeof applyRecognitionResult === 'function') applyRecognitionResult(text2);
-          return;
+          if (typeof applyRecognitionResult === 'function' && applyRecognitionResult(text2)) return;
         }
       } catch(e) { console.log('[莆仙话] FunASR 不可用:', e.message); }
 
@@ -4005,8 +4001,7 @@ async function startVoiceWithFallback() {
       try {
         var text = await callAliyunFcProxy(blob);
         if (text && text.trim()) {
-          if (typeof applyRecognitionResult === 'function') applyRecognitionResult(text);
-          return;
+          if (typeof applyRecognitionResult === 'function' && applyRecognitionResult(text)) return;
         }
       } catch(e) { console.log('[闽南话] FC 不可用:', e.message); }
 
@@ -4015,8 +4010,7 @@ async function startVoiceWithFallback() {
       try {
         var hotwordText = await callHotwordASR(blob);
         if (hotwordText && hotwordText.trim()) {
-          if (typeof applyRecognitionResult === 'function') applyRecognitionResult(hotwordText);
-          return;
+          if (typeof applyRecognitionResult === 'function' && applyRecognitionResult(hotwordText)) return;
         }
       } catch(e) { console.log('[闽南话] 热词ASR 不可用:', e.message); }
 
@@ -4025,8 +4019,7 @@ async function startVoiceWithFallback() {
       try {
         var text2 = await tryFunasrWithBlob(blob);
         if (text2 && text2.trim()) {
-          if (typeof applyRecognitionResult === 'function') applyRecognitionResult(text2);
-          return;
+          if (typeof applyRecognitionResult === 'function' && applyRecognitionResult(text2)) return;
         }
       } catch(e) { console.log('[闽南话] FunASR 不可用:', e.message); }
 
@@ -4037,8 +4030,7 @@ async function startVoiceWithFallback() {
       try {
         var text = await callAliyunFcProxy(blob);
         if (text && text.trim()) {
-          if (typeof applyRecognitionResult === 'function') applyRecognitionResult(text);
-          return;
+          if (typeof applyRecognitionResult === 'function' && applyRecognitionResult(text)) return;
         }
       } catch(e) { console.log('[中文] FC 不可用:', e.message); }
     }
@@ -4052,8 +4044,7 @@ async function startVoiceWithFallback() {
       text3 = await recognizeWithGoogle('zh-CN');
     }
     if (text3 && text3.trim()) {
-      if (typeof applyRecognitionResult === 'function') applyRecognitionResult(text3);
-      return;
+      if (typeof applyRecognitionResult === 'function' && applyRecognitionResult(text3)) return;
     }
 
     // ─── 全部失败 ───
@@ -4100,6 +4091,13 @@ async function startSmartVoiceRecognition(options) {
 
     var blob = new Blob(chunks, { type: 'audio/webm' });
 
+    // 文本清洗：去除标点后是否还有有效内容（防止"。"等纯标点截断链路）
+    function _hasMeaningful(text) {
+      if (!text || !text.trim()) return false;
+      var cleaned = text.trim().replace(/[。，、；：？！,.!?;:…·~\s]/g, '');
+      return cleaned.length > 0;
+    }
+
     // ═══ 三板块独立识别链路 ═══
     if (currentLang === 'puxianhua') {
       // ── 莆仙话链路：本地ASR → 热词 → FC → FunASR ──
@@ -4115,7 +4113,7 @@ async function startSmartVoiceRecognition(options) {
           } else if (v1Res.confidence >= 0.85) {
             layer0Adopt = true;
           }
-          if (layer0Adopt) {
+          if (layer0Adopt && _hasMeaningful(displayText)) {
             onResult(displayText, v1Res.needsConfirmation);
             onDone(displayText);
             return;
@@ -4127,7 +4125,7 @@ async function startSmartVoiceRecognition(options) {
       // 第 1 层：百炼热词
       try {
         var hotwordText = await callHotwordASR(blob);
-        if (hotwordText && hotwordText.trim()) {
+        if (_hasMeaningful(hotwordText)) {
           onResult(hotwordText, false);
           onDone(hotwordText);
           return;
@@ -4137,7 +4135,7 @@ async function startSmartVoiceRecognition(options) {
       // 第 2 层：FC 云端（dialect=puxian）
       try {
         var text = await callAliyunFcProxy(blob);
-        if (text && text.trim()) {
+        if (_hasMeaningful(text)) {
           onResult(text, false);
           onDone(text);
           return;
@@ -4147,7 +4145,7 @@ async function startSmartVoiceRecognition(options) {
       // 第 3 层：FunASR
       try {
         var text2 = await tryFunasrWithBlob(blob);
-        if (text2 && text2.trim()) {
+        if (_hasMeaningful(text2)) {
           onResult(text2, false);
           onDone(text2);
           return;
@@ -4159,7 +4157,7 @@ async function startSmartVoiceRecognition(options) {
       // 第 1 层：FC 讯飞闽南话引擎（dialect=fujian）
       try {
         var text = await callAliyunFcProxy(blob);
-        if (text && text.trim()) {
+        if (_hasMeaningful(text)) {
           onResult(text, false);
           onDone(text);
           return;
@@ -4169,7 +4167,7 @@ async function startSmartVoiceRecognition(options) {
       // 第 2 层：百炼热词
       try {
         var hotwordText = await callHotwordASR(blob);
-        if (hotwordText && hotwordText.trim()) {
+        if (_hasMeaningful(hotwordText)) {
           onResult(hotwordText, false);
           onDone(hotwordText);
           return;
@@ -4179,7 +4177,7 @@ async function startSmartVoiceRecognition(options) {
       // 第 3 层：FunASR
       try {
         var text2 = await tryFunasrWithBlob(blob);
-        if (text2 && text2.trim()) {
+        if (_hasMeaningful(text2)) {
           onResult(text2, false);
           onDone(text2);
           return;
@@ -4190,7 +4188,7 @@ async function startSmartVoiceRecognition(options) {
       // ── 中文链路：FC only（最简）──
       try {
         var text = await callAliyunFcProxy(blob);
-        if (text && text.trim()) {
+        if (_hasMeaningful(text)) {
           onResult(text, false);
           onDone(text);
           return;
@@ -4202,7 +4200,7 @@ async function startSmartVoiceRecognition(options) {
     var _svLang = window.__speechLang || 'zh-CN';
     var _svText = await recognizeWithGoogle(_svLang);
     if (!_svText && _svLang !== 'zh-CN' && !window.__chromeSpeechUnavailable) _svText = await recognizeWithGoogle('zh-CN');
-    if (_svText && _svText.trim()) {
+    if (_hasMeaningful(_svText)) {
       onResult(_svText, false);
       onDone(_svText);
       return;
