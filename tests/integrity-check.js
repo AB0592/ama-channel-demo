@@ -305,10 +305,8 @@ section('[7] 莆仙话「实验版」标注完整性 & 闽南话/中文不被误
      /flowHeader\.innerHTML\s*=\s*["'][^"']*闽南话翻译流程[^"']*["']/],
     ['JS 切到莆仙话模式：flowHeader = 莆仙话翻译流程',
      /flowHeader\.innerHTML\s*=\s*["'][^"']*莆仙话翻译流程[^"']*["']/],
-    ['JS 切到莆仙话模式：langHint 含 先用闽南话引擎试识别',
-     /langHint\.textContent\s*=\s*["'][^"']*先用闽南话引擎试识别[^"']*["']/],
-    ['JS 切到莆仙话模式：langHint 含 同属闽语（诚实标注）',
-     /langHint\.textContent\s*=\s*["'][^"']*同属闽语[^"']*["']/],
+    ['JS 切到莆仙话模式：langHint 为空（用户要求移除方言提示文字）',
+     /else\s*\{[^}]*langHint\.textContent\s*=\s*['"]['"]/],
   ];
   positives.forEach(([n, re]) => check(`【应存在】${n}`, re.test(HTML)));
 
