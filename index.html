@@ -5482,11 +5482,10 @@ async function callV1AsrTranscribe(audioBlob) {
 
   formData.append('user_id', getPersistentUserId());
 
-  var resp = await fetch(ASR_V1_URL, {
+  var resp = await fetchWithTimeout(ASR_V1_URL, {
     method: 'POST',
-    body: formData,
-    signal: AbortSignal.timeout(6000)
-  });
+    body: formData
+  }, 8000);
 
   if (!resp.ok) {
     var errBody = {};
@@ -5514,16 +5513,33 @@ async function callV1AsrTranscribe(audioBlob) {
 
 // 第 1.5 层：阿里云百炼热词识别（35个节目名热词，方言模式优先）
 // 使用 paraformer-realtime-v2 + 热词表，提升节目名识别准确率
+// 热词层健康检查缓存（避免每次录音都探测）
+var _hotwordServiceAvailable = null;
+async function checkHotwordService() {
+  if (_hotwordServiceAvailable !== null) return _hotwordServiceAvailable;
+  try {
+    await fetchWithTimeout(_API_ORIGIN + '/api/health', { method: 'GET' }, 800);
+    _hotwordServiceAvailable = true;
+  } catch(e) {
+    _hotwordServiceAvailable = false;
+    console.log('[热词ASR] 本地服务不可用(' + _API_ORIGIN + ')，热词层整体跳过');
+  }
+  return _hotwordServiceAvailable;
+}
+
 async function callHotwordASR(blob) {
+  // 前置健康检查：本地服务不可达时直接跳过，不等 5s 超时
+  var available = await checkHotwordService();
+  if (!available) return null;
+
   var formData = new FormData();
   formData.append('audio', blob, 'speech.webm');
   formData.append('language', 'zh');
 
-  var resp = await fetch(HOTWORD_ASR_URL, {
+  var resp = await fetchWithTimeout(HOTWORD_ASR_URL, {
     method: 'POST',
-    body: formData,
-    signal: AbortSignal.timeout(6000)
-  });
+    body: formData
+  }, 5000);
   // 404 快速跳过：热词服务未部署时不等超时
   if (resp.status === 404) {
     console.log('[热词ASR] 服务未部署 (404)，快速跳过');
@@ -5624,6 +5640,21 @@ async function webmToPcmBase64(webmBlob) {
 }
 
 
+// 带超时的 fetch（兼容所有浏览器，不依赖 AbortSignal.timeout）
+function fetchWithTimeout(url, options, timeoutMs) {
+  var controller = new AbortController();
+  var timeoutId = setTimeout(function() { controller.abort(); }, timeoutMs);
+  return fetch(url, Object.assign({}, options, { signal: controller.signal }))
+    .then(function(resp) {
+      clearTimeout(timeoutId);
+      return resp;
+    })
+    .catch(function(err) {
+      clearTimeout(timeoutId);
+      throw err;
+    });
+}
+
 // 阿里云 FC 代理：发送 PCM base64，按板块传不同 dialect
 async function callAliyunFcProxy(audioBlob) {
   var pcmBase64 = await webmToPcmBase64(audioBlob);
@@ -5633,12 +5664,12 @@ async function callAliyunFcProxy(audioBlob) {
   var body = JSON.stringify({ audio_base64: pcmBase64, format: 'pcm', dialect: dialectParam });
 
   // 统一 8s 单次请求（不重试，失败快速降级）
-  var resp = await fetch(FC_PROXY_URL, {
+  var resp = await fetchWithTimeout(FC_PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: body,
-    signal: AbortSignal.timeout(8000)
-  });
+    body: body
+  }, 8000);
+  if (!resp.ok) throw new Error('FC HTTP ' + resp.status);
   var data = await resp.json();
   if (data.error) throw new Error(data.error);
   return data.text || null;

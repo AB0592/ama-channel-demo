@@ -226,7 +226,7 @@ def recognize_xunfei(audio_pcm_base64, accent='mandarin'):
                 sent += frame_size
             full_text = ''
             while True:
-                resp = await ws.recv()
+                resp = await asyncio.wait_for(ws.recv(), timeout=6)
                 data = json.loads(resp)
                 code = data.get('code', 0)
                 if code != 0:
@@ -240,8 +240,13 @@ def recognize_xunfei(audio_pcm_base64, accent='mandarin'):
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    result = loop.run_until_complete(_ws())
-    loop.close()
+    try:
+        result = loop.run_until_complete(asyncio.wait_for(_ws(), timeout=6))
+    except asyncio.TimeoutError:
+        logger.warning('Xunfei timeout after 6s (accent=%s)' % accent)
+        return ''
+    finally:
+        loop.close()
     return result
 
 # =============================================
