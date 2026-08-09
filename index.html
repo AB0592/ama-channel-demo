@@ -5474,7 +5474,7 @@ async function callV1AsrTranscribe(audioBlob) {
   var formData = new FormData();
   formData.append('audio', audioBlob, 'speech.webm');
   formData.append('provider', 'local');  // 本地微调模型识别
-  formData.append('language', 'auto');
+  formData.append('language', 'putian'); // 明确指定莆仙话，触发微调模型
   formData.append('scene', 'program_search'); // 启用节目名规范化
   formData.append('enable_candidates', 'true');
   formData.append('save_recording', 'true');
