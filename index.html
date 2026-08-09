@@ -5814,9 +5814,12 @@ const FC_PROXY_URL = 'https://ama-channel-qtsdkdknbc.cn-shanghai.fcapp.run';
 const FC_FUNASR_URL = 'wss://funasr-igkajrakfs.cn-shanghai.fcapp.run';
 
 // 莆仙话 ASR v1 API（本地服务，默认端口 8520）
-// 部署时修改为实际服务器地址
-const ASR_V1_URL = window.location.origin.replace(/:\d+$/, '') + ':8520' + '/api/v1/asr/transcribe';
-const ACCENT_API_BASE = window.location.origin.replace(/:\d+$/, '') + ':8520' + '/api/v1/accent';
+// HTTPS 隧道访问时走相对路径（经反向代理转发），本地访问时走 8520 端口
+var _API_ORIGIN = window.location.protocol === 'https:'
+  ? window.location.origin
+  : window.location.origin.replace(/:\d+$/, '') + ':8520';
+const ASR_V1_URL = _API_ORIGIN + '/api/v1/asr/transcribe';
+const ACCENT_API_BASE = _API_ORIGIN + '/api/v1/accent';
 
 // 获取或创建持久化用户 ID（用于口音档案关联）
 function getPersistentUserId() {
@@ -6081,7 +6084,7 @@ async function tryFunasrWithBlob(webmBlob) {
 // =============================================
 // Phase 3: 录音历史功能
 // =============================================
-const REC_API_BASE = window.location.origin.replace(/:\d+$/, '') + ':8520' + '/api/v1/recordings';
+const REC_API_BASE = _API_ORIGIN + '/api/v1/recordings';
 let _recHistoryPage = 1;
 let _recHistoryTotalPages = 0;
 let _currentAudioPlayer = null;
@@ -6244,7 +6247,7 @@ document.getElementById('recHistoryClose').addEventListener('click', toggleRecHi
 // =============================================
 // Phase 5: 模型训练数据集管理
 // =============================================
-const DS_API_BASE = window.location.origin.replace(/:\d+$/, '') + ':8520' + '/api/v1/datasets';
+const DS_API_BASE = _API_ORIGIN + '/api/v1/datasets';
 let _dsCurrentId = null;
 let _dsSamplePage = 1;
 let _dsSampleTotalPages = 0;
@@ -6615,7 +6618,7 @@ document.getElementById('dsClose').addEventListener('click', toggleDsPanel);
 // =============================================
 // Phase 6: 本地模型管理
 // =============================================
-const MODEL_API_BASE = window.location.origin.replace(/:\d+$/, '') + ':8520' + '/api/v1/model';
+const MODEL_API_BASE = _API_ORIGIN + '/api/v1/model';
 
 // 打开模型面板
 function openModelPanel() {
