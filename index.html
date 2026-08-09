@@ -1068,6 +1068,48 @@
     font-weight: 700;
   }
 
+  .accent-select {
+    min-height: 32px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(184, 117, 32, 0.22);
+    background: rgba(255,255,255,0.66);
+    color: var(--text-muted);
+    font-size: 0.82em;
+    font-family: "Noto Serif SC", "Songti SC", "SimSun", "Microsoft YaHei", serif;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .accent-select:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .accent-select:focus {
+    outline: none;
+    border-color: var(--gold);
+  }
+
+  .accent-toast {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #fff8e1, #fff3cd);
+    border: 1px solid var(--gold);
+    border-radius: 12px;
+    padding: 10px 18px;
+    box-shadow: 0 4px 16px rgba(184, 117, 32, 0.2);
+    z-index: 10000;
+    font-size: 0.86em;
+    color: var(--text-dark);
+    max-width: 90vw;
+    animation: accentToastSlide 0.4s ease;
+  }
+  @keyframes accentToastSlide {
+    from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
   .lang-hint {
     color: var(--text-muted);
     font-size: 0.78em;
@@ -1426,6 +1468,486 @@ input[type="text"], input[type="search"], textarea { font-size: clamp(22px, 5vw,
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.15); }
 }
+
+/* ===== Recording History Panel (Phase 3) ===== */
+.rec-history-panel {
+  max-width: 700px;
+  margin: 0 auto 20px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+.rec-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+}
+.rec-history-header h3 { margin: 0; font-size: 1.2em; }
+.rec-history-close {
+  background: none; border: none; color: #fff;
+  font-size: 1.8em; cursor: pointer; line-height: 1;
+  color: #fff; padding: 0 8px;
+}
+.rec-history-close:hover { opacity: 0.7; }
+.rec-history-stats {
+  padding: 10px 20px;
+  font-size: 0.85em;
+  color: #666;
+  background: #f8f8f8;
+  border-bottom: 1px solid #eee;
+}
+.rec-history-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 8px 12px;
+}
+.rec-history-empty {
+  text-align: center;
+  color: #999;
+  padding: 30px 0;
+}
+.rec-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  margin: 6px 0;
+  background: #f9f9f9;
+  border-radius: 10px;
+  border: 1px solid #eee;
+  transition: background 0.2s;
+}
+.rec-item:hover { background: #f0f0f8; }
+.rec-item-info {
+  flex: 1;
+  min-width: 0;
+}
+.rec-item-text {
+  font-size: 1em;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rec-item-meta {
+  font-size: 0.78em;
+  color: #888;
+  margin-top: 2px;
+}
+.rec-item-play {
+  background: #667eea;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.1em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.rec-item-play:hover { background: #5568d3; }
+.rec-item-delete {
+  background: #fee;
+  color: #c33;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.8em;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.rec-item-delete:hover { background: #fdd; }
+.rec-history-pager {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-top: 1px solid #eee;
+}
+.rec-history-pager button {
+  background: #eee;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+.rec-history-pager button:disabled { opacity: 0.4; cursor: default; }
+.rec-history-pager button.active { background: #667eea; color: #fff; }
+.rec-audio-player {
+  width: 100%;
+  margin-top: 6px;
+}
+
+/* ===== Dataset Panel (Phase 5) ===== */
+.ds-panel {
+  max-width: 760px;
+  margin: 0 auto 20px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+.ds-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #11998e, #38ef7d);
+  color: #fff;
+}
+.ds-header h3 { margin: 0; font-size: 1.2em; }
+.ds-close {
+  background: none; border: none; color: #fff;
+  font-size: 1.8em; cursor: pointer; line-height: 1; padding: 0 8px;
+}
+.ds-close:hover { opacity: 0.7; }
+.ds-toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #f8f8f8;
+  border-bottom: 1px solid #eee;
+  flex-wrap: wrap;
+}
+.ds-toolbar button {
+  background: #11998e;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+.ds-toolbar button:hover { background: #0d7a72; }
+.ds-toolbar input {
+  flex: 1;
+  min-width: 120px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.85em;
+}
+.ds-list {
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 8px 12px;
+}
+.ds-empty {
+  text-align: center;
+  color: #999;
+  padding: 30px 0;
+}
+.ds-card {
+  padding: 12px 16px;
+  margin: 8px 0;
+  background: #f9f9f9;
+  border-radius: 10px;
+  border: 1px solid #eee;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.ds-card:hover { background: #f0faf8; border-color: #11998e; }
+.ds-card-name { font-size: 1.05em; font-weight: 700; color: #333; }
+.ds-card-meta { font-size: 0.8em; color: #888; margin-top: 4px; }
+.ds-badge {
+  display: inline-block;
+  font-size: 0.72em;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  margin-left: 6px;
+}
+.ds-badge-draft { background: #fff3cd; color: #856404; }
+.ds-badge-locked { background: #d1ecf1; color: #0c5460; }
+.ds-badge-exported { background: #d4edda; color: #155724; }
+.ds-badge-pending { background: #fff3cd; color: #856404; }
+.ds-badge-annotated { background: #cce5ff; color: #004085; }
+.ds-badge-verified { background: #d4edda; color: #155724; }
+
+/* Dataset detail view */
+.ds-detail { padding: 8px 12px; }
+.ds-back {
+  background: #eee; border: none; border-radius: 8px;
+  padding: 6px 14px; cursor: pointer; font-size: 0.85em; margin-bottom: 10px;
+}
+.ds-detail-stats {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  padding: 10px 0; border-bottom: 1px solid #eee;
+  font-size: 0.82em; color: #555;
+}
+.ds-detail-stats span { white-space: nowrap; }
+.ds-samples {
+  max-height: 380px;
+  overflow-y: auto;
+}
+.ds-sample {
+  padding: 10px 14px;
+  margin: 6px 0;
+  background: #f9f9f9;
+  border-radius: 10px;
+  border: 1px solid #eee;
+}
+.ds-sample-original { font-size: 0.95em; color: #555; }
+.ds-sample-corrected {
+  font-size: 0.95em; font-weight: 600; color: #333;
+  margin-top: 4px;
+}
+.ds-sample-edit {
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 0.9em;
+  margin-top: 6px;
+}
+.ds-sample-actions {
+  display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;
+}
+.ds-sample-actions button {
+  border: none; border-radius: 6px; padding: 4px 10px;
+  font-size: 0.8em; cursor: pointer;
+}
+.ds-btn-save { background: #11998e; color: #fff; }
+.ds-btn-save:hover { background: #0d7a72; }
+.ds-btn-verify { background: #d4edda; color: #155724; }
+.ds-btn-del { background: #fee; color: #c33; border: 1px solid #fcc; }
+.ds-sample-meta { font-size: 0.76em; color: #999; margin-top: 4px; }
+.ds-pager {
+  display: flex; justify-content: center; gap: 8px;
+  padding: 10px 20px; border-top: 1px solid #eee;
+}
+.ds-pager button {
+  background: #eee; border: none; border-radius: 6px;
+  padding: 6px 14px; cursor: pointer; font-size: 0.85em;
+}
+.ds-pager button:disabled { opacity: 0.4; cursor: default; }
+
+/* Export dialog */
+.ds-export-dialog {
+  padding: 16px 20px;
+  border-top: 1px solid #eee;
+  background: #f8f8f8;
+}
+.ds-export-dialog label { font-size: 0.85em; color: #555; margin-right: 6px; }
+.ds-export-dialog select, .ds-export-dialog input[type="number"] {
+  border: 1px solid #ddd; border-radius: 6px; padding: 4px 8px; font-size: 0.85em;
+}
+.ds-export-dialog button {
+  background: #11998e; color: #fff; border: none; border-radius: 8px;
+  padding: 6px 16px; cursor: pointer; font-size: 0.85em; margin-left: 8px;
+}
+.ds-export-result {
+  margin-top: 8px; padding: 8px 12px;
+  border-radius: 8px; font-size: 0.85em; display: none;
+}
+
+/* ===== Model Panel (Phase 6) ===== */
+.model-panel {
+  max-width: 760px;
+  margin: 0 auto 20px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+.model-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #1565C0, #42A5F5);
+  color: #fff;
+}
+.model-header h3 { margin: 0; font-size: clamp(20px, 4.5vw, 26px); }
+.model-close {
+  background: none; border: none; color: #fff;
+  font-size: 1.8em; cursor: pointer; line-height: 1; padding: 0 8px;
+}
+.model-close:hover { opacity: 0.7; }
+.model-section {
+  padding: 12px 20px;
+  border-bottom: 1px solid #eee;
+}
+.model-section:last-child { border-bottom: none; }
+.model-section h4 {
+  margin: 0 0 10px 0;
+  font-size: 1em;
+  color: #333;
+  font-weight: 700;
+}
+.model-empty {
+  text-align: center;
+  color: #999;
+  padding: 20px 0;
+}
+.model-engine-card {
+  padding: 10px 14px;
+  margin: 6px 0;
+  background: #f9f9f9;
+  border-radius: 10px;
+  border: 1px solid #eee;
+}
+.model-engine-name {
+  font-size: 1.05em;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 4px;
+}
+.model-engine-info { font-size: 0.85em; color: #555; }
+.model-engine-meta {
+  font-size: 0.82em;
+  color: #888;
+  margin-top: 3px;
+  word-break: break-all;
+}
+.model-badge {
+  display: inline-block;
+  font-size: 0.72em;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  margin-left: 6px;
+}
+.model-badge-green { background: #d4edda; color: #155724; }
+.model-badge-red { background: #f8d7da; color: #721c24; }
+.model-badge-yellow { background: #fff3cd; color: #856404; }
+.model-badge-active { background: #cce5ff; color: #004085; }
+.model-active-engine {
+  padding: 10px 14px;
+  margin-top: 8px;
+  background: #e3f2fd;
+  border-radius: 10px;
+  font-size: 0.9em;
+  color: #333;
+}
+.model-config-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.model-config-row label {
+  font-size: 0.85em;
+  color: #555;
+  white-space: nowrap;
+}
+.model-config-row select {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.85em;
+}
+.model-save-btn {
+  background: #1565C0;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 16px;
+  cursor: pointer;
+  font-size: 0.85em;
+  margin-top: 6px;
+}
+.model-save-btn:hover { background: #0D47A1; }
+.model-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.model-toolbar input {
+  flex: 1;
+  min-width: 120px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.85em;
+}
+.model-toolbar select {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.85em;
+}
+.model-toolbar button {
+  background: #1565C0;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+.model-toolbar button:hover { background: #0D47A1; }
+.model-ft-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+.model-ft-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin: 6px 0;
+  background: #f9f9f9;
+  border-radius: 10px;
+  border: 1px solid #eee;
+}
+.model-ft-info { flex: 1; min-width: 0; }
+.model-ft-name {
+  font-size: 0.95em;
+  font-weight: 600;
+  color: #333;
+}
+.model-ft-meta {
+  font-size: 0.78em;
+  color: #888;
+  margin-top: 2px;
+  word-break: break-all;
+}
+.model-ft-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.model-btn-activate {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.8em;
+  cursor: pointer;
+}
+.model-btn-activate:hover { background: #c3e6cb; }
+.model-btn-delete {
+  background: #fee;
+  color: #c33;
+  border: 1px solid #fcc;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.8em;
+  cursor: pointer;
+}
+.model-btn-delete:hover { background: #fdd; }
+
+@media (max-width: 600px) {
+  .model-panel { border-radius: 10px; }
+  .model-section { padding: 10px 12px; }
+  .model-ft-card { flex-direction: column; align-items: flex-start; }
+  .model-ft-actions { width: 100%; }
+}
 </style>
 </head>
 <body>
@@ -1449,6 +1971,13 @@ input[type="text"], input[type="search"], textarea { font-size: clamp(22px, 5vw,
       <button class="lang-btn active" data-lang="puxianhua">莆仙话</button>
       <button class="lang-btn" data-lang="minnanhua">闽南话</button>
       <button class="lang-btn" data-lang="chinese">中文</button>
+      <label style="margin-left:12px;">&#127880; 口音：</label>
+      <select id="accentSelect" class="accent-select" title="选择您的口音，帮助系统更准确识别">
+        <option value="auto">自动</option>
+        <option value="putian">莆田口音</option>
+        <option value="xianyou">仙游口音</option>
+        <option value="mandarin">标准普通话</option>
+      </select>
       <span class="lang-hint" id="langHint">语音请用普通话读戏名</span>
     </div>
     <div class="input-area">
@@ -1459,12 +1988,169 @@ input[type="text"], input[type="search"], textarea { font-size: clamp(22px, 5vw,
       </button>
       <button class="search-btn" id="searchBtn">点播</button>
       <button class="voice-browse-btn" id="voiceBrowseBtn">&#127911; 语音选台</button>
+      <button class="voice-browse-btn" id="recHistoryBtn" title="查看录音历史">&#128197; 历史</button>
+      <button class="voice-browse-btn" id="datasetBtn" title="模型训练数据集">&#129514; 数据集</button>
+      <button class="voice-browse-btn" id="modelBtn" title="本地模型状态与管理">&#129302; 模型</button>
     </div>
     <div class="recognition-status" id="recogStatus">
       <span class="status-dot" id="statusDot"></span>
       <span id="statusText">正在听您说话...</span>
     </div>
 
+  </div>
+
+  <!-- ===== Recording History Panel (Phase 3) ===== -->
+  <div class="rec-history-panel" id="recHistoryPanel" style="display:none;">
+    <div class="rec-history-header">
+      <h3>&#128197; 录音历史</h3>
+      <button class="rec-history-close" id="recHistoryClose">&times;</button>
+    </div>
+    <div class="rec-history-stats" id="recHistoryStats"></div>
+    <div class="rec-history-list" id="recHistoryList">
+      <p class="rec-history-empty">暂无录音记录</p>
+    </div>
+    <div class="rec-history-pager" id="recHistoryPager"></div>
+  </div>
+
+  <!-- ===== Dataset Panel (Phase 5) ===== -->
+  <div class="ds-panel" id="dsPanel" style="display:none;">
+    <div class="ds-header">
+      <h3>&#129514; 模型训练数据集</h3>
+      <button class="ds-close" id="dsClose">&times;</button>
+    </div>
+
+    <!-- 数据集列表视图 -->
+    <div id="dsListView">
+      <div class="ds-toolbar">
+        <input type="text" id="dsNewName" placeholder="输入数据集名称..." />
+        <input type="text" id="dsNewDesc" placeholder="描述（可选）" style="flex:1.5;" />
+        <button onclick="createDataset()">&#10133; 创建</button>
+        <button onclick="loadDatasets()">&#128260; 刷新</button>
+      </div>
+      <div class="ds-list" id="dsList">
+        <p class="ds-empty">暂无数据集，请创建一个</p>
+      </div>
+    </div>
+
+    <!-- 数据集详情视图 -->
+    <div id="dsDetailView" style="display:none;">
+      <div class="ds-detail">
+        <button class="ds-back" onclick="showDatasetList()">&#8592; 返回列表</button>
+        <h3 id="dsDetailName" style="margin:6px 0;"></h3>
+        <div class="ds-detail-stats" id="dsDetailStats"></div>
+        <div class="ds-toolbar" style="background:none;border:none;padding:6px 0;">
+          <button onclick="batchImportRecordings()">&#128230; 从录音导入</button>
+          <button onclick="toggleExportDialog()">&#128190; 导出</button>
+          <button onclick="lockDataset()" id="dsLockBtn">&#128274; 锁定</button>
+          <button onclick="deleteDataset()" style="background:#c33;">&#128465; 删除</button>
+        </div>
+
+        <!-- 导出对话框 -->
+        <div class="ds-export-dialog" id="dsExportDialog" style="display:none;">
+          <label>格式：</label>
+          <select id="dsExportFormat">
+            <option value="jsonl">JSONL</option>
+            <option value="csv">CSV</option>
+            <option value="manifest">DashScope Manifest</option>
+            <option value="kaldi">Kaldi</option>
+          </select>
+          <label style="margin-left:10px;">状态过滤：</label>
+          <select id="dsExportStatus">
+            <option value="">全部</option>
+            <option value="pending">待标注</option>
+            <option value="annotated">已标注</option>
+            <option value="verified">已验证</option>
+          </select>
+          <label style="margin-left:10px;">最低置信度：</label>
+          <input type="number" id="dsExportMinConf" min="0" max="1" step="0.1" value="0" style="width:60px;" />
+          <label><input type="checkbox" id="dsExportCopyAudio" /> 复制音频</label>
+          <button onclick="exportDataset()">&#128190; 开始导出</button>
+          <div class="ds-export-result" id="dsExportResult"></div>
+        </div>
+
+        <!-- 样本列表 -->
+        <div class="ds-samples" id="dsSamples">
+          <p class="ds-empty">暂无样本</p>
+        </div>
+        <div class="ds-pager" id="dsPager"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Model Panel (Phase 6) ===== -->
+  <div class="model-panel" id="modelPanel" style="display:none;">
+    <div class="model-header">
+      <h3>&#129302; 本地模型管理</h3>
+      <button class="model-close" id="modelClose">&times;</button>
+    </div>
+
+    <!-- 引擎状态 -->
+    <div class="model-section">
+      <h4>&#9889; 引擎状态</h4>
+      <div id="modelEngineStatus">
+        <p class="model-empty">加载中...</p>
+      </div>
+    </div>
+
+    <!-- 引擎配置 -->
+    <div class="model-section">
+      <h4>&#9881; 引擎配置</h4>
+      <div class="model-config-row">
+        <label>识别引擎：</label>
+        <select id="modelEngineSelect">
+          <option value="auto">自动</option>
+          <option value="sensevoice">SenseVoice</option>
+          <option value="whisper">Whisper</option>
+        </select>
+      </div>
+      <div class="model-config-row">
+        <label>Whisper 模型大小：</label>
+        <select id="modelWhisperSize">
+          <option value="tiny">tiny</option>
+          <option value="base">base</option>
+          <option value="small">small</option>
+          <option value="medium">medium</option>
+          <option value="large">large</option>
+        </select>
+      </div>
+      <button class="model-save-btn" onclick="saveModelConfig()">&#128190; 保存配置</button>
+    </div>
+
+    <!-- 微调模型 -->
+    <div class="model-section">
+      <h4>&#129513; 微调模型</h4>
+      <div class="model-toolbar">
+        <input type="text" id="ftModelName" placeholder="微调模型名称..." />
+        <select id="ftModelEngine">
+          <option value="sensevoice">SenseVoice</option>
+          <option value="whisper">Whisper</option>
+        </select>
+        <button onclick="registerFinetuneModel()">&#10133; 注册</button>
+        <button onclick="loadFinetuneModels()">&#128260; 刷新</button>
+        <button onclick="deactivateModel()" style="background:#999;">&#10060; 取消微调模型</button>
+      </div>
+      <div id="modelFtList" class="model-ft-list">
+        <p class="model-empty">暂无微调模型</p>
+      </div>
+    </div>
+
+    <!-- 微调数据导出 -->
+    <div class="model-section">
+      <h4>&#128230; 微调数据导出</h4>
+      <div class="model-config-row">
+        <label>数据集：</label>
+        <select id="ftExportDataset"><option value="">-- 选择数据集 --</option></select>
+        <label>格式：</label>
+        <select id="ftExportFormat">
+          <option value="sensevoice">SenseVoice</option>
+          <option value="whisper">Whisper</option>
+        </select>
+        <button class="model-save-btn" onclick="exportFinetuneData()">&#128190; 导出微调数据</button>
+      </div>
+      <div id="modelExportList" class="model-ft-list">
+        <p class="model-empty">暂无导出记录</p>
+      </div>
+    </div>
   </div>
 
   <!-- ===== Gallery Nav ===== -->
@@ -2701,84 +3387,6 @@ const minnanDict = {
 };
 
 // =============================================
-// =============================================
-// 节目名语音库（方言直呼匹配：莆仙话/闽南话节目名）
-// 原理：节目名→多发音索引（普通话拼音 + 方言宽松拼音 + 别名谐音），
-// ASR 输出文本转拼音后做方言归一化编辑距离匹配。
-// 莆仙话/闽南话无商用识别引擎，此层是"能认出节目名"的关键。
-// =============================================
-const VOICE_LIB = [{"t": "春草闯堂", "c": "莆仙戏", "p": "cuncaocuantan", "a": ["cuncao", "cuantan", "caocuantan", "cuncuocuantan", "cuncaocuantan", "cuncuo", "cuncau", "cuncaosi", "tsunchauchongtong"]}, {"t": "状元与乞丐", "c": "莆仙戏", "p": "zuanyuanyuqigai", "a": ["zuanyuan", "qigai", "zuanyuanyuqigai", "zuanyuanqigai", "zuanyuannuqigai", "zuanyuansi", "qigaisi", "tsingunkahkhitka", "tsingun", "khitka"]}, {"t": "江梅妃", "c": "莆仙戏", "p": "jianmeihei", "a": ["meihei", "jiancaipin", "jianmeihei", "jianweihei", "meiwei", "meiheisi", "kanmuhui", "muhui"]}, {"t": "新亭泪", "c": "莆仙戏", "p": "sintinnei", "a": ["sintin", "sintinnei", "sinpinnei", "sintinduiqi", "sintinsi", "sintngnu", "sintng"]}, {"t": "秋风辞", "c": "莆仙戏", "p": "qiuhenci", "a": ["qiuhen", "qiuhenci", "qiuhenqin", "qiuhensi", "tsiuhongs"]}, {"t": "射雕英雄传", "c": "电视剧", "p": "sediaoyinsiongzuan", "a": ["sediao", "sediaoyinsiong", "sediaoyinsiongzuan", "sitiauenhinthun"]}, {"t": "红楼梦", "c": "电视剧", "p": "hongnoumen", "a": ["hongnou", "hongnoumen", "hngnbng"]}, {"t": "三国演义", "c": "电视剧", "p": "sanuoyanyi", "a": ["sanuo", "sanuoyanyi", "samkokin"]}, {"t": "水浒传", "c": "电视剧", "p": "suihuzuan", "a": ["suihu", "suihuzuan", "tsuhothun"]}, {"t": "西游记", "c": "电视剧", "p": "siyouji", "a": ["siyou", "sunwukong", "siyouji", "seik"]}, {"t": "东方红", "c": "音乐", "p": "donghanhong", "a": ["hongge", "donghanhong", "tonghonghng"]}, {"t": "没有共产党就没有新中国", "c": "音乐", "p": "meiyougongcandanjiumeiyousinzongguo", "a": ["meiyougongcandan", "gongcandan", "meiyougongcandanjiumeiyousinzongguo", "bkinsntng"]}, {"t": "打靶归来", "c": "音乐", "p": "dabaguinai", "a": ["daba", "dabatguinai", "dabaguinai", "dabagui", "tnnpkuini"]}, {"t": "最炫民族风", "c": "音乐", "p": "zuisuanminzuhen", "a": ["minzuhen", "zuisuanminzuhen", "zuisuan", "zuisuanminzu", "tsuhinbntsokhong"]}, {"t": "小苹果", "c": "音乐", "p": "siaopinguo", "a": ["pinguo", "siaopinguo", "siphngk"]}, {"t": "地道战", "c": "电影", "p": "didaozan", "a": ["didao", "didaaozan", "didaozan", "tttsin"]}, {"t": "铁道游击队", "c": "电影", "p": "tiedaoyoujidui", "a": ["tiedao", "youjidui", "tiedaoyouji", "tiedaoyoujidui", "thihtiktu"]}, {"t": "英雄儿女", "c": "电影", "p": "yinsiongennu", "a": ["yinsiong", "yinsiongennu", "enhinjn"]}, {"t": "人到中年", "c": "电影", "p": "nendaozongnian", "a": ["zongnian", "nendaonianzong", "nendaozongnian", "jnkutiongnin"]}, {"t": "庐山恋", "c": "电影", "p": "nusannian", "a": ["nusan", "nusannian", "nosannun"]}, {"t": "陈三五娘", "c": "歌仔戏", "p": "censanwunian", "a": ["censan", "wunian", "sanwunian", "censanwunian", "tansamngoonong", "tnsamngoni", "tnsam", "ngoni"]}, {"t": "梁山伯与祝英台", "c": "歌仔戏", "p": "niansanboyuzuyintai", "a": ["niansanbo", "zuyintai", "nianzu", "sanboyintai", "yintai", "sanbo", "niansanboyuzuyintai", "nisanpehhoktsiokinti", "nisannpeh", "tsiokinti", "nianyintai", "niansanboyintai"]}, {"t": "吕蒙正", "c": "歌仔戏", "p": "numenzen", "a": ["menzen", "numenzen", "paosiuqiu", "nbngtsng"]}, {"t": "薛平贵与王宝钏", "c": "歌仔戏", "p": "suepinguiyuwanbaocuan", "a": ["suepingui", "wanbaocuan", "pingui", "baocuan", "suepinguiyuwanbaocuan", "sihpngkuhokngptsun", "sihpngku"]}, {"t": "王金龙与苏三", "c": "歌仔戏", "p": "wanjinnongyususan", "a": ["wanjinnong", "susan", "jinnong", "susanqijie", "wanjinnongyususan", "yutancun", "ngkimninhoksoosam"]}, {"t": "八骏马", "c": "南音", "p": "bajunma", "a": ["junma", "bajunma", "bajun", "pattsnb", "pattsn"]}, {"t": "梅花操", "c": "南音", "p": "meihuacao", "a": ["meihua", "meihuacao", "muhuetsau"]}, {"t": "百鸟归巢", "c": "南音", "p": "bainiaoguicao", "a": ["bainiao", "bainiaoguicao", "pikniukuits"]}, {"t": "三千两金", "c": "南音", "p": "sanqiannianjin", "a": ["sanqian", "sanqiannianjin", "sanntsiannikim"]}, {"t": "直入花园", "c": "南音", "p": "zinuhuayuan", "a": ["huayuan", "zinuhuayuan", "zinu", "titjiphuehng"]}, {"t": "小沙弥下山", "c": "南音", "p": "siaosamisiasan", "a": ["siaosami", "sami", "siaosamisiaosan", "siaosamisiasan", "siasan", "sisabhsan"]}, {"t": "驯猴", "c": "南音", "p": "sunhou", "a": ["housi", "sunhou", "snku"]}, {"t": "元宵乐", "c": "南音", "p": "yuansiaone", "a": ["yuansiao", "yuansiaone", "gunsiaunok"]}, {"t": "大名府", "c": "木偶戏", "p": "daminhu", "a": ["damin", "daminhu", "tibngh"]}, {"t": "雷万春打虎", "c": "木偶戏", "p": "neiwancundahu", "a": ["neiwancun", "dahu", "neiwencun", "neiwencundahu", "neiwancundahu", "neiwencundahua", "nubntsuntnnho"]}];
-const HANZI_PY = {"一": "yi", "万": "wan", "三": "san", "下": "xia", "与": "yu", "丐": "gai", "丘": "qiu", "东": "dong", "两": "liang", "个": "ge", "中": "zhong", "丰": "feng", "串": "chuan", "主": "zhu", "义": "yi", "之": "zhi", "乐": "le", "乞": "qi", "乳": "ru", "二": "er", "五": "wu", "亡": "wang", "产": "chan", "亭": "ting", "人": "ren", "亿": "yi", "今": "jin", "仔": "zai", "仙": "xian", "企": "qi", "伍": "wu", "优": "you", "伞": "san", "传": "chuan", "伯": "bo", "低": "di", "供": "gong", "侯": "hou", "俊": "jun", "俗": "su", "保": "bao", "倒": "dao", "借": "jie", "停": "ting", "偶": "ou", "傻": "sha", "僵": "jiang", "儒": "ru", "儿": "er", "元": "yuan", "兑": "dui", "党": "dang", "入": "ru", "八": "ba", "公": "gong", "共": "gong", "军": "jun", "冬": "dong", "凉": "liang", "凋": "diao", "凤": "feng", "凭": "ping", "击": "ji", "划": "hua", "创": "chuang", "别": "bie", "到": "dao", "削": "xue", "功": "gong", "千": "qian", "午": "wu", "华": "hua", "南": "nan", "占": "zhan", "厅": "ting", "厚": "hou", "原": "yuan", "只": "zhi", "台": "tai", "名": "ming", "后": "hou", "吓": "xia", "吕": "lv", "君": "jun", "听": "ting", "启": "qi", "吼": "hou", "员": "yuan", "呼": "hu", "命": "ming", "咚": "dong", "品": "pin", "哗": "hua", "唇": "chun", "唐": "tang", "啥": "sha", "喉": "hou", "嘲": "chao", "嘴": "zui", "园": "yuan", "国": "guo", "圆": "yuan", "地": "di", "均": "jun", "坊": "fang", "坝": "ba", "基": "ji", "堂": "tang", "堆": "dui", "堡": "bao", "壮": "zhuang", "壶": "hu", "复": "fu", "夏": "xia", "外": "wai", "大": "da", "女": "nv", "奶": "nai", "如": "ru", "妃": "fei", "妆": "zhuang", "妈": "ma", "姐": "jie", "姜": "jiang", "娘": "niang", "婆": "po", "媒": "mei", "嬷": "ma", "孙": "sun", "孝": "xiao", "孟": "meng", "学": "xue", "完": "wan", "宏": "hong", "宝": "bao", "宫": "gong", "宴": "yan", "宵": "xiao", "密": "mi", "对": "dui", "寻": "xun", "封": "feng", "射": "she", "将": "jiang", "小": "xiao", "尘": "chen", "就": "jiu", "屡": "lv", "山": "shan", "峰": "feng", "川": "chuan", "巡": "xun", "巢": "chao", "工": "gong", "巴": "ba", "希": "xi", "帖": "tie", "帮": "bang", "幢": "chuang", "平": "ping", "年": "nian", "庄": "zhuang", "庐": "lu", "应": "ying", "底": "di", "府": "fu", "废": "fei", "庭": "ting", "廷": "ting", "弃": "qi", "弥": "mi", "归": "gui", "影": "ying", "心": "xin", "忆": "yi", "忘": "wang", "忠": "zhong", "念": "nian", "怆": "chuang", "恋": "lian", "悟": "wu", "悬": "xuan", "想": "xiang", "意": "yi", "慈": "ci", "戏": "xi", "我": "wo", "战": "zhan", "房": "fang", "扒": "ba", "打": "da", "找": "zhao", "把": "ba", "抚": "fu", "抛": "pao", "抬": "tai", "抱": "bao", "拜": "bai", "拢": "long", "指": "zhi", "挡": "dang", "挣": "zheng", "捻": "nian", "搂": "lou", "搭": "da", "摆": "bai", "播": "bo", "擂": "lei", "操": "cao", "放": "fang", "政": "zheng", "散": "san", "文": "wen", "斤": "jin", "斧": "fu", "新": "xin", "方": "fang", "旅": "lv", "旋": "xuan", "族": "zu", "旬": "xun", "旺": "wang", "明": "ming", "春": "chun", "晓": "xiao", "晨": "chen", "普": "pu", "曹": "cao", "最": "zui", "有": "you", "朝": "chao", "朦": "meng", "木": "mu", "机": "ji", "杉": "shan", "来": "lai", "果": "guo", "柏": "bai", "柜": "gui", "桂": "gui", "档": "dang", "梁": "liang", "梅": "mei", "梦": "meng", "棠": "tang", "楼": "lou", "概": "gai", "槽": "cao", "樱": "ying", "欣": "xin", "歌": "ge", "正": "zheng", "武": "wu", "民": "min", "气": "qi", "水": "shui", "汁": "zhi", "汝": "ru", "江": "jiang", "汤": "tang", "沉": "chen", "沙": "sha", "没": "mei", "油": "you", "泪": "lei", "津": "jin", "洪": "hong", "浆": "jiang", "浒": "hu", "消": "xiao", "涉": "she", "游": "you", "湖": "hu", "湾": "wan", "溉": "gai", "源": "yuan", "溪": "xi", "演": "yan", "潮": "chao", "炉": "lu", "炒": "chao", "炫": "xuan", "点": "dian", "炼": "lian", "烛": "zhu", "煤": "mei", "熊": "xiong", "燕": "yan", "牵": "qian", "状": "zhuang", "猴": "hou", "玄": "xuan", "王": "wang", "玩": "wan", "玫": "mei", "球": "qiu", "瓶": "ping", "瓷": "ci", "由": "you", "电": "dian", "画": "hua", "界": "jie", "疤": "ba", "疮": "chuang", "白": "bai", "百": "bai", "盖": "gai", "盟": "meng", "目": "mu", "直": "zhi", "看": "kan", "眼": "yan", "睡": "shui", "码": "ma", "砂": "sha", "硝": "xiao", "磊": "lei", "社": "she", "祖": "zu", "祝": "zhu", "福": "fu", "秋": "qiu", "种": "zhong", "积": "ji", "稀": "xi", "税": "shui", "稻": "dao", "空": "kong", "穿": "chuan", "窗": "chuang", "站": "zhan", "竹": "zhu", "笑": "xiao", "第": "di", "笼": "long", "筋": "jin", "筑": "zhu", "答": "da", "签": "qian", "米": "mi", "类": "lei", "粮": "liang", "糊": "hu", "糖": "tang", "糙": "cao", "素": "su", "累": "lei", "红": "hong", "纯": "chun", "纱": "sha", "纸": "zhi", "练": "lian", "终": "zhong", "绣": "xiu", "绿": "lv", "缕": "lv", "缘": "yuan", "美": "mei", "而": "er", "耳": "er", "聋": "long", "肥": "fei", "胎": "tai", "胡": "hu", "腐": "fu", "腕": "wan", "膛": "tang", "臣": "chen", "舍": "she", "舞": "wu", "船": "chuan", "良": "liang", "艳": "yan", "艺": "yi", "节": "jie", "芝": "zhi", "芦": "lu", "芯": "xin", "花": "hua", "芳": "fang", "苏": "su", "苔": "tai", "英": "ying", "苹": "ping", "草": "cao", "莆": "pu", "莲": "lian", "菌": "jun", "菲": "fei", "萌": "meng", "萍": "ping", "萧": "xiao", "蒙": "meng", "薛": "xue", "薪": "xin", "蘸": "zhan", "虎": "hu", "虹": "hong", "虾": "xia", "蚯": "qiu", "蜂": "feng", "蜜": "mi", "螳": "tang", "衫": "shan", "袅": "niao", "装": "zhuang", "裹": "guo", "西": "xi", "要": "yao", "规": "gui", "视": "shi", "解": "jie", "训": "xun", "记": "ji", "访": "fang", "证": "zheng", "评": "ping", "识": "shi", "诉": "su", "词": "ci", "话": "hua", "语": "yu", "谜": "mi", "貂": "diao", "贴": "tie", "贵": "gui", "费": "fei", "起": "qi", "足": "zu", "跪": "gui", "辆": "liang", "辛": "xin", "辞": "ci", "达": "da", "迁": "qian", "过": "guo", "迎": "ying", "这": "zhe", "远": "yuan", "迷": "mi", "选": "xuan", "通": "tong", "道": "dao", "那": "na", "邮": "you", "邱": "qiu", "郑": "zheng", "酥": "su", "酿": "niang", "醉": "zui", "采": "cai", "量": "liang", "金": "jin", "钏": "chuan", "钙": "gai", "钟": "zhong", "钱": "qian", "铁": "tie", "铅": "qian", "铝": "lv", "链": "lian", "销": "xiao", "锋": "feng", "锡": "xi", "闯": "chuang", "闽": "min", "队": "dui", "阿": "a", "陈": "chen", "隆": "long", "雄": "xiong", "雌": "ci", "雕": "diao", "雪": "xue", "雷": "lei", "霄": "xiao", "霉": "mei", "霸": "ba", "非": "fei", "靶": "ba", "音": "yin", "风": "feng", "飞": "fei", "饱": "bao", "马": "ma", "驯": "xun", "骂": "ma", "骏": "jun", "鲨": "sha", "鸟": "niao", "鸡": "ji", "鸣": "ming", "鸿": "hong", "鹑": "chun", "鹰": "ying", "麻": "ma", "黏": "nian", "龙": "long", "龟": "gui", "缎": "duan", "渗": "shen", "呀": "ya", "神": "shen", "的": "de", "河": "he", "载": "zai", "曲": "qu", "磨": "mo", "了": "le", "和": "he", "不": "bu", "清": "qing", "绑": "bang", "店": "dian", "爷": "ye", "烦": "fan", "波": "bo", "典": "dian", "锻": "duan", "育": "yu", "号": "hao", "滴": "di", "甸": "dian", "席": "xi", "喜": "xi", "聊": "liao", "布": "bu", "幼": "you", "振": "zhen", "是": "shi", "窝": "wo", "断": "duan", "姥": "lao", "映": "ying", "倾": "qing", "卧": "wo", "簿": "bu", "殿": "dian", "坎": "kan", "佬": "lao", "像": "xiang", "雨": "yu", "阁": "ge", "申": "shen", "摇": "yao", "箱": "xiang", "洗": "xi", "步": "bu", "很": "hen", "宰": "zai", "垫": "dian", "震": "zhen", "唱": "chang", "猖": "chang", "廖": "liao", "殴": "ou", "任": "ren", "忍": "ren", "欧": "ou", "娶": "qu", "幕": "mu", "伸": "shen", "莱": "lai", "审": "shen", "邦": "bang", "早": "zao", "砍": "kan", "响": "xiang", "式": "shi", "针": "zhen", "籁": "lai", "榜": "bang", "折": "zhe", "区": "qu", "因": "yin", "什": "shen", "哥": "ge", "豪": "hao", "趣": "qu", "窑": "yao", "预": "yu", "娼": "chang", "轻": "qing", "啊": "a", "毫": "hao", "哦": "o", "嗯": "n", "格": "ge", "搁": "ge", "昌": "chang", "系": "xi", "握": "wo", "言": "yan", "痕": "hen", "各": "ge", "相": "xiang", "好": "hao", "问": "wen", "慕": "mu", "眉": "mei", "魔": "mo", "耀": "yao", "在": "zai", "示": "shi", "家": "jia", "浩": "hao", "情": "qing", "墓": "mu", "端": "duan", "膀": "bang", "青": "qing", "请": "qing", "崽": "zai", "摸": "mo", "友": "you", "银": "yin", "化": "hua", "隔": "ge", "子": "zi", "遥": "yao", "珍": "zhen", "荷": "he", "沃": "wo", "拿": "na", "沈": "shen", "捞": "lao", "枣": "zao", "劳": "lao", "真": "zhen", "拟": "ni", "哲": "zhe", "傍": "bang", "何": "he", "去": "qu", "遮": "zhe", "割": "ge", "澡": "zao", "仿": "fang", "呢": "ne", "刊": "kan", "拨": "bo", "硬": "ying", "右": "you", "部": "bu", "泥": "ni", "狠": "hen", "再": "zai", "她": "ta", "泊": "po", "捕": "bu", "又": "you", "藕": "ou", "他": "ta", "短": "duan", "咬": "yao", "辙": "zhe", "认": "ren", "葛": "ge", "碘": "dian", "博": "bo", "尼": "ni", "料": "liao", "得": "de", "纳": "na", "妮": "ni", "盒": "he", "呕": "ou", "么": "me", "们": "men", "德": "de", "菖": "chang", "灶": "zao", "细": "xi", "娜": "na", "疗": "liao", "取": "qu", "仁": "ren", "向": "xiang", "昊": "hao", "药": "yao", "蚤": "zao", "深": "shen", "市": "shi", "段": "duan", "饮": "yin", "镇": "zhen", "甚": "shen", "瞭": "liao", "慎": "shen", "默": "mo", "惦": "dian", "牧": "mu", "癞": "lai", "佑": "you", "老": "lao", "阴": "yin", "牢": "lao", "引": "yin", "侃": "kan", "世": "shi", "哪": "na", "身": "shen", "纺": "fang", "你": "ni", "合": "he", "赖": "lai", "忙": "mang", "搏": "bo", "恨": "hen", "爸": "ba", "刃": "ren", "香": "xiang", "玉": "yu", "事": "shi", "吗": "ma", "哈": "ha", "嘿": "hei", "啦": "la", "嘛": "ma", "吧": "ba", "天": "tian", "热": "re", "冷": "leng", "昨": "zuo", "温": "wen", "晴": "qing", "霜": "shuang", "吖": "ya", "压": "ya", "鸭": "ya", "牙": "ya", "芽": "ya", "雅": "ya", "添": "tian", "填": "tian", "田": "tian", "甜": "tian", "汽": "qi", "器": "qi", "妻": "qi", "惹": "re", "愣": "leng", "楞": "leng", "冥": "ming", "左": "zuo", "坐": "zuo", "作": "zuo", "做": "zuo", "瘟": "wen", "闻": "wen", "羽": "yu", "血": "xue", "穴": "xue", "双": "shuang", "爽": "shuang", "泣": "qi", "无": "wu", "尾": "wei", "开": "kai", "炮": "pao", "胜": "sheng", "利": "li", "坚": "jian", "守": "shou", "阵": "zhen", "见": "jian", "多": "duo", "少": "shao", "何": "he", "儿": "er", "女": "nv", "到": "dao", "中": "zhong", "年": "nian"};
-const VOICE_BLACKLIST = ["再见", "你好", "您好", "拜拜", "哈喽", "嗨", "早安", "晚安", "在吗", "干嘛", "干什么", "多少钱", "谢谢", "感谢", "吃饭", "天气", "肚子饿", "我回来了", "你好吗", "大家好", "你是谁", "几点", "今天星期", "早上好", "下午好", "晚上好", "没问题", "好的", "可以"];
-
-
-function voiceNormPinyin(s) {
-  s = String(s || '').toLowerCase().replace(/[^a-z]/g, '');
-  return s
-    .replace(/zh/g, 'z').replace(/ch/g, 'c').replace(/sh/g, 's')
-    .replace(/f/g, 'h').replace(/x/g, 's')
-    .replace(/l/g, 'n').replace(/r/g, 'n')
-    .replace(/eng/g, 'en').replace(/ing/g, 'in').replace(/ang/g, 'an')
-    .replace(/uang/g, 'uan').replace(/iang/g, 'ian')
-    .replace(/v/g, 'u');
-}
-
-function voiceEditDist(a, b) {
-  var m = a.length, n = b.length;
-  var dp = [];
-  for (var j = 0; j <= n; j++) dp[j] = j;
-  for (var i = 1; i <= m; i++) {
-    var prev = dp[0]; dp[0] = i;
-    for (var j = 1; j <= n; j++) {
-      var cur = dp[j];
-      dp[j] = Math.min(dp[j] + 1, dp[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
-      prev = cur;
-    }
-  }
-  return dp[n];
-}
-
-function voiceToPinyin(text) {
-  var out = '';
-  for (var i = 0; i < text.length; i++) {
-    out += HANZI_PY[text[i]] || '';
-  }
-  return out;
-}
-
-function voiceCleanSpoken(text) {
-  var t = String(text || '').trim();
-  t = t.replace(/^(我要看|我想看|我要听|我想听|帮我找|帮我搜|帮我放|播放一下|给我放|我要播|我想播|请播|请放|搜索|查找|播放|播一下|放一下|来点|来一个|有没有|有没有什么|什么是|给我来|给我整个|整个|来个|看|听|放)\s*/, '');
-  t = t.replace(/(这个|那个|啥|一下|看看|听听|节目|电视|戏曲|戏|电影|音乐|歌|歌曲|视频|片子|片)$/, '');
-  return t;
-}
-
-// 语音库主入口：返回 { title, score } 或 null（score<=2 视为强命中）
-function findVoiceLibraryMatch(rawText) {
-  var t = String(rawText || '');
-  for (var i = 0; i < VOICE_BLACKLIST.length; i++) {
-    if (t.indexOf(VOICE_BLACKLIST[i]) !== -1) return null;
-  }
-  var cleaned = voiceCleanSpoken(t);
-  var qn = voiceNormPinyin(voiceToPinyin(cleaned));
-  if (!qn) return null;
-  var best = null, bestScore = 999;
-  for (var k = 0; k < VOICE_LIB.length; k++) {
-    var e = VOICE_LIB[k];
-    var cands = [e.p].concat(e.a);
-    var bestC = 999;
-    for (var j = 0; j < cands.length; j++) {
-      var d = voiceEditDist(qn, cands[j]);
-      var ratio = Math.min(qn.length, cands[j].length) / Math.max(qn.length, cands[j].length, 1);
-      if (ratio < 0.55) d += 6;
-      if (d < bestC) bestC = d;
-    }
-    if (bestC < bestScore) { bestScore = bestC; best = e; }
-  }
-  if (best && bestScore <= 2) return { title: best.t, score: bestScore };
-  return null;
-}
-
 // 多发音语库（拼音近似、谐音、常见误识别）
 // =============================================
 const puxianPronunciationDict = {
@@ -2886,36 +3494,31 @@ function getPronunciationVariants(title, lang) {
   return dict[title] || [];
 }
 
-// 单次扫描替换：用合并正则按最长键优先匹配，回调中查字典替换
-// 正则引擎从左到右扫描原文，不会重新扫描已替换的文本，彻底杜绝级联膨胀
-var _replaceRegexCache = {};
-function singlePassReplace(text, dict) {
-  if (!text) return text;
-  var keys = Object.keys(dict);
-  if (keys.length === 0) return text;
-  // 缓存正则：按 key 长度降序排列，最长键优先匹配
-  var cacheKey = keys.slice().sort().join('\x00');
-  var re = _replaceRegexCache[cacheKey];
-  if (!re) {
-    var sorted = keys.slice().sort(function(a, b) { return b.length - a.length; });
-    var escaped = sorted.map(function(k) {
-      return k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    });
-    re = new RegExp(escaped.join('|'), 'g');
-    _replaceRegexCache[cacheKey] = re;
-  }
-  return text.replace(re, function(match) {
-    return dict[match] !== undefined ? dict[match] : match;
-  });
-}
-
 // 闽南话翻译引擎
 function translateMinnan(input) {
   if (!input) return { translated: '', changed: false };
 
-  var trimmed = input.trim();
-  var translated = singlePassReplace(trimmed, minnanDict);
-  var changed = translated !== trimmed;
+  const trimmed = input.trim();
+  let translated = trimmed;
+  let changed = false;
+
+  // 整句匹配
+  for (const [k, v] of Object.entries(minnanDict)) {
+    if (translated.includes(k) && k === v) continue;
+    if (translated.includes(k)) {
+      translated = translated.replaceAll(k, v);
+      if (v !== k) changed = true;
+    }
+  }
+
+  // 逐字/逐词替换（按长度降序）
+  const sortedKeys = Object.keys(minnanDict).sort((a, b) => b.length - a.length);
+  for (const k of sortedKeys) {
+    if (translated.includes(k)) {
+      translated = translated.replaceAll(k, minnanDict[k]);
+      if (minnanDict[k] !== k) changed = true;
+    }
+  }
 
   return { translated: translated.trim(), changed };
 }
@@ -2926,9 +3529,27 @@ function translateMinnan(input) {
 function translatePuxian(input) {
   if (!input) return { translated: '', changed: false };
 
-  var trimmed = input.trim();
-  var translated = singlePassReplace(trimmed, puxianDict);
-  var changed = translated !== trimmed;
+  const trimmed = input.trim();
+  let translated = trimmed;
+  let changed = false;
+
+  // 第一优先：整句匹配
+  for (const [k, v] of Object.entries(puxianDict)) {
+    if (translated.includes(k) && k === v) continue;
+    if (translated.includes(k)) {
+      translated = translated.replaceAll(k, v);
+      if (v !== k) changed = true;
+    }
+  }
+
+  // 第二优先：逐字/逐词替换（按长度降序，避免短词覆盖长词）
+  const sortedKeys = Object.keys(puxianDict).sort((a, b) => b.length - a.length);
+  for (const k of sortedKeys) {
+    if (translated.includes(k)) {
+      translated = translated.replaceAll(k, puxianDict[k]);
+      if (puxianDict[k] !== k) changed = true;
+    }
+  }
 
   return { translated: translated.trim(), changed };
 }
@@ -2941,86 +3562,57 @@ function normalizeSpokenQuery(input) {
     .replace(/(这个|一下|看看|听听|节目|视频|音频)$/g, '');
 
   var fixes = {
-    // 莆仙戏（完整节目名作为 identity 条目，确保最长优先匹配，防止级联膨胀）
-    '春草闯堂': '春草闯堂',
-    '秋风辞': '秋风辞',
-    '状元与乞丐': '状元与乞丐',
-    '江梅妃': '江梅妃',
-    '新亭泪': '新亭泪',
-    // 歌仔戏
-    '陈三五娘': '陈三五娘',
-    '梁山伯与祝英台': '梁山伯与祝英台',
-    '吕蒙正': '吕蒙正',
-    '薛平贵与王宝钏': '薛平贵与王宝钏',
-    '王金龙与苏三': '王金龙与苏三',
-    // 南音
-    '八骏马': '八骏马',
-    '梅花操': '梅花操',
-    '百鸟归巢': '百鸟归巢',
-    '三千两金': '三千两金',
-    '直入花园': '直入花园',
-    '小沙弥下山': '小沙弥下山',
-    '驯猴': '驯猴',
-    '元宵乐': '元宵乐',
-    // 木偶戏
-    '大名府': '大名府',
-    '雷万春打虎': '雷万春打虎',
-    // 电视剧
-    '射雕英雄传': '射雕英雄传',
-    '红楼梦': '红楼梦',
-    '三国演义': '三国演义',
-    '水浒传': '水浒传',
-    '西游记': '西游记',
-    // 音乐
-    '东方红': '东方红',
-    '没有共产党就没有新中国': '没有共产党就没有新中国',
-    '打靶归来': '打靶归来',
-    '最炫民族风': '最炫民族风',
-    '小苹果': '小苹果',
-    // 电影
-    '地道战': '地道战',
-    '铁道游击队': '铁道游击队',
-    '英雄儿女': '英雄儿女',
-    '人到中年': '人到中年',
-    '庐山恋': '庐山恋',
-    // ---- 以下为误识别/缩写修正（长度短于完整名，会被上面的完整名优先匹配） ----
+    // 莆仙戏
     '新品类': '新亭泪', '新品泪': '新亭泪', '新平泪': '新亭泪',
     '新听泪': '新亭泪', '新停泪': '新亭泪', '新亭类': '新亭泪',
     '新亭累': '新亭泪', '新庭泪': '新亭泪',
     '秋风词': '秋风辞',
-    '状元乞丐': '状元与乞丐',
+    '状元乞丐': '状元与乞丐', '状元与乞丐': '状元与乞丐',
     '状员': '状元', '壮员': '状元', '状圆': '状元',
     '江梅飞': '江梅妃', '江美飞': '江梅妃',
     '春草闯唐': '春草闯堂', '春草闯汤': '春草闯堂',
     '春草窗堂': '春草闯堂',
-    '陈三无娘': '陈三五娘',
+    // 歌仔戏
+    '陈三五娘': '陈三五娘', '陈三无娘': '陈三五娘',
     '梁山伯': '梁山伯与祝英台',
     '祝英台': '梁山伯与祝英台', '祝影台': '梁山伯与祝英台',
-    '绿蒙正': '吕蒙正',
+    '吕蒙正': '吕蒙正', '绿蒙正': '吕蒙正',
     '薛平贵': '薛平贵与王宝钏', '王宝钏': '薛平贵与王宝钏',
     '王金龙': '王金龙与苏三', '苏三': '王金龙与苏三',
+    // 南音
     '八俊马': '八骏马', '八军马': '八骏马',
-    '梅花草': '梅花操',
-    '白鸟归巢': '百鸟归巢',
-    '三钱两金': '三千两金',
-    '只入花园': '直入花园',
+    '梅花操': '梅花操', '梅花草': '梅花操',
+    '百鸟归巢': '百鸟归巢', '白鸟归巢': '百鸟归巢',
+    '三千两金': '三千两金', '三钱两金': '三千两金',
+    '直入花园': '直入花园', '只入花园': '直入花园',
     '小沙弥': '小沙弥下山', '小沙迷': '小沙弥下山',
-    '训猴': '驯猴',
-    '元霄乐': '元宵乐',
-    '大民府': '大名府',
-    '雷文春': '雷万春打虎',
-    '猪八戒': '西游记',
+    '驯猴': '驯猴', '训猴': '驯猴',
+    '元宵乐': '元宵乐', '元霄乐': '元宵乐',
+    // 木偶戏
+    '木偶系': '木偶戏', '木偶戏': '木偶戏',
+    '大名府': '大名府', '大民府': '大名府',
+    '雷文春': '雷文春大花',
+    '岳飞传': '岳飞传', '岳飞': '岳飞传',
+    '猪八戒': '猪八戒娶亲',
+    // 电视剧
     '射雕英雄': '射雕英雄传', '射雕': '射雕英雄传',
-    '三国': '三国演义',
-    '水浒': '水浒传',
-    '西游': '西游记',
+    '红楼梦': '红楼梦',
+    '三国演义': '三国演义', '三国': '三国演义',
+    '水浒传': '水浒传', '水浒': '水浒传',
+    '西游记': '西游记', '西游': '西游记',
+    // 音乐
+    '东方红': '东方红',
     '没有共产党': '没有共产党就没有新中国',
-    '打把归来': '打靶归来',
-    '最悬民族风': '最炫民族风',
-    '铁道': '铁道游击队',
-    '英雄': '英雄儿女',
-    '庐山': '庐山恋',
-    // 通用误识别（最短，最后匹配）
+    '打靶归来': '打靶归来', '打把归来': '打靶归来',
+    '最炫民族风': '最炫民族风', '最悬民族风': '最炫民族风',
+    '小苹果': '小苹果',
+    // 电影
+    '地道战': '地道战',
+    '铁道游击队': '铁道游击队', '铁道': '铁道游击队',
+    '英雄儿女': '英雄儿女', '英雄': '英雄儿女',
+    '人到中年': '人到中年',
+    '庐山恋': '庐山恋', '庐山': '庐山恋',
+    // 通用误识别
     '春草': '春草闯堂',
     '状元': '状元与乞丐',
     '秋风': '秋风辞',
@@ -3028,7 +3620,11 @@ function normalizeSpokenQuery(input) {
     '新亭': '新亭泪'
   };
 
-  text = singlePassReplace(text, fixes);
+  Object.keys(fixes).forEach(function(key) {
+    if (text.indexOf(key) !== -1) {
+      text = text.replaceAll(key, fixes[key]);
+    }
+  });
 
   return text.trim();
 }
@@ -3082,14 +3678,6 @@ function buildSearchCandidates(rawInput) {
 }
 
 function findBestVoiceMatches(rawInput) {
-  // 第 0 层：节目名语音库（方言直呼命中节目名，直接调用）
-  var vl = findVoiceLibraryMatch(rawInput);
-  if (vl) {
-    var vlResults = searchOpera(vl.title);
-    if (vlResults.length > 0) {
-      return { query: vl.title, results: vlResults, voiceLibrary: true, voiceScore: vl.score };
-    }
-  }
   var candidates = buildSearchCandidates(rawInput);
   var allResults = [];
   var seen = {};
@@ -3139,7 +3727,7 @@ const operaDB = [
     title: '春草闯堂',
     description: '聪明机智的丫鬟春草，巧妙帮助小姐与薛玫庭，一段充满喜剧色彩的古代爱情故事。莆仙戏经典保留剧目。',
     poster: 'opera_images/chuncao.jpg',
-    keywords: ['春草', '闯堂', '丫鬟', '聪明', '小姐', '爱情', '喜剧', 'chuncao', 'chun cao', '小丫鬟', '春草闯堂', '好笑', '李千金', '薛玫庭', '李相国', '胡知府', '薛眉停', '冒认姑爷', '闯公堂', '救书生', '打抱不平', '大团圆', 'tshun chhau', '机智'],
+    keywords: ['春草', '闯堂', '丫鬟', '聪明', '小姐', '爱情', '喜剧', 'chuncao', 'chun cao', '小丫鬟', '春草闯堂', '好笑'],
     category: '莆仙戏',
     media: 'opera_audio/chuncao.wav'
   },
@@ -3149,7 +3737,7 @@ const operaDB = [
     title: '状元与乞丐',
     description: '同日出生的两个孩子，命运却截然不同。状元与乞丐的故事，讲述命运与努力的关系，发人深省的莆仙戏佳作。',
     poster: 'opera_images/zhuangyuan.jpg',
-    keywords: ['状元', '乞丐', '命运', '努力', '读书', '考试', 'zhuangyuan', 'qigai', '状元乞丐', '考上', '状元与乞丐', '丁文龙', '丁文虎', '柳氏', '丁家父子', '算命先生', '田文龙', '田文虎', '算命定命', '命运转折', '发奋读书', '高中状元', '命运靠自己', '奋斗'],
+    keywords: ['状元', '乞丐', '命运', '努力', '读书', '考试', 'zhuangyuan', 'qigai', '状元乞丐', '考上', '状元与乞丐'],
     category: '莆仙戏',
     media: 'opera_audio/zhuangyuan.wav'
   },
@@ -3159,7 +3747,7 @@ const operaDB = [
     title: '江梅妃',
     description: '讲述唐代才貌双全的江采萍（梅妃）与唐玄宗的爱情故事。她以梅花为魂，才华横溢却命运多舛，感人至深。',
     poster: 'opera_images/puxianxi_jiangmeifei.jpg',
-    keywords: ['江', '梅妃', '江采萍', '唐玄宗', '皇帝', '梅花', '妃子', '美人', 'jiangmeifei', 'jiang meifei', '江梅妃', '梅妃', '唐明皇', '杨贵妃', '杨玉环', '高力士', '唐环宗', '赋梅花赋', '失宠', '一斛珍珠', '赋诗拒珠', '何必珍珠慰寂寥', '柳叶双眉久不描', '寂寥终老', '梅妃怨', '长门赋', '才女', '爱情悲剧'],
+    keywords: ['江', '梅妃', '江采萍', '唐玄宗', '皇帝', '梅花', '妃子', '美人', 'jiangmeifei', 'jiang meifei', '江梅妃', '梅妃'],
     category: '莆仙戏',
     media: 'opera_audio/jiangmeifei.wav',
     subtitles: [
@@ -3179,7 +3767,7 @@ const operaDB = [
     title: '新亭泪',
     description: '东晋名士王导、周顗等新亭对泣，感慨国土沦丧，抒发忧国忧民的壮志豪情。一曲慷慨悲歌，荡气回肠。',
     poster: 'opera_images/puxianxi_xintinglei_v2.jpg',
-    keywords: ['新亭', '泪', '哭', '东晋', '忧国', '爱国', '名士', 'xintinglei', 'xin ting lei', '新亭泪', '新亭对泣', '悲', '王导', '周顗', '司马睿', '过江', '南渡', '北伐', '忧国忧民', '亡国之痛', '中原', '衣冠南渡'],
+    keywords: ['新亭', '泪', '哭', '东晋', '忧国', '爱国', '名士', 'xintinglei', 'xin ting lei', '新亭泪', '新亭对泣', '悲'],
     category: '莆仙戏',
     media: 'opera_audio/xintinglei.wav'
   },
@@ -3189,7 +3777,7 @@ const operaDB = [
     title: '秋风辞',
     description: '汉武帝晚年求仙问道，秋风萧瑟中回顾一生功过。一首秋风辞，道尽帝王孤独与世事无常，气势恢宏。',
     poster: 'opera_images/puxianxi_qiufengci.jpg',
-    keywords: ['秋风', '辞', '汉武帝', '皇帝', '诗', '晚年', '孤独', '帝王', 'qiufengci', 'qiu feng ci', '秋风辞', '汉武', '刘彻', '李夫人', '东方朔', '求仙', '秋风起', '回顾一生', '写秋风辞', '秋风起兮白云飞', '少壮几时兮奈老何', '人生苦短', '帝王孤独', '求仙问道'],
+    keywords: ['秋风', '辞', '汉武帝', '皇帝', '诗', '晚年', '孤独', '帝王', 'qiufengci', 'qiu feng ci', '秋风辞', '汉武'],
     category: '莆仙戏',
     media: 'opera_audio/qiufengci.wav'
   },
@@ -3199,7 +3787,7 @@ const operaDB = [
     title: '射雕英雄传',
     description: '83版经典武侠剧，黄日华翁美杰主演。郭靖从蒙古草原到中原武林的传奇成长之路，"华山论剑"成为永恒经典。',
     poster: 'opera_images/dianshi_shediaoyingxiongzhuan.jpg',
-    keywords: ['射雕英雄传','黄日华','翁美杰','武侠','郭靖','黄蓉','经典','dianshi1', '洪七公', '江南七怪', '欧阳锋', '黄药师', '周伯通', '杨康', '降龙十八掌', '九阴真经', '华山论剑', '桃花岛'],
+    keywords: ['射雕英雄传','黄日华','翁美杰','武侠','郭靖','黄蓉','经典','dianshi1'],
     category: '电视剧',
     media: 'opera_audio/shediaoyingxiongzhuan.wav'
   },
@@ -3209,7 +3797,7 @@ const operaDB = [
     title: '红楼梦',
     description: '87版经典古装剧，陈晓旭饰演林黛玉如诗如画。贾宝玉与林黛玉的爱情悲剧，"花谢花飞花满天"催人泪下。',
     poster: 'opera_images/dianshi_hongloumeng(1).jpg',
-    keywords: ['红楼梦','林黛玉','贾宝玉','陈晓旭','经典','古装','dianshi2', '薛宝钗', '王熙凤', '贾母', '刘姥姥', '欧阳奋强', '大观园', '葬花', '贾府', '爱情悲剧', '枉凝眉', '葬花吟', '红豆曲', '古典'],
+    keywords: ['红楼梦','林黛玉','贾宝玉','陈晓旭','经典','古装','dianshi2'],
     category: '电视剧',
     media: 'opera_audio/hongloumeng.wav'
   },
@@ -3219,7 +3807,7 @@ const operaDB = [
     title: '三国演义',
     description: '94版经典历史剧，波澜壮阔的三国争霸史诗。桃园三结义、三顾茅庐、赤壁之战，英雄辈出的年代。',
     poster: 'opera_images/dianshi_sanguoyanyi(1).jpg',
-    keywords: ['三国演义','诸葛亮','关羽','刘备','曹操','经典','历史','dianshi3', '孔明', '张飞', '赵云', '桃园三结义', '三顾茅庐', '草船借箭', '空城计', '赤壁之战', '滚滚长江东逝水'],
+    keywords: ['三国演义','诸葛亮','关羽','刘备','曹操','经典','历史','dianshi3'],
     category: '电视剧',
     media: 'opera_audio/sanguoyanyi.wav'
   },
@@ -3229,7 +3817,7 @@ const operaDB = [
     title: '水浒传',
     description: '98版经典名著剧，武松打虎、鲁智深倒拔垂杨柳、林冲夜奔，梁山好汉的豪迈故事。好汉歌一响浑身是劲。',
     poster: 'opera_images/dianshi_shuihuzhuan.jpg',
-    keywords: ['水浒传','武松','打虎','鲁智深','林冲','好汉歌','经典','dianshi4', '宋江', '李逵', '杨志', '武松打虎', '林教头风雪山神庙', '鲁提辖拳打镇关西', '梁山泊', '一百零八将', '大河向东流', '梁山好汉', '英雄'],
+    keywords: ['水浒传','武松','打虎','鲁智深','林冲','好汉歌','经典','dianshi4'],
     category: '电视剧',
     media: 'opera_audio/shuihuzhuan.wav'
   },
@@ -3239,7 +3827,7 @@ const operaDB = [
     title: '西游记',
     description: '86版经典神话剧，六小龄童演绎的孙悟空不可超越。大闹天宫、三打白骨精、真假美猴王，百看不厌的经典。',
     poster: 'opera_images/dianshi_xiyouji.jpg',
-    keywords: ['西游记','孙悟空','六小龄童','大闹天宫','三打白骨精','经典','神话','dianshi5', '美猴王', '齐天大圣', '唐僧', '猪八戒', '沙僧', '马德华', '真假美猴王', '火焰山', '取经', '九九八十一难', '敢问路在何方', '你挑着担我牵着马'],
+    keywords: ['西游记','孙悟空','六小龄童','大闹天宫','三打白骨精','经典','神话','dianshi5'],
     category: '电视剧',
     media: 'opera_audio/xiyouji.wav'
   },
@@ -3249,7 +3837,7 @@ const operaDB = [
     title: '东方红',
     description: '经典革命歌曲，歌颂伟大领袖毛主席。旋律激昂振奋人心，那个年代人人会唱的时代之歌。',
     poster: 'opera_images/yinyue_dongfanghong(1).jpg',
-    keywords: ['革命歌曲','东方红','经典','红歌','毛主席','yinyue1', '东方红太阳升', '中国出了个毛泽东', '他为人民谋幸福', '他是人民大救星'],
+    keywords: ['革命歌曲','东方红','经典','红歌','毛主席','yinyue1'],
     category: '音乐',
     media: 'opera_audio/dongfanghong.wav'
   },
@@ -3259,7 +3847,7 @@ const operaDB = [
     title: '没有共产党就没有新中国',
     description: '经典革命歌曲，慷慨激昂唱出人民群众的心声。阿嬷那代人的青春记忆，人人会唱。',
     poster: 'opera_images/yinyue_meiyougongchandang(1).jpg',
-    keywords: ['革命歌曲','共产党','经典','红歌','没有共产党','yinyue2', '没有共产党就没有新中国', '共产党辛劳为民族', '共产党他一心救中国', '革命'],
+    keywords: ['革命歌曲','共产党','经典','红歌','没有共产党','yinyue2'],
     category: '音乐',
     media: 'opera_audio/meiyougongchandang.wav'
   },
@@ -3269,7 +3857,7 @@ const operaDB = [
     title: '打靶归来',
     description: '经典军旅歌曲，"日落西山红霞飞，战士打靶把营归"。旋律欢快活泼，士兵们凯旋归来的喜悦，阿嬷最爱唱的歌。',
     poster: 'opera_images/yinyue_dabaguiwei.jpg',
-    keywords: ['军歌','打靶归来','经典','红歌','士兵','欢快','yinyue3', '日落西山红霞飞', '战士打靶把营归', '胸前红花映彩霞', '愉快的歌声满天飞', '咪索拉咪索', '拉索咪索瑞', '打靶', '军营'],
+    keywords: ['军歌','打靶归来','经典','红歌','士兵','欢快','yinyue3'],
     category: '音乐',
     media: 'opera_audio/dabaguiwei.wav',
     subtitles: [
@@ -3295,7 +3883,7 @@ const operaDB = [
     title: '最炫民族风',
     description: '凤凰传奇经典广场舞神曲，广场舞阿姨们的最爱。旋律一响就忍不住跟着节奏动起来。',
     poster: 'opera_images/yinyue_zuixuanminzufeng(1).jpg',
-    keywords: ['广场舞','最炫民族风','凤凰传奇','跳舞','yinyue4', '玲花', '曾毅', '苍茫的天涯是我的爱', '绵绵的青山脚下花正开', '什么样的节奏最呀最摇摆', '什么样的歌声才是最开怀', '留下来', '神曲'],
+    keywords: ['广场舞','最炫民族风','凤凰传奇','跳舞','yinyue4'],
     category: '音乐',
     media: 'opera_audio/zuixuanminzufeng.wav'
   },
@@ -3305,7 +3893,7 @@ const operaDB = [
     title: '小苹果',
     description: '筷子兄弟经典广场舞金曲，火遍全国。简单欢快的节奏，阿嬷和姐妹们跳舞的标配曲目。',
     poster: 'opera_images/yinyue_xiaopingguo(1).jpg',
-    keywords: ['广场舞','小苹果','筷子兄弟','跳舞','欢快','yinyue5', '肖央', '王太利', '我种下一颗种子', '终于长出了果实', '今天是个伟大日子', '你是我的小呀小苹果', '怎么爱你都不嫌多', '红红的小脸儿温暖我的心窝', '点亮我生命的火', '神曲'],
+    keywords: ['广场舞','小苹果','筷子兄弟','跳舞','欢快','yinyue5'],
     category: '音乐',
     media: 'opera_audio/xiaopingguo.wav'
   },
@@ -3315,7 +3903,7 @@ const operaDB = [
     title: '地道战',
     description: '1965年经典抗战电影，华北平原民兵利用地道巧妙打击日本侵略者。高家庄民兵的智慧与勇气，阿嬷年轻时的记忆。',
     poster: 'opera_images/dianying_didaozhan(1).jpg',
-    keywords: ['地道战','抗战','经典电影','民兵','日本','老电影','dianying1', '高传宝', '高老忠', '高家庄', '挖地道', '地道战嘿地道战', '埋伏神兵千百万', '鬼子', '炮楼', '地道战主题曲'],
+    keywords: ['地道战','抗战','经典电影','民兵','日本','老电影','dianying1'],
     category: '电影',
     media: 'opera_audio/didaaozhan.wav'
   },
@@ -3325,7 +3913,7 @@ const operaDB = [
     title: '铁道游击队',
     description: '1956年经典抗战电影，鲁南铁道游击队在火车上与日寇斗智斗勇。"弹起我心爱的土琵琶"唱遍全国。',
     poster: 'opera_images/dianying_tiedaoyoujidui.jpg',
-    keywords: ['铁道游击队','抗战','经典电影','火车','游击队','老电影','dianying2', '刘洪', '李正', '王强', '小坡', '微山湖', '打火车', '炸铁轨', '飞车夺枪', '弹起我心爱的土琵琶', '西边的太阳快要落山了', '微山湖上静悄悄'],
+    keywords: ['铁道游击队','抗战','经典电影','火车','游击队','老电影','dianying2'],
     category: '电影',
     media: 'opera_audio/tiedaoyoujidui.wav'
   },
@@ -3335,7 +3923,7 @@ const operaDB = [
     title: '英雄儿女',
     description: '1964年经典抗美援朝电影，志愿军战士王成坚守阵地英勇牺牲。"为了胜利，向我开炮！"震撼人心的经典台词。',
     poster: 'opera_images/dianying_yingxiongernv(1).jpg',
-    keywords: ['英雄儿女','抗美援朝','经典电影','志愿军','王成','老电影','dianying3', '王芳', '王团长', '向我开炮', '为了胜利', '坚守阵地', '上甘岭', '英雄赞歌', '烽烟滚滚唱英雄', '四面青山侧耳听'],
+    keywords: ['英雄儿女','抗美援朝','经典电影','志愿军','王成','老电影','dianying3'],
     category: '电影',
     media: 'opera_audio/yingxiongernv.wav'
   },
@@ -3345,7 +3933,7 @@ const operaDB = [
     title: '人到中年',
     description: '1982年经典现实主义电影，讲述中年女医生陆文婷在工作和家庭间的艰难抉择。感动了无数观众的时代佳作。',
     poster: 'opera_images/dianying_rendaonian.jpg',
-    keywords: ['人到中年','经典电影','医生','现实','80年代','老电影','dianying4', '陆文婷', '傅家杰', '中年危机', '工作家庭两难', '眼科手术', '医院', '现实主义'],
+    keywords: ['人到中年','经典电影','医生','现实','80年代','老电影','dianying4'],
     category: '电影',
     media: 'opera_audio/rendaonian.wav'
   },
@@ -3355,7 +3943,7 @@ const operaDB = [
     title: '庐山恋',
     description: '1980年经典爱情电影，改革开放后第一部爱情片。庐山美景中的纯真爱情，张瑜郭凯敏主演，创造了票房神话。',
     poster: 'opera_images/dianying_lushanlian(1).jpg',
-    keywords: ['庐山恋','爱情','经典电影','庐山','张瑜','80年代','老电影','dianying5', '周筠', '耿桦', '郭凯敏', '含鄱口', '庐山瀑布', '初见', '读英语', '改革开放'],
+    keywords: ['庐山恋','爱情','经典电影','庐山','张瑜','80年代','老电影','dianying5'],
     category: '电影',
     media: 'opera_audio/lushanlian.wav'
   },
@@ -3365,7 +3953,7 @@ const operaDB = [
     title: '陈三五娘',
     description: '泉州才子陈三途经潮州遇见五娘，两人一见钟情，经过重重波折终于团圆。闽南文化瑰宝，最经典的爱情传奇。',
     poster: 'opera_images/gezaixi_chensanwuniang_v2.jpg',
-    keywords: ['陈三五娘','陈三','五娘','歌仔戏','闽南戏','爱情','经典','gezaixi1', '陈伯钦', '黄五娘', '益春', '黄员外', '元宵观灯', '投荔枝', '磨镜', '私奔', '林大逼婚', '终成眷属', '荔枝', '泉州', '潮州'],
+    keywords: ['陈三五娘','陈三','五娘','歌仔戏','闽南戏','爱情','经典','gezaixi1'],
     category: '歌仔戏',
     media: 'opera_audio/chensanwuniang.wav'
   },
@@ -3375,7 +3963,7 @@ const operaDB = [
     title: '梁山伯与祝英台',
     description: '中国四大民间传说之一。祝英台女扮男装求学，与梁山伯同窗三载情深意重，最终化为蝴蝶双飞。凄美爱情的千古绝唱。',
     poster: 'opera_images/gezaixi_liangzhu(1).jpg',
-    keywords: ['梁山伯','祝英台','梁祝','歌仔戏','蝴蝶','爱情','悲剧','gezaixi2', '四九', '银心', '祝员外', '马文才', '夫子', '草桥结拜', '三年同窗', '十八相送', '楼台会', '哭坟', '化蝶', '楼台会歌', '哭灵', '爱情悲剧', '女扮男装', '同窗'],
+    keywords: ['梁山伯','祝英台','梁祝','歌仔戏','蝴蝶','爱情','悲剧','gezaixi2'],
     category: '歌仔戏',
     media: 'opera_audio/liangzhu.wav'
   },
@@ -3385,7 +3973,7 @@ const operaDB = [
     title: '吕蒙正',
     description: '穷书生发奋苦读，最终高中状元。妻子刘月娥抛绣球招亲，不嫌贫爱富，夫妻相濡以沫终得团圆。闽南传统大戏。',
     poster: 'opera_images/gezaixi_lvmengzheng.jpg',
-    keywords: ['吕蒙正','歌仔戏','状元','穷书生','传统','爱情','gezaixi3', '刘月娥', '刘宰相', '刘员外', '抛绣球', '赶斋', '泼粥', '中状元', '大团圆', '不嫌贫', '发奋读书'],
+    keywords: ['吕蒙正','歌仔戏','状元','穷书生','传统','爱情','gezaixi3'],
     category: '歌仔戏',
     media: 'opera_audio/lvmengzheng.wav'
   },
@@ -3395,7 +3983,7 @@ const operaDB = [
     title: '薛平贵与王宝钏',
     description: '薛平贵远征西凉十八年，王宝钏寒窑苦守十八年。最终夫妻相认，团圆团聚。忠贞爱情的传世经典。',
     poster: 'opera_images/gezaixi_xuepinggui(1)(1).jpg',
-    keywords: ['薛平贵','王宝钏','歌仔戏','十八年','寒窑','忠贞','爱情','gezaixi4', '王允', '代战公主', '王母', '抛绣球', '远征西凉', '武家坡', '大登殿', '西凉', '团圆'],
+    keywords: ['薛平贵','王宝钏','歌仔戏','十八年','寒窑','忠贞','爱情','gezaixi4'],
     category: '歌仔戏',
     media: 'opera_audio/xuepinggui.wav'
   },
@@ -3405,7 +3993,7 @@ const operaDB = [
     title: '王金龙与苏三',
     description: '苏三与吏部尚书之子王金龙真心相爱，被迫离散后王金龙发奋读书高中，最终为苏三昭雪冤屈，有情人终成眷属。',
     poster: 'opera_images/gezaixi_wangjinlongsusam.jpg',
-    keywords: ['王金龙','苏三','歌仔戏','冤屈','爱情','传统','gezaixi5', '王大人', '初遇', '苏三被诬', '起解', '三堂会审', '昭雪', '大团圆', '伸冤'],
+    keywords: ['王金龙','苏三','歌仔戏','冤屈','爱情','传统','gezaixi5'],
     category: '歌仔戏',
     media: 'opera_audio/wangjinlongsusam.wav'
   },
@@ -3414,7 +4002,7 @@ const operaDB = [
     title: '八骏马',
     description: '南音名谱，以八匹骏马奔腾为主题的器乐名曲，气势恢宏。',
     category: '南音',
-    keywords: ['八骏','骏马','八骏马','南音','nanyin','器乐','名谱', '奔腾', '器乐名曲', '琵琶'],
+    keywords: ['八骏','骏马','八骏马','南音','nanyin','器乐','名谱'],
     media: 'opera_audio/bajunma.wav',
     poster: 'opera_images/nanyin_bajunma_v4.jpg'
   },
@@ -3423,7 +4011,7 @@ const operaDB = [
     title: '梅花操',
     description: '南音四大名谱之一，以梅花为主题的器乐名曲，清雅脱俗。',
     category: '南音',
-    keywords: ['梅花','梅花操','南音','nanyin','器乐','四大名谱', '傲雪', '南音四大名谱', '清雅'],
+    keywords: ['梅花','梅花操','南音','nanyin','器乐','四大名谱'],
     media: 'opera_audio/meihuacao.wav',
     poster: 'opera_images/nanyin_meihuacao_v3.jpg'
   },
@@ -3432,7 +4020,7 @@ const operaDB = [
     title: '百鸟归巢',
     description: '南音经典名曲，描绘百鸟归巢的美妙意境，生动传神。',
     category: '南音',
-    keywords: ['百鸟','归巢','百鸟归巢','南音','nanyin','经典', '鸟鸣', '林间', '晚霞'],
+    keywords: ['百鸟','归巢','百鸟归巢','南音','nanyin','经典'],
     media: 'opera_audio/bainiaoguichao.wav',
     poster: 'opera_images/nanyin_bainiaoguichao.jpg'
   },
@@ -3441,7 +4029,7 @@ const operaDB = [
     title: '三千两金',
     description: '南音传统曲目，讲述商人千金散尽还复来的故事。',
     category: '南音',
-    keywords: ['三千','两金','三千两金','南音','nanyin','传统', '三千两金费去尽', '一身受寒', '败家子回头', '浪子回头金不换', '败家子', '回头'],
+    keywords: ['三千','两金','三千两金','南音','nanyin','传统'],
     media: 'opera_audio/sanqianliangjin.wav',
     poster: 'opera_images/nanyin_sanqianliangjin.jpg'
   },
@@ -3450,7 +4038,7 @@ const operaDB = [
     title: '直入花园',
     description: '南音名曲，描绘春日花园游赏的优美意境。',
     category: '南音',
-    keywords: ['直入','花园','直入花园','南音','nanyin','泉州', '直入花园看百花', '百花', '春游'],
+    keywords: ['直入','花园','直入花园','南音','nanyin','泉州'],
     media: 'opera_audio/zhiruhuayuan.wav',
     poster: 'opera_images/nanyin_zhiruhuayuan_v3.jpg'
   },
@@ -3459,7 +4047,7 @@ const operaDB = [
     title: '小沙弥下山',
     description: '漳州布袋戏经典喜剧，小和尚初次下山化缘的趣味故事。',
     category: '木偶戏',
-    keywords: ['小沙弥','下山','沙弥','布袋戏','木偶戏','muouxi','漳州', '老师父', '下山化缘', '调皮', '喜剧', '木偶'],
+    keywords: ['小沙弥','下山','沙弥','布袋戏','木偶戏','muouxi','漳州'],
     media: 'opera_audio/xiaoshamixiashan.wav',
     poster: 'opera_images/muouxi_xiaoshamixiashan.jpg'
   },
@@ -3468,7 +4056,7 @@ const operaDB = [
     title: '驯猴',
     description: '漳州布袋戏精彩短剧，灵巧猴偶表演各种高难度杂技动作。',
     category: '木偶戏',
-    keywords: ['驯猴','猴','猴子','布袋戏','木偶戏','muouxi','杂技', '耍猴', '翻跟头', '漳州'],
+    keywords: ['驯猴','猴','猴子','布袋戏','木偶戏','muouxi','杂技'],
     media: 'opera_audio/xunhou.wav',
     poster: 'opera_images/muouxi_xunhou.jpg'
   },
@@ -3477,7 +4065,7 @@ const operaDB = [
     title: '元宵乐',
     description: '提线木偶戏节日剧目，元宵佳节舞龙舞狮的欢乐场景。',
     category: '木偶戏',
-    keywords: ['元宵','元宵乐','提线','木偶戏','muouxi','节日','龙灯', '闹元宵', '看花灯', '舞龙灯', '舞狮', '提线木偶'],
+    keywords: ['元宵','元宵乐','提线','木偶戏','muouxi','节日','龙灯'],
     media: 'opera_audio/yuanxiaole.wav',
     poster: 'opera_images/muouxi_yuanxiaole.jpg'
   },
@@ -3486,7 +4074,7 @@ const operaDB = [
     title: '大名府',
     description: '提线木偶戏经典武打剧目，卢俊义大名府的英雄故事。',
     category: '木偶戏',
-    keywords: ['大名府','卢俊义','水浒','提线','木偶戏','muouxi','武打', '燕青', '英雄', '武打戏', '提线木偶'],
+    keywords: ['大名府','卢俊义','水浒','提线','木偶戏','muouxi','武打'],
     media: 'opera_audio/damingfu.wav',
     poster: 'opera_images/muouxi_damingfu.jpg'
   },
@@ -3495,7 +4083,7 @@ const operaDB = [
     title: '雷万春打虎',
     description: '布袋戏经典武打剧目，雷万春景阳冈打虎的英勇故事。',
     category: '木偶戏',
-    keywords: ['雷万春','打虎','布袋戏','木偶戏','muouxi','武打','英雄', '景阳冈', '武松打虎'],
+    keywords: ['雷万春','打虎','布袋戏','木偶戏','muouxi','武打','英雄'],
     media: 'opera_audio/leiwenchundahe.wav',
     poster: 'opera_images/muouxi_leiwanchundahu.jpg'
   }
@@ -3530,16 +4118,15 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
     } else if (currentLang === 'minnanhua') {
       userInput.placeholder = '用闽南话说戏名、节目名...';
       if (flowHeader) flowHeader.innerHTML = '&#127760; 闽南话翻译流程';
-      langHint.textContent = '闽南话模式：优先方言识别，直接说节目名（如春草闯堂、状元与乞丐）；失败请用普通话读戏名';
+      langHint.textContent = '语音请用普通话读戏名';
     } else {
       userInput.placeholder = '用莆仙话说戏名、节目名...';
       if (flowHeader) flowHeader.innerHTML = '&#127760; 莆仙话翻译流程';
-      langHint.textContent = '莆仙话：先用闽南话引擎试识别（同属闽语，节目名可认出），配合语音库匹配；失败请用普通话读戏名';
+      langHint.textContent = '语音请用普通话读戏名';
     }
-    // 同步更新语音识别语言：闽南话尝试方言引擎，莆仙话暂无引擎用普通话
-    window.__speechLang = (currentLang === 'minnanhua' || currentLang === 'puxianhua') ? 'nan-Hant-TW' : 'zh-CN';
+    // 同步更新语音识别语言
     if (recognition) {
-      recognition.lang = window.__speechLang;
+      recognition.lang = 'zh-CN';
     }
   });
 });
@@ -3701,34 +4288,6 @@ function getSpeechRecognitionCtor() {
   return window.SpeechRecognition || window.webkitSpeechRecognition || null;
 }
 
-// 通用 Google Web Speech 识别（闽南话用 nan-Hant-TW；任何失败返回 null 走降级链，不抛异常）
-function recognizeWithGoogle(lang) {
-  return new Promise(function(resolve) {
-    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { resolve(null); return; }
-    var rec;
-    try { rec = new SR(); } catch(e) { resolve(null); return; }
-    rec.lang = lang || 'zh-CN';
-    rec.interimResults = false;
-    rec.maxAlternatives = 1;
-    var done = false;
-    var tid = setTimeout(function() { done = true; try { rec.stop(); } catch(e) {} resolve(null); }, 8000);
-    rec.onresult = function(e) {
-      if (done) return; done = true; clearTimeout(tid);
-      var txt = '';
-      try { txt = e.results[0][0].transcript || ''; } catch(err) {}
-      resolve(txt || null);
-    };
-    rec.onerror = function() {
-      if (done) return; done = true; clearTimeout(tid); resolve(null);
-    };
-    rec.onend = function() {
-      if (done) return; done = true; clearTimeout(tid); resolve(null);
-    };
-    try { rec.start(); } catch(e) { done = true; clearTimeout(tid); resolve(null); }
-  });
-}
-
 function getSpeechErrorMessage(error) {
   var code = error && error.error ? error.error : error;
   if (code === 'no-speech') return '没有听到声音，请靠近一点再试一次';
@@ -3792,7 +4351,7 @@ function showStatus(type, text) {
 }
 
 // =============================================
-// 主麦克风入口：录音 → FC(百度→讯飞) → Google → 提示
+// 主麦克风入口：录音 → v1 API → FC(百度→讯飞) → Google → 提示
 // =============================================
 let _isRecording = false;
 
@@ -3850,8 +4409,24 @@ async function startVoiceWithFallback() {
 
     var blob = new Blob(chunks, { type: 'audio/webm' });
 
-    // ─── 第 1 层：阿里云 FC（百度→讯飞，方言模式传 accent 走讯飞方言引擎）───
-    if (typeof showStatus === 'function') showStatus('listening', '正在识别（讯飞闽南话引擎）...');
+    // ─── 第 0 层：莆仙话 ASR v1 API（本地服务，优先） ───
+    if (typeof showStatus === 'function') showStatus('listening', '正在识别（本地 ASR）...');
+    try {
+      var v1Result = await callV1AsrTranscribe(blob);
+      if (v1Result && v1Result.text && v1Result.text.trim()) {
+        if (typeof applyRecognitionResult === 'function')
+          applyRecognitionResult(v1Result.text, {
+            normalizedText: v1Result.normalizedText,
+            needsConfirmation: v1Result.needsConfirmation,
+            accentAdapted: v1Result.accentAdapted,
+            accentCorrections: v1Result.accentCorrections
+          });
+        return;
+      }
+    } catch(e) { console.log('v1 ASR 不可用:', e.message); }
+
+    // ─── 第 1 层：阿里云 FC（百度→讯飞），国内优先 ───
+    if (typeof showStatus === 'function') showStatus('listening', '正在识别（百度/讯飞）...');
     try {
       var text = await callAliyunFcProxy(blob);
       if (text && text.trim()) {
@@ -3870,13 +4445,27 @@ async function startVoiceWithFallback() {
       }
     } catch(e) { console.log('FunASR 不可用:', e.message); }
 
-    // ─── 第 3 层：Chrome 自带识别（最后一层兜底）───
-    if (typeof showStatus === 'function') showStatus('listening', '正在识别（浏览器）...');
-    var text3 = await recognizeWithGoogle(window.__speechLang || 'zh-CN');
-    if (!text3 && (window.__speechLang || 'zh-CN') !== 'zh-CN') text3 = await recognizeWithGoogle('zh-CN');
-    if (text3 && text3.trim()) {
-      if (typeof applyRecognitionResult === 'function') applyRecognitionResult(text3);
-      return;
+    // ─── 第 3 层：Google Web Speech（备选，国外/VPN 可用）───
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SR) {
+      if (typeof showStatus === 'function') showStatus('listening', '正在识别（Google）...');
+      try {
+        var text3 = await new Promise(function(resolve, reject) {
+          var rec = new SR();
+          rec.lang = 'zh-CN';
+          rec.interimResults = false;
+          rec.maxAlternatives = 1;
+          var tid = setTimeout(function() { try { rec.stop(); } catch(e) {} reject(new Error('timeout')); }, 6000);
+          rec.onresult = function(e) { clearTimeout(tid); resolve(e.results[0][0].transcript); };
+          rec.onerror = function(e) { clearTimeout(tid); reject(e); };
+          rec.onend = function() { clearTimeout(tid); reject(new Error('no result')); };
+          rec.start();
+        });
+        if (text3 && text3.trim()) {
+          if (typeof applyRecognitionResult === 'function') applyRecognitionResult(text3);
+          return;
+        }
+      } catch(e) { console.log('Google 不可用:', e.message || e.error); }
     }
 
     // ─── 全部失败 ───
@@ -3922,6 +4511,16 @@ async function startSmartVoiceRecognition(options) {
 
     var blob = new Blob(chunks, { type: 'audio/webm' });
 
+    // 第 0 层：莆仙话 ASR v1 API（优先）
+    try {
+      var v1Res = await callV1AsrTranscribe(blob);
+      if (v1Res && v1Res.text && v1Res.text.trim()) {
+        onResult(v1Res.normalizedText || v1Res.text, v1Res.needsConfirmation);
+        onDone(v1Res.normalizedText || v1Res.text);
+        return;
+      }
+    } catch(e) { console.log('SmartVoice v1 ASR error:', e.message); }
+
     // 第 1 层：FC 百度/讯飞
     try {
       var text = await callAliyunFcProxy(blob);
@@ -3942,14 +4541,27 @@ async function startSmartVoiceRecognition(options) {
       }
     } catch(e) { console.log('SmartVoice FunASR error:', e.message); }
 
-    // 第 3 层：Google Web Speech（方言模式优先方言语言码，失败再普通话）
-    var _svLang = window.__speechLang || 'zh-CN';
-    var _svText = await recognizeWithGoogle(_svLang);
-    if (!_svText && _svLang !== 'zh-CN') _svText = await recognizeWithGoogle('zh-CN');
-    if (_svText && _svText.trim()) {
-      onResult(_svText, false);
-      onDone(_svText);
-      return;
+    // 第 3 层：Google Web Speech
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SR) {
+      try {
+        var text3 = await new Promise(function(resolve, reject) {
+          var rec = new SR();
+          rec.lang = 'zh-CN';
+          rec.interimResults = false;
+          rec.maxAlternatives = 1;
+          var tid = setTimeout(function() { try { rec.stop(); } catch(e) {} reject(new Error('timeout')); }, 6000);
+          rec.onresult = function(e) { clearTimeout(tid); resolve(e.results[0][0].transcript); };
+          rec.onerror = function(e) { clearTimeout(tid); reject(e); };
+          rec.onend = function() { clearTimeout(tid); reject(new Error('no result')); };
+          rec.start();
+        });
+        if (text3 && text3.trim()) {
+          onResult(text3, false);
+          onDone(text3);
+          return;
+        }
+      } catch(e) { console.log('SmartVoice Google error:', e.message || e.error); }
     }
 
     onError('语音识别暂时不可用，请直接打字输入');
@@ -4052,10 +4664,13 @@ function setupDialectDictMic(options) {
 // Search & Match (with Puxian Translation)
 // =============================================
 let originalInput = ''; // 保存原始方言输入
+let _autoPlayOnSingleMatch = false; // v1 API 高置信度时自动播放单一匹配
 
 function startSearch() {
   const rawInput = userInput.value.trim();
   if (!rawInput) return;
+  var _wasAutoPlay = _autoPlayOnSingleMatch;
+  _autoPlayOnSingleMatch = false; // 消费后重置
   // 口语清洗：去掉常见前缀表达
   var cleanedInput = rawInput
     .replace(/^(我要看|我想看|我要听|我想听|帮我找|帮我搜|帮我放|播放一下|给我放|我要播|我想播|请播|请放|搜索|查找|播放|播一下|放一下|来点|来一个|有没有|有没有什么|什么是|给我来|给我整个|整个|来个)\s*/, '')
@@ -4141,7 +4756,13 @@ function startSearch() {
         sLcs = sp[sn] / sShort;
       }
       if (sExact || sLcs >= 0.5) {
-        showResult();
+        // v1 API 高置信度 + 单一匹配 → 自动播放，无需点击确认
+        if (_wasAutoPlay && matchResults.length === 1) {
+          currentOpera = matchResults[0];
+          startPlayback(currentOpera);
+        } else {
+          showResult();
+        }
       } else {
         if (flowMatched) flowMatched.innerHTML = '<span class="flow-no-translate">未找到相关节目</span>';
         if (translationFlow) translationFlow.classList.remove('active');
@@ -5192,18 +5813,135 @@ if (origTranslateMinnan) {
 const FC_PROXY_URL = 'https://ama-channel-qtsdkdknbc.cn-shanghai.fcapp.run';
 const FC_FUNASR_URL = 'wss://funasr-igkajrakfs.cn-shanghai.fcapp.run';
 
+// 莆仙话 ASR v1 API（本地服务，默认端口 8520）
+// 部署时修改为实际服务器地址
+const ASR_V1_URL = window.location.origin.replace(/:\d+$/, '') + ':8520' + '/api/v1/asr/transcribe';
+const ACCENT_API_BASE = window.location.origin.replace(/:\d+$/, '') + ':8520' + '/api/v1/accent';
+
+// 获取或创建持久化用户 ID（用于口音档案关联）
+function getPersistentUserId() {
+  var uid = localStorage.getItem('ama_user_id');
+  if (!uid) {
+    uid = 'user_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+    localStorage.setItem('ama_user_id', uid);
+  }
+  return uid;
+}
+
 // 将识别结果填入搜索框并触发搜索
-function applyRecognitionResult(text) {
+// opts.normalizedText: v1 API 返回的规范化节目名（优先使用）
+// opts.needsConfirmation: v1 API 返回的是否需要确认
+function applyRecognitionResult(text, opts) {
   if (!text || !text.trim()) return false;
+  opts = opts || {};
+  // 优先使用规范化后的节目名
+  var displayText = opts.normalizedText || text;
   // 清洗语音识别结果中的标点符号和空格
-  var cleaned = text.trim().replace(/[。，、；：？！,.!?;:…·~\s]/g, '');
+  var cleaned = displayText.trim().replace(/[。，、；：？！,.!?;:…·~\s]/g, '');
   if (!cleaned) return false;
   var inputEl = document.getElementById('userInput');
   if (!inputEl) return false;
   inputEl.value = cleaned;
-  if (typeof showStatus === 'function') showStatus('result', '识别结果：' + cleaned);
+  var statusMsg = opts.normalizedText
+    ? '识别结果：' + cleaned + (opts.normalizedText !== text ? '（来自：' + text + '）' : '')
+    : '识别结果：' + cleaned;
+  if (typeof showStatus === 'function') showStatus('result', statusMsg);
+  // Phase 4：口音纠错反馈
+  if (opts.accentAdapted && opts.accentCorrections && opts.accentCorrections.length > 0) {
+    showAccentCorrectionToast(opts.accentCorrections);
+  }
+  // v1 API 高置信度（needs_confirmation=false）时，单一匹配自动播放
+  _autoPlayOnSingleMatch = opts.needsConfirmation === false;
   if (typeof startSearch === 'function') { setTimeout(function(){ startSearch(); }, 100); }
   return true;
+}
+
+// Phase 4：口音纠错反馈提示
+function showAccentCorrectionToast(corrections) {
+  // 移除已有的提示
+  var existing = document.querySelector('.accent-toast');
+  if (existing) existing.remove();
+
+  var correctionsHtml = '';
+  for (var i = 0; i < corrections.length; i++) {
+    var c = corrections[i];
+    correctionsHtml += '<div style="margin-top:4px;">' +
+      '<span style="text-decoration:line-through;color:#999;">' + escapeHtmlSafe(c.original) + '</span>' +
+      ' &#8594; ' +
+      '<span style="color:var(--gold);font-weight:600;">' + escapeHtmlSafe(c.corrected) + '</span>';
+    if (c.reason) {
+      correctionsHtml += ' <span style="color:#999;font-size:0.9em;">(' + escapeHtmlSafe(c.reason) + ')</span>';
+    }
+    correctionsHtml += '</div>';
+  }
+
+  var toast = document.createElement('div');
+  toast.className = 'accent-toast';
+  toast.innerHTML =
+    '<div style="font-weight:600;margin-bottom:2px;">&#127880; 口音纠错已应用</div>' +
+    correctionsHtml;
+  document.body.appendChild(toast);
+
+  // 3 秒后自动消失
+  setTimeout(function() {
+    toast.style.transition = 'opacity 0.4s';
+    toast.style.opacity = '0';
+    setTimeout(function() { toast.remove(); }, 400);
+  }, 3000);
+}
+
+// Phase 4：加载用户口音偏好
+async function loadAccentPreference() {
+  var accentSelect = document.getElementById('accentSelect');
+  if (!accentSelect) return;
+
+  try {
+    var resp = await fetch(ACCENT_API_BASE + '/profile?user_id=' + encodeURIComponent(getPersistentUserId()), {
+      signal: AbortSignal.timeout(3000)
+    });
+    if (resp.ok) {
+      var data = await resp.json();
+      if (data.accent && data.accent !== 'auto') {
+        accentSelect.value = data.accent;
+      }
+    }
+  } catch(e) {
+    // 加载失败时使用默认值（auto），不影响正常使用
+    console.log('口音偏好加载失败:', e.message);
+  }
+}
+
+// Phase 4：保存口音偏好
+async function saveAccentPreference(accent) {
+  try {
+    await fetch(ACCENT_API_BASE + '/profile/' + encodeURIComponent(getPersistentUserId()), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accent: accent }),
+      signal: AbortSignal.timeout(3000)
+    });
+  } catch(e) {
+    console.log('口音偏好保存失败:', e.message);
+  }
+}
+
+// Phase 4：初始化口音选择器
+function initAccentSelector() {
+  var accentSelect = document.getElementById('accentSelect');
+  if (!accentSelect) return;
+
+  accentSelect.addEventListener('change', function() {
+    var accent = this.value;
+    saveAccentPreference(accent);
+    // 提示用户
+    var accentLabel = this.options[this.selectedIndex].text;
+    if (typeof showStatus === 'function') {
+      showStatus('result', '口音已设置为：' + accentLabel);
+    }
+  });
+
+  // 页面加载时从服务器加载偏好
+  loadAccentPreference();
 }
 
 // WebM → 16kHz PCM base64
@@ -5234,15 +5972,66 @@ async function webmToPcmBase64(webmBlob) {
 }
 
 
+// 第 1 层（优先）：莆仙话 ASR v1 API（本地服务）
+// 发送原始 WebM 音频，服务端做识别 + 节目名规范化
+async function callV1AsrTranscribe(audioBlob) {
+  var formData = new FormData();
+  formData.append('audio', audioBlob, 'speech.webm');
+  formData.append('provider', 'local');  // 阶段 6：本地微调模型识别
+  formData.append('language', 'auto');
+  formData.append('scene', 'program_search'); // 启用节目名规范化
+  formData.append('enable_candidates', 'true');
+  formData.append('save_recording', 'true');  // 阶段 3：保存录音
+  formData.append('consent', 'true');         // 用户同意录音保存
+
+  // Phase 4：传入口音和用户 ID
+  var accentSelect = document.getElementById('accentSelect');
+  var accentVal = accentSelect ? accentSelect.value : 'auto';
+  if (accentVal && accentVal !== 'auto') {
+    formData.append('accent', accentVal);
+  }
+  formData.append('user_id', getPersistentUserId());
+
+  var resp = await fetch(ASR_V1_URL, {
+    method: 'POST',
+    body: formData,
+    signal: AbortSignal.timeout(30000)  // 阶段 2：真实识别需要更长超时
+  });
+
+  if (!resp.ok) {
+    var errBody = {};
+    try { errBody = await resp.json(); } catch(e) {}
+    var errDetail = errBody.detail || {};
+    var errMsg = (errDetail.error && errDetail.error.message) || errBody.detail || ('HTTP ' + resp.status);
+    throw new Error('v1 API: ' + errMsg);
+  }
+
+  var data = await resp.json();
+  if (!data.success) {
+    var e = data.error || {};
+    throw new Error('v1 API: ' + (e.message || '未知错误'));
+  }
+
+  // 返回 { text, normalizedText, needsConfirmation, recordingId, accentAdapted, accentCorrections }
+  return {
+    text: data.text || '',
+    normalizedText: data.normalized_text || null,
+    needsConfirmation: data.needs_confirmation || false,
+    recordingId: data.recording_id || null,
+    recordingSaved: data.recording_saved || false,
+    accentAdapted: data.accent_adapted || false,
+    accentCorrections: data.accent_corrections || null,
+    accent: data.accent || null
+  };
+}
+
 // 第 2 层：阿里云 FC 代理（百度→讯飞），发送 PCM base64
 async function callAliyunFcProxy(audioBlob) {
   var pcmBase64 = await webmToPcmBase64(audioBlob);
-  // 闽南话/莆仙话同属闽语，先用讯飞闽南话引擎(accent=fujian)试识别
-  var dialectParam = (currentLang === 'minnanhua' || currentLang === 'puxianhua') ? 'fujian' : 'mandarin';
   var resp = await fetch(FC_PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ audio_base64: pcmBase64, format: 'pcm', dialect: dialectParam }),
+    body: JSON.stringify({ audio_base64: pcmBase64, format: 'pcm' }),
     signal: AbortSignal.timeout(8000)
   });
   var data = await resp.json();
@@ -5288,6 +6077,920 @@ async function tryFunasrWithBlob(webmBlob) {
     ws.onclose = function() { clearTimeout(timeout); resolve(finalText || null); };
   });
 }
+
+// =============================================
+// Phase 3: 录音历史功能
+// =============================================
+const REC_API_BASE = window.location.origin.replace(/:\d+$/, '') + ':8520' + '/api/v1/recordings';
+let _recHistoryPage = 1;
+let _recHistoryTotalPages = 0;
+let _currentAudioPlayer = null;
+
+// 切换录音历史面板
+function toggleRecHistoryPanel() {
+  var panel = document.getElementById('recHistoryPanel');
+  if (panel.style.display === 'none') {
+    document.getElementById('dsPanel').style.display = 'none';
+    document.getElementById('modelPanel').style.display = 'none';
+    panel.style.display = 'block';
+    loadRecHistory(1);
+  } else {
+    panel.style.display = 'none';
+    if (_currentAudioPlayer) { _currentAudioPlayer.pause(); _currentAudioPlayer = null; }
+  }
+}
+
+// 加载录音历史
+async function loadRecHistory(page) {
+  _recHistoryPage = page || 1;
+  var listEl = document.getElementById('recHistoryList');
+  var statsEl = document.getElementById('recHistoryStats');
+  var pagerEl = document.getElementById('recHistoryPager');
+
+  listEl.innerHTML = '<p class="rec-history-empty">加载中...</p>';
+  statsEl.innerHTML = '';
+  pagerEl.innerHTML = '';
+
+  try {
+    // 加载录音列表
+    var resp = await fetch(REC_API_BASE + '?page=' + _recHistoryPage + '&page_size=10', {
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+
+    _recHistoryTotalPages = data.total_pages || 0;
+
+    // 加载统计信息
+    try {
+      var statsResp = await fetch(REC_API_BASE + '/stats', { signal: AbortSignal.timeout(3000) });
+      if (statsResp.ok) {
+        var stats = await statsResp.json();
+        var sizeKB = Math.round(stats.total_size_bytes / 1024);
+        var sizeStr = sizeKB > 1024 ? (sizeKB / 1024).toFixed(1) + ' MB' : sizeKB + ' KB';
+        statsEl.innerHTML = '共 ' + stats.total + ' 条录音，总大小 ' + sizeStr;
+      }
+    } catch(e) {}
+
+    // 渲染列表
+    if (!data.recordings || data.recordings.length === 0) {
+      listEl.innerHTML = '<p class="rec-history-empty">暂无录音记录</p>';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < data.recordings.length; i++) {
+      var rec = data.recordings[i];
+      var ts = rec.timestamp ? new Date(rec.timestamp).toLocaleString('zh-CN') : '';
+      var displayText = rec.normalized_text || rec.text || '(无识别结果)';
+      var dur = rec.duration_ms ? (rec.duration_ms / 1000).toFixed(1) + 's' : '';
+      var provider = rec.provider || '';
+      html += '<div class="rec-item" data-rec-id="' + rec.recording_id + '">';
+      html += '  <div class="rec-item-info">';
+      html += '    <div class="rec-item-text">' + escapeHtmlSafe(displayText) + '</div>';
+      html += '    <div class="rec-item-meta">' + ts + ' · ' + dur + ' · ' + escapeHtmlSafe(provider) + '</div>';
+      html += '  </div>';
+      html += '  <button class="rec-item-play" onclick="playRecording(\'' + rec.recording_id + '\', this)" title="播放">&#9654;</button>';
+      html += '  <button class="rec-item-delete" onclick="deleteRecording(\'' + rec.recording_id + '\')" title="删除">删除</button>';
+      html += '</div>';
+    }
+    listEl.innerHTML = html;
+
+    // 渲染分页
+    if (_recHistoryTotalPages > 1) {
+      var pagerHtml = '';
+      pagerHtml += '<button onclick="loadRecHistory(' + (_recHistoryPage - 1) + ')" ' + (_recHistoryPage <= 1 ? 'disabled' : '') + '>上一页</button>';
+      pagerHtml += '<span style="padding:6px 10px;font-size:0.85em;color:#666;">' + _recHistoryPage + ' / ' + _recHistoryTotalPages + '</span>';
+      pagerHtml += '<button onclick="loadRecHistory(' + (_recHistoryPage + 1) + ')" ' + (_recHistoryPage >= _recHistoryTotalPages ? 'disabled' : '') + '>下一页</button>';
+      pagerEl.innerHTML = pagerHtml;
+    }
+  } catch(e) {
+    listEl.innerHTML = '<p class="rec-history-empty">加载失败：' + escapeHtmlSafe(e.message) + '</p>';
+  }
+}
+
+// 播放录音
+function playRecording(recId, btn) {
+  // 停止当前播放
+  if (_currentAudioPlayer) {
+    _currentAudioPlayer.pause();
+    _currentAudioPlayer = null;
+    // 恢复所有按钮为播放图标
+    var allBtns = document.querySelectorAll('.rec-item-play');
+    for (var i = 0; i < allBtns.length; i++) allBtns[i].innerHTML = '&#9654;';
+  }
+
+  // 查找或创建音频元素
+  var item = btn.closest('.rec-item');
+  var existingAudio = item.querySelector('.rec-audio-player');
+
+  if (existingAudio) {
+    // 已有音频元素，切换播放/暂停
+    if (existingAudio.paused) {
+      existingAudio.play();
+      btn.innerHTML = '&#9208;';
+      _currentAudioPlayer = existingAudio;
+    } else {
+      existingAudio.pause();
+      btn.innerHTML = '&#9654;';
+    }
+    return;
+  }
+
+  // 创建新的音频元素
+  var audioUrl = REC_API_BASE + '/' + recId + '/audio';
+  var audio = document.createElement('audio');
+  audio.className = 'rec-audio-player';
+  audio.controls = true;
+  audio.src = audioUrl;
+  item.appendChild(audio);
+
+  audio.onplay = function() { btn.innerHTML = '&#9208;'; _currentAudioPlayer = audio; };
+  audio.onpause = function() { btn.innerHTML = '&#9654;'; };
+  audio.onended = function() { btn.innerHTML = '&#9654;'; _currentAudioPlayer = null; };
+  audio.onerror = function() { btn.innerHTML = '&#9654;'; item.removeChild(audio); };
+
+  audio.play();
+}
+
+// 删除录音
+async function deleteRecording(recId) {
+  if (!confirm('确定要删除这条录音吗？')) return;
+
+  try {
+    var resp = await fetch(REC_API_BASE + '/' + recId, {
+      method: 'DELETE',
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+    // 刷新列表
+    loadRecHistory(_recHistoryPage);
+  } catch(e) {
+    alert('删除失败：' + e.message);
+  }
+}
+
+// HTML 转义
+function escapeHtmlSafe(s) {
+  if (!s) return '';
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// 绑定按钮事件
+document.getElementById('recHistoryBtn').addEventListener('click', toggleRecHistoryPanel);
+document.getElementById('recHistoryClose').addEventListener('click', toggleRecHistoryPanel);
+
+// =============================================
+// Phase 5: 模型训练数据集管理
+// =============================================
+const DS_API_BASE = window.location.origin.replace(/:\d+$/, '') + ':8520' + '/api/v1/datasets';
+let _dsCurrentId = null;
+let _dsSamplePage = 1;
+let _dsSampleTotalPages = 0;
+
+// 切换数据集面板
+function toggleDsPanel() {
+  var panel = document.getElementById('dsPanel');
+  if (panel.style.display === 'none') {
+    document.getElementById('recHistoryPanel').style.display = 'none';
+    document.getElementById('modelPanel').style.display = 'none';
+    if (_currentAudioPlayer) { _currentAudioPlayer.pause(); _currentAudioPlayer = null; }
+    panel.style.display = 'block';
+    showDatasetList();
+    loadDatasets();
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+// 显示数据集列表视图
+function showDatasetList() {
+  document.getElementById('dsListView').style.display = 'block';
+  document.getElementById('dsDetailView').style.display = 'none';
+  _dsCurrentId = null;
+}
+
+// 显示数据集详情视图
+function showDatasetDetail(datasetId) {
+  _dsCurrentId = datasetId;
+  document.getElementById('dsListView').style.display = 'none';
+  document.getElementById('dsDetailView').style.display = 'block';
+  loadDatasetDetail(datasetId);
+  _dsSamplePage = 1;
+  loadDatasetSamples(datasetId, 1);
+}
+
+// 加载数据集列表
+async function loadDatasets() {
+  var listEl = document.getElementById('dsList');
+  listEl.innerHTML = '<p class="ds-empty">加载中...</p>';
+
+  try {
+    var resp = await fetch(DS_API_BASE, { signal: AbortSignal.timeout(5000) });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+
+    if (!data.datasets || data.datasets.length === 0) {
+      listEl.innerHTML = '<p class="ds-empty">暂无数据集，请创建一个</p>';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < data.datasets.length; i++) {
+      var ds = data.datasets[i];
+      var updated = ds.updated_at ? new Date(ds.updated_at).toLocaleString('zh-CN') : '';
+      var badgeClass = 'ds-badge ds-badge-' + ds.status;
+      var statusText = { draft: '草稿', locked: '已锁定', exported: '已导出' }[ds.status] || ds.status;
+      html += '<div class="ds-card" onclick="showDatasetDetail(\'' + ds.dataset_id + '\')">';
+      html += '  <div class="ds-card-name">' + escapeHtmlSafe(ds.name) + '<span class="' + badgeClass + '">' + statusText + '</span></div>';
+      html += '  <div class="ds-card-meta">' + ds.sample_count + ' 个样本 · 更新于 ' + updated + '</div>';
+      html += '</div>';
+    }
+    listEl.innerHTML = html;
+  } catch(e) {
+    listEl.innerHTML = '<p class="ds-empty">加载失败：' + escapeHtmlSafe(e.message) + '</p>';
+  }
+}
+
+// 创建数据集
+async function createDataset() {
+  var name = document.getElementById('dsNewName').value.trim();
+  var desc = document.getElementById('dsNewDesc').value.trim();
+
+  if (!name) { alert('请输入数据集名称'); return; }
+
+  try {
+    var resp = await fetch(DS_API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, description: desc }),
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!resp.ok) {
+      var err = await resp.json().catch(function() { return {}; });
+      throw new Error(err.detail || 'HTTP ' + resp.status);
+    }
+    document.getElementById('dsNewName').value = '';
+    document.getElementById('dsNewDesc').value = '';
+    loadDatasets();
+  } catch(e) {
+    alert('创建失败：' + e.message);
+  }
+}
+
+// 加载数据集详情（名称 + 统计）
+async function loadDatasetDetail(datasetId) {
+  try {
+    // 获取详情
+    var resp = await fetch(DS_API_BASE + '/' + datasetId, { signal: AbortSignal.timeout(5000) });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var detail = await resp.json();
+    document.getElementById('dsDetailName').textContent = detail.name;
+
+    // 获取统计
+    var statsResp = await fetch(DS_API_BASE + '/' + datasetId + '/stats', { signal: AbortSignal.timeout(5000) });
+    if (statsResp.ok) {
+      var stats = await statsResp.json();
+      var durSec = Math.round(stats.total_duration_ms / 1000);
+      var sizeMB = (stats.total_audio_size / 1024 / 1024).toFixed(1);
+      var html = '<span>总样本：' + stats.total_samples + '</span>';
+      html += '<span>待标注：' + stats.pending + '</span>';
+      html += '<span>已标注：' + stats.annotated + '</span>';
+      html += '<span>已验证：' + stats.verified + '</span>';
+      html += '<span>总时长：' + durSec + 's</span>';
+      html += '<span>总大小：' + sizeMB + ' MB</span>';
+      html += '<span>平均置信度：' + (stats.avg_confidence * 100).toFixed(0) + '%</span>';
+      document.getElementById('dsDetailStats').innerHTML = html;
+    }
+
+    // 锁定按钮文案
+    var lockBtn = document.getElementById('dsLockBtn');
+    if (detail.status === 'locked' || detail.status === 'exported') {
+      lockBtn.textContent = '🔓 解锁';
+      lockBtn.onclick = function() { updateDatasetStatus('draft'); };
+    } else {
+      lockBtn.textContent = '🔒 锁定';
+      lockBtn.onclick = function() { updateDatasetStatus('locked'); };
+    }
+  } catch(e) {
+    console.error('加载数据集详情失败:', e);
+  }
+}
+
+// 加载样本列表
+async function loadDatasetSamples(datasetId, page) {
+  _dsSamplePage = page || 1;
+  var samplesEl = document.getElementById('dsSamples');
+  var pagerEl = document.getElementById('dsPager');
+  samplesEl.innerHTML = '<p class="ds-empty">加载中...</p>';
+  pagerEl.innerHTML = '';
+
+  try {
+    var url = DS_API_BASE + '/' + datasetId + '/samples?page=' + _dsSamplePage + '&page_size=20';
+    var resp = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+
+    _dsSampleTotalPages = data.total_pages || 0;
+
+    if (!data.samples || data.samples.length === 0) {
+      samplesEl.innerHTML = '<p class="ds-empty">暂无样本，可点击"从录音导入"添加</p>';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < data.samples.length; i++) {
+      var s = data.samples[i];
+      var added = s.added_at ? new Date(s.added_at).toLocaleString('zh-CN') : '';
+      var badgeClass = 'ds-badge ds-badge-' + s.annotation_status;
+      var statusText = { pending: '待标注', annotated: '已标注', verified: '已验证' }[s.annotation_status] || s.annotation_status;
+      var origText = s.original_text || '(无)';
+      var corrText = s.corrected_text || '';
+      var dur = s.duration_ms ? (s.duration_ms / 1000).toFixed(1) + 's' : '';
+
+      html += '<div class="ds-sample" data-sample-id="' + s.sample_id + '">';
+      html += '  <div class="ds-sample-original">原始识别：' + escapeHtmlSafe(origText) + '</div>';
+      html += '  <div class="ds-sample-corrected">标注文本：' + escapeHtmlSafe(corrText) + '<span class="' + badgeClass + '">' + statusText + '</span></div>';
+      html += '  <input type="text" class="ds-sample-edit" value="' + escapeHtmlSafe(corrText || origText) + '" placeholder="输入修正后的文本..." />';
+      html += '  <div class="ds-sample-actions">';
+      html += '    <button class="ds-btn-save" onclick="saveAnnotation(\'' + s.sample_id + '\', this)">保存标注</button>';
+      html += '    <button class="ds-btn-verify" onclick="verifyAnnotation(\'' + s.sample_id + '\', this)">验证通过</button>';
+      html += '    <button class="ds-btn-del" onclick="removeSample(\'' + s.sample_id + '\')">移除</button>';
+      html += '  </div>';
+      html += '  <div class="ds-sample-meta">置信度 ' + (s.confidence * 100).toFixed(0) + '% · ' + dur + ' · ' + escapeHtmlSafe(s.provider) + ' · ' + added + '</div>';
+      html += '</div>';
+    }
+    samplesEl.innerHTML = html;
+
+    // 分页
+    if (_dsSampleTotalPages > 1) {
+      var ph = '';
+      ph += '<button onclick="loadDatasetSamples(\'' + datasetId + '\',' + (_dsSamplePage - 1) + ')" ' + (_dsSamplePage <= 1 ? 'disabled' : '') + '>上一页</button>';
+      ph += '<span style="padding:6px 10px;font-size:0.85em;color:#666;">' + _dsSamplePage + ' / ' + _dsSampleTotalPages + '</span>';
+      ph += '<button onclick="loadDatasetSamples(\'' + datasetId + '\',' + (_dsSamplePage + 1) + ')" ' + (_dsSamplePage >= _dsSampleTotalPages ? 'disabled' : '') + '>下一页</button>';
+      pagerEl.innerHTML = ph;
+    }
+  } catch(e) {
+    samplesEl.innerHTML = '<p class="ds-empty">加载失败：' + escapeHtmlSafe(e.message) + '</p>';
+  }
+}
+
+// 保存标注
+async function saveAnnotation(sampleId, btn) {
+  var sampleEl = btn.closest('.ds-sample');
+  var input = sampleEl.querySelector('.ds-sample-edit');
+  var text = input.value.trim();
+
+  if (!text) { alert('标注文本不能为空'); return; }
+
+  try {
+    var resp = await fetch(DS_API_BASE + '/' + _dsCurrentId + '/samples/' + sampleId, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ corrected_text: text, annotation_status: 'annotated' }),
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    loadDatasetSamples(_dsCurrentId, _dsSamplePage);
+    loadDatasetDetail(_dsCurrentId);
+  } catch(e) {
+    alert('保存失败：' + e.message);
+  }
+}
+
+// 验证标注
+async function verifyAnnotation(sampleId, btn) {
+  var sampleEl = btn.closest('.ds-sample');
+  var input = sampleEl.querySelector('.ds-sample-edit');
+  var text = input.value.trim();
+
+  if (!text) { alert('请先填写标注文本'); return; }
+
+  try {
+    var resp = await fetch(DS_API_BASE + '/' + _dsCurrentId + '/samples/' + sampleId, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ corrected_text: text, annotation_status: 'verified' }),
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    loadDatasetSamples(_dsCurrentId, _dsSamplePage);
+    loadDatasetDetail(_dsCurrentId);
+  } catch(e) {
+    alert('验证失败：' + e.message);
+  }
+}
+
+// 移除样本
+async function removeSample(sampleId) {
+  if (!confirm('确定移除这个样本吗？')) return;
+
+  try {
+    var resp = await fetch(DS_API_BASE + '/' + _dsCurrentId + '/samples/' + sampleId, {
+      method: 'DELETE',
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    loadDatasetSamples(_dsCurrentId, _dsSamplePage);
+    loadDatasetDetail(_dsCurrentId);
+  } catch(e) {
+    alert('移除失败：' + e.message);
+  }
+}
+
+// 批量导入录音
+async function batchImportRecordings() {
+  if (!confirm('将当前用户的所有录音导入为训练样本，已存在的会自动跳过。继续？')) return;
+
+  try {
+    var resp = await fetch(DS_API_BASE + '/' + _dsCurrentId + '/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: '' }),
+      signal: AbortSignal.timeout(15000)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var result = await resp.json();
+    alert('导入完成：新增 ' + result.added + ' 个样本，跳过 ' + (result.skipped || 0) + ' 个，错误 ' + (result.errors || 0) + ' 个');
+    loadDatasetSamples(_dsCurrentId, 1);
+    loadDatasetDetail(_dsCurrentId);
+  } catch(e) {
+    alert('导入失败：' + e.message);
+  }
+}
+
+// 切换导出对话框
+function toggleExportDialog() {
+  var dialog = document.getElementById('dsExportDialog');
+  var result = document.getElementById('dsExportResult');
+  if (dialog.style.display === 'none') {
+    dialog.style.display = 'block';
+    result.style.display = 'none';
+  } else {
+    dialog.style.display = 'none';
+  }
+}
+
+// 导出数据集
+async function exportDataset() {
+  var format = document.getElementById('dsExportFormat').value;
+  var statusFilter = document.getElementById('dsExportStatus').value;
+  var minConf = parseFloat(document.getElementById('dsExportMinConf').value) || 0;
+  var copyAudio = document.getElementById('dsExportCopyAudio').checked;
+  var resultEl = document.getElementById('dsExportResult');
+
+  resultEl.style.display = 'block';
+  resultEl.style.background = '#fff3cd';
+  resultEl.style.color = '#856404';
+  resultEl.textContent = '正在导出...';
+
+  try {
+    var body = { format: format, copy_audio: copyAudio };
+    if (statusFilter) body.status_filter = statusFilter;
+    if (minConf > 0) body.min_confidence = minConf;
+
+    var resp = await fetch(DS_API_BASE + '/' + _dsCurrentId + '/export', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30000)
+    });
+    if (!resp.ok) {
+      var err = await resp.json().catch(function() { return {}; });
+      throw new Error(err.detail || 'HTTP ' + resp.status);
+    }
+    var result = await resp.json();
+
+    resultEl.style.background = '#d4edda';
+    resultEl.style.color = '#155724';
+    resultEl.innerHTML = '导出成功！格式：' + result.format + '，样本数：' + result.sample_count + '，音频文件：' + result.audio_copied + ' 个<br>路径：' + escapeHtmlSafe(result.path);
+
+    // 刷新详情
+    loadDatasetDetail(_dsCurrentId);
+  } catch(e) {
+    resultEl.style.background = '#f8d7da';
+    resultEl.style.color = '#721c24';
+    resultEl.textContent = '导出失败：' + e.message;
+  }
+}
+
+// 更新数据集状态（锁定/解锁）
+async function updateDatasetStatus(status) {
+  try {
+    var resp = await fetch(DS_API_BASE + '/' + _dsCurrentId + '/status', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: status }),
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    loadDatasetDetail(_dsCurrentId);
+  } catch(e) {
+    alert('操作失败：' + e.message);
+  }
+}
+
+// 删除数据集
+async function deleteDataset() {
+  if (!confirm('确定删除这个数据集吗？所有样本和导出文件都会被删除，此操作不可恢复。')) return;
+
+  try {
+    var resp = await fetch(DS_API_BASE + '/' + _dsCurrentId, {
+      method: 'DELETE',
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    showDatasetList();
+    loadDatasets();
+  } catch(e) {
+    alert('删除失败：' + e.message);
+  }
+}
+
+// 绑定数据集按钮事件
+document.getElementById('datasetBtn').addEventListener('click', toggleDsPanel);
+document.getElementById('dsClose').addEventListener('click', toggleDsPanel);
+
+// =============================================
+// Phase 6: 本地模型管理
+// =============================================
+const MODEL_API_BASE = window.location.origin.replace(/:\d+$/, '') + ':8520' + '/api/v1/model';
+
+// 打开模型面板
+function openModelPanel() {
+  document.getElementById('recHistoryPanel').style.display = 'none';
+  document.getElementById('dsPanel').style.display = 'none';
+  if (_currentAudioPlayer) { _currentAudioPlayer.pause(); _currentAudioPlayer = null; }
+  document.getElementById('modelPanel').style.display = 'block';
+  loadModelStatus();
+  loadFinetuneModels();
+  loadDatasetsForExport();
+}
+
+// 关闭模型面板
+function closeModelPanel() {
+  document.getElementById('modelPanel').style.display = 'none';
+}
+
+// 切换模型面板
+function toggleModelPanel() {
+  var panel = document.getElementById('modelPanel');
+  if (panel.style.display === 'none' || !panel.style.display) {
+    openModelPanel();
+  } else {
+    closeModelPanel();
+  }
+}
+
+// 渲染单个引擎信息
+function renderEngineInfo(engine) {
+  var html = '';
+  var installed = engine.installed;
+  var available = engine.available;
+  var modelPath = engine.model_path || engine.model_dir;
+  var modelSize = engine.model_size;
+
+  if (available) {
+    html += '<span class="model-badge model-badge-green">可用</span>';
+  } else if (installed) {
+    html += '<span class="model-badge model-badge-yellow">已安装（无模型）</span>';
+  } else {
+    html += '<span class="model-badge model-badge-red">未安装</span>';
+  }
+
+  if (modelPath) {
+    html += '<div class="model-engine-meta">模型路径：' + escapeHtmlSafe(modelPath) + '</div>';
+  }
+  if (modelSize) {
+    html += '<div class="model-engine-meta">模型大小：' + escapeHtmlSafe(modelSize) + '</div>';
+  }
+  if (engine.version) {
+    html += '<div class="model-engine-meta">版本：' + escapeHtmlSafe(engine.version) + '</div>';
+  }
+
+  return html;
+}
+
+// 加载模型状态
+async function loadModelStatus() {
+  var el = document.getElementById('modelEngineStatus');
+  el.innerHTML = '<p class="model-empty">加载中...</p>';
+
+  try {
+    var resp = await fetch(MODEL_API_BASE + '/status', { signal: AbortSignal.timeout(5000) });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+
+    var html = '';
+
+    // SenseVoice 状态
+    var sv = data.sensevoice || {};
+    html += '<div class="model-engine-card">';
+    html += '  <div class="model-engine-name">SenseVoice' + (sv.available ? '<span class="model-badge model-badge-green">可用</span>' : (sv.installed ? '<span class="model-badge model-badge-yellow">已安装</span>' : '<span class="model-badge model-badge-red">未安装</span>')) + '</div>';
+    html += '  <div class="model-engine-info">';
+    if (sv.model_path || sv.model_dir) {
+      html += '    <div class="model-engine-meta">模型路径：' + escapeHtmlSafe(sv.model_path || sv.model_dir) + '</div>';
+    }
+    if (sv.model_size) {
+      html += '    <div class="model-engine-meta">模型大小：' + escapeHtmlSafe(sv.model_size) + '</div>';
+    }
+    if (sv.version) {
+      html += '    <div class="model-engine-meta">版本：' + escapeHtmlSafe(sv.version) + '</div>';
+    }
+    if (!sv.model_path && !sv.model_dir && !sv.model_size && !sv.version) {
+      html += '    <div class="model-engine-meta">暂无详细信息</div>';
+    }
+    html += '  </div>';
+    html += '</div>';
+
+    // Whisper 状态
+    var wh = data.whisper || {};
+    html += '<div class="model-engine-card">';
+    html += '  <div class="model-engine-name">Whisper' + (wh.available ? '<span class="model-badge model-badge-green">可用</span>' : (wh.installed ? '<span class="model-badge model-badge-yellow">已安装</span>' : '<span class="model-badge model-badge-red">未安装</span>')) + '</div>';
+    html += '  <div class="model-engine-info">';
+    if (wh.model_path || wh.model_dir) {
+      html += '    <div class="model-engine-meta">模型路径：' + escapeHtmlSafe(wh.model_path || wh.model_dir) + '</div>';
+    }
+    if (wh.model_size) {
+      html += '    <div class="model-engine-meta">模型大小：' + escapeHtmlSafe(wh.model_size) + '</div>';
+    }
+    if (wh.version) {
+      html += '    <div class="model-engine-meta">版本：' + escapeHtmlSafe(wh.version) + '</div>';
+    }
+    if (!wh.model_path && !wh.model_dir && !wh.model_size && !wh.version) {
+      html += '    <div class="model-engine-meta">暂无详细信息</div>';
+    }
+    html += '  </div>';
+    html += '</div>';
+
+    // 当前激活引擎
+    var activeEngine = data.active_engine || data.engine || 'auto';
+    var finetuneActive = data.finetune_active;
+    html += '<div class="model-active-engine">当前引擎：<span class="model-badge model-badge-active">' + escapeHtmlSafe(activeEngine) + '</span>';
+    if (finetuneActive && finetuneActive.name) {
+      html += ' &nbsp; 微调模型：<span class="model-badge model-badge-green">' + escapeHtmlSafe(finetuneActive.name) + '</span>';
+    }
+    html += '</div>';
+
+    el.innerHTML = html;
+
+    // 更新配置下拉框
+    var config = data.config || {};
+    if (config.engine) {
+      document.getElementById('modelEngineSelect').value = config.engine;
+    } else if (data.active_engine) {
+      document.getElementById('modelEngineSelect').value = data.active_engine;
+    }
+    if (config.whisper_model_size) {
+      document.getElementById('modelWhisperSize').value = config.whisper_model_size;
+    }
+  } catch(e) {
+    el.innerHTML = '<p class="model-empty">加载失败：' + escapeHtmlSafe(e.message) + '</p>';
+  }
+}
+
+// 保存模型配置
+async function saveModelConfig() {
+  var engine = document.getElementById('modelEngineSelect').value;
+  var whisperSize = document.getElementById('modelWhisperSize').value;
+
+  try {
+    var resp = await fetch(MODEL_API_BASE + '/config', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ engine: engine, whisper_model_size: whisperSize }),
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+    alert('配置已保存');
+    loadModelStatus();
+  } catch(e) {
+    alert('保存失败：' + e.message);
+  }
+}
+
+// 加载微调模型列表
+async function loadFinetuneModels() {
+  var el = document.getElementById('modelFtList');
+  el.innerHTML = '<p class="model-empty">加载中...</p>';
+
+  try {
+    var resp = await fetch(MODEL_API_BASE + '/finetune/models', { signal: AbortSignal.timeout(5000) });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+
+    var models = data.models || data.finetune_models || [];
+    if (models.length === 0) {
+      el.innerHTML = '<p class="model-empty">暂无微调模型</p>';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < models.length; i++) {
+      var m = models[i];
+      var created = m.created_at ? new Date(m.created_at).toLocaleString('zh-CN') : '';
+      var activeBadge = m.active ? '<span class="model-badge model-badge-active">当前使用</span>' : '';
+      var modelId = m.model_id || m.id;
+      html += '<div class="model-ft-card">';
+      html += '  <div class="model-ft-info">';
+      html += '    <div class="model-ft-name">' + escapeHtmlSafe(m.name) + activeBadge + '</div>';
+      html += '    <div class="model-ft-meta">引擎：' + escapeHtmlSafe(m.engine) + ' &middot; 创建于 ' + created + '</div>';
+      if (m.path) {
+        html += '    <div class="model-ft-meta">路径：' + escapeHtmlSafe(m.path) + '</div>';
+      }
+      html += '  </div>';
+      html += '  <div class="model-ft-actions">';
+      if (!m.active) {
+        html += '    <button onclick="activateModel(\'' + modelId + '\')" class="model-btn-activate">激活</button>';
+      }
+      html += '    <button onclick="deleteModel(\'' + modelId + '\')" class="model-btn-delete">删除</button>';
+      html += '  </div>';
+      html += '</div>';
+    }
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<p class="model-empty">加载失败：' + escapeHtmlSafe(e.message) + '</p>';
+  }
+}
+
+// 激活微调模型
+async function activateModel(modelId) {
+  try {
+    var resp = await fetch(MODEL_API_BASE + '/finetune/activate/' + modelId, {
+      method: 'POST',
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+    alert('已激活微调模型');
+    loadFinetuneModels();
+    loadModelStatus();
+  } catch(e) {
+    alert('激活失败：' + e.message);
+  }
+}
+
+// 取消微调模型
+async function deactivateModel() {
+  if (!confirm('确定要取消当前微调模型，恢复使用基础模型吗？')) return;
+
+  try {
+    var resp = await fetch(MODEL_API_BASE + '/finetune/deactivate', {
+      method: 'POST',
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+    alert('已取消微调模型');
+    loadFinetuneModels();
+    loadModelStatus();
+  } catch(e) {
+    alert('操作失败：' + e.message);
+  }
+}
+
+// 删除微调模型
+async function deleteModel(modelId) {
+  if (!confirm('确定要删除这个微调模型吗？')) return;
+
+  try {
+    var resp = await fetch(MODEL_API_BASE + '/finetune/models/' + modelId, {
+      method: 'DELETE',
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+    loadFinetuneModels();
+  } catch(e) {
+    alert('删除失败：' + e.message);
+  }
+}
+
+// 注册微调模型
+async function registerFinetuneModel() {
+  var name = document.getElementById('ftModelName').value.trim();
+  var engine = document.getElementById('ftModelEngine').value;
+
+  if (!name) { alert('请输入微调模型名称'); return; }
+
+  try {
+    var resp = await fetch(MODEL_API_BASE + '/finetune/models', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, engine: engine }),
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+    document.getElementById('ftModelName').value = '';
+    loadFinetuneModels();
+  } catch(e) {
+    alert('注册失败：' + e.message);
+  }
+}
+
+// 加载数据集列表用于导出选择
+async function loadDatasetsForExport() {
+  var select = document.getElementById('ftExportDataset');
+
+  try {
+    var resp = await fetch(DS_API_BASE, { signal: AbortSignal.timeout(5000) });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+
+    var html = '<option value="">-- 选择数据集 --</option>';
+    var datasets = data.datasets || [];
+    for (var i = 0; i < datasets.length; i++) {
+      var ds = datasets[i];
+      html += '<option value="' + ds.dataset_id + '">' + escapeHtmlSafe(ds.name) + ' (' + ds.sample_count + ' 样本)</option>';
+    }
+    select.innerHTML = html;
+
+    // 绑定 onchange 事件加载导出历史
+    select.onchange = function() {
+      if (this.value) {
+        loadFinetuneExports(this.value);
+      } else {
+        document.getElementById('modelExportList').innerHTML = '<p class="model-empty">暂无导出记录</p>';
+      }
+    };
+  } catch(e) {
+    select.innerHTML = '<option value="">加载失败</option>';
+  }
+}
+
+// 导出微调数据
+async function exportFinetuneData() {
+  var datasetId = document.getElementById('ftExportDataset').value;
+  var format = document.getElementById('ftExportFormat').value;
+
+  if (!datasetId) { alert('请选择数据集'); return; }
+
+  try {
+    var resp = await fetch(MODEL_API_BASE + '/finetune/export', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dataset_id: datasetId, format: format }),
+      signal: AbortSignal.timeout(30000)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+
+    var msg = data.message || '导出成功';
+    if (data.sample_count !== undefined) {
+      msg += '（' + data.sample_count + ' 个样本）';
+    }
+    alert(msg);
+    loadFinetuneExports(datasetId);
+  } catch(e) {
+    alert('导出失败：' + e.message);
+  }
+}
+
+// 加载微调导出历史
+async function loadFinetuneExports(datasetId) {
+  var el = document.getElementById('modelExportList');
+  el.innerHTML = '<p class="model-empty">加载中...</p>';
+
+  try {
+    var resp = await fetch(MODEL_API_BASE + '/finetune/exports/' + datasetId, { signal: AbortSignal.timeout(5000) });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+
+    var exports = data.exports || data.export_history || [];
+    if (exports.length === 0) {
+      el.innerHTML = '<p class="model-empty">暂无导出记录</p>';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < exports.length; i++) {
+      var ex = exports[i];
+      var created = ex.created_at ? new Date(ex.created_at).toLocaleString('zh-CN') : '';
+      html += '<div class="model-ft-card">';
+      html += '  <div class="model-ft-info">';
+      html += '    <div class="model-ft-name">' + escapeHtmlSafe(ex.format || '导出') + ' 格式</div>';
+      html += '    <div class="model-ft-meta">' + (ex.sample_count || 0) + ' 样本 &middot; ' + created + '</div>';
+      if (ex.path) {
+        html += '    <div class="model-ft-meta">路径：' + escapeHtmlSafe(ex.path) + '</div>';
+      }
+      html += '  </div>';
+      html += '</div>';
+    }
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<p class="model-empty">加载失败：' + escapeHtmlSafe(e.message) + '</p>';
+  }
+}
+
+// 绑定模型面板按钮事件
+document.getElementById('modelBtn').addEventListener('click', toggleModelPanel);
+document.getElementById('modelClose').addEventListener('click', closeModelPanel);
+
+// Phase 4：初始化口音选择器
+initAccentSelector();
 
 </script>
 
