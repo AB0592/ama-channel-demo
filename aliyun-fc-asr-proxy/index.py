@@ -281,79 +281,112 @@ def handler(event, context):
             raw_body = raw_body.decode('utf-8')
         payload = json.loads(raw_body) if raw_body else {}
         audio_base64 = payload.get('audio_base64', '')
-        dialect = payload.get('dialect', 'mandarin')  # mandarin / fujian(闽南话) / cantonese(粤语)
+        dialect = payload.get('dialect', 'mandarin')  # mandarin / fujian(闽南话) / puxian(莆仙话)
         if not audio_base64:
             return make_response(200, {'text': '', 'error': 'missing audio_base64', 'ver': 'v3'})
         logger.info('Audio base64 len: %d, dialect: %s' % (len(audio_base64), dialect))
         _xf_error = None  # 讯飞失败原因（始终返回，便于诊断）
-        if dialect != 'mandarin':
-            # ---- 方言模式（闽南话/莆仙话）----
-            # 降级链：讯飞方言引擎(accent=fujian) → DashScope(通用中文) → 百度中文(兜底）
-            # 第1层：讯飞方言引擎（accent=fujian，闽南话专用）
-            if XUNFEI_APP_ID and XUNFEI_API_KEY and XUNFEI_API_SECRET:
-                try:
-                    text = recognize_xunfei(audio_base64, accent=dialect)
-                    if text and text.strip():
-                        logger.info('Xunfei(%s) success: %s' % (dialect, text[:50]))
-                        return make_response(200, {'text': text.strip(), 'provider': 'xunfei', 'dialect': dialect, 'ver': 'v3'})
-                    else:
-                        _xf_error = 'Xunfei(%s) returned empty text' % dialect
-                        logger.warning(_xf_error)
-                except Exception as e:
-                    _xf_error = 'Xunfei(%s): %s' % (dialect, str(e))
-                    logger.warning(_xf_error)
-            else:
-                _xf_error = 'Xunfei keys not configured (XUNFEI_APP_ID/API_KEY/API_SECRET)'
-                logger.warning(_xf_error)
-            # 第2层：DashScope paraformer-realtime-v2（通用中文识别，非方言模型）
+
+        if dialect == 'puxian':
+            # ---- 莆仙话模式 ----
+            # 讯飞 accent 不支持莆仙话，直接跳过讯飞
+            # 降级链：DashScope(带热词) → 百度中文(兜底)
+            _xf_error = 'Xunfei skipped: accent not supported for puxian dialect'
+            logger.info(_xf_error)
+            # 第1层：DashScope paraformer-realtime-v2（带 vocabulary_id 热词）
             if DASHSCOPE_API_KEY:
                 try:
                     text = recognize_dashscope(audio_base64)
                     if text and text.strip():
-                        logger.info('DashScope(%s) success: %s' % (dialect, text[:50]))
+                        logger.info('DashScope(puxian) success: %s' % text[:50])
                         return make_response(200, {'text': text.strip(), 'provider': 'dashscope', 'dialect': dialect, 'xunfei_error': _xf_error, 'ver': 'v3'})
                 except Exception as e:
-                    _dbg = 'DashScope(%s): %s' % (dialect, str(e))
-                    logger.warning(_dbg)
+                    logger.warning('DashScope(puxian): %s' % str(e))
             else:
                 logger.warning('DASHSCOPE_API_KEY not configured')
-            # 第3层：百度中文（兜底，识别普通话发音）
+            # 第2层：百度中文（兜底）
             if BAIDU_API_KEY and BAIDU_SECRET_KEY:
                 try:
                     text = recognize_baidu(audio_base64)
                     if text and text.strip():
-                        logger.info('Baidu(%s) success: %s' % (dialect, text[:50]))
+                        logger.info('Baidu(puxian) success: %s' % text[:50])
                         return make_response(200, {'text': text.strip(), 'provider': 'baidu', 'dialect': dialect, 'xunfei_error': _xf_error, 'ver': 'v3'})
                 except Exception as e:
-                    _dbg = 'Baidu(%s): %s' % (dialect, str(e))
-                    logger.warning(_dbg)
+                    logger.warning('Baidu(puxian): %s' % str(e))
             else:
                 logger.warning('Baidu keys not configured')
-            return make_response(200, {'text': '', 'error': 'dialect provider failed', 'xunfei_error': _xf_error, 'ver': 'v3'})
-        # ---- 第 1 层：百度语音（普通话）----
-        try:
-            text = recognize_baidu(audio_base64)
-            if text and text.strip():
-                return make_response(200, {'text': text.strip(), 'provider': 'baidu'})
-        except Exception as e:
-            logger.warning('Baidu: %s' % str(e))
-        # ---- 第 2 层：科大讯飞（普通话）----
-        if XUNFEI_APP_ID and XUNFEI_API_KEY and XUNFEI_API_SECRET:
+            return make_response(200, {'text': '', 'error': 'puxian provider failed', 'xunfei_error': _xf_error, 'ver': 'v3'})
+
+        elif dialect == 'fujian':
+            # ---- 闽南话模式 ----
+            # 降级链：讯飞方言引擎(accent=fujian) → DashScope(带热词) → 百度中文(兜底)
+            # 第1层：讯飞方言引擎（accent=fujian，闽南话专用）
+            if XUNFEI_APP_ID and XUNFEI_API_KEY and XUNFEI_API_SECRET:
+                try:
+                    text = recognize_xunfei(audio_base64, accent='fujian')
+                    if text and text.strip():
+                        logger.info('Xunfei(fujian) success: %s' % text[:50])
+                        return make_response(200, {'text': text.strip(), 'provider': 'xunfei', 'dialect': dialect, 'ver': 'v3'})
+                    else:
+                        _xf_error = 'Xunfei(fujian) returned empty text'
+                        logger.warning(_xf_error)
+                except Exception as e:
+                    _xf_error = 'Xunfei(fujian): %s' % str(e)
+                    logger.warning(_xf_error)
+            else:
+                _xf_error = 'Xunfei keys not configured (XUNFEI_APP_ID/API_KEY/API_SECRET)'
+                logger.warning(_xf_error)
+            # 第2层：DashScope paraformer-realtime-v2（带热词）
+            if DASHSCOPE_API_KEY:
+                try:
+                    text = recognize_dashscope(audio_base64)
+                    if text and text.strip():
+                        logger.info('DashScope(fujian) success: %s' % text[:50])
+                        return make_response(200, {'text': text.strip(), 'provider': 'dashscope', 'dialect': dialect, 'xunfei_error': _xf_error, 'ver': 'v3'})
+                except Exception as e:
+                    logger.warning('DashScope(fujian): %s' % str(e))
+            else:
+                logger.warning('DASHSCOPE_API_KEY not configured')
+            # 第3层：百度中文（兜底）
+            if BAIDU_API_KEY and BAIDU_SECRET_KEY:
+                try:
+                    text = recognize_baidu(audio_base64)
+                    if text and text.strip():
+                        logger.info('Baidu(fujian) success: %s' % text[:50])
+                        return make_response(200, {'text': text.strip(), 'provider': 'baidu', 'dialect': dialect, 'xunfei_error': _xf_error, 'ver': 'v3'})
+                except Exception as e:
+                    logger.warning('Baidu(fujian): %s' % str(e))
+            else:
+                logger.warning('Baidu keys not configured')
+            return make_response(200, {'text': '', 'error': 'fujian provider failed', 'xunfei_error': _xf_error, 'ver': 'v3'})
+
+        else:
+            # ---- 普通话模式（mandarin）----
+            # 降级链：百度中文 → 讯飞(普通话) → DashScope(带热词)
+            # 第1层：百度语音（普通话）
             try:
-                text = recognize_xunfei(audio_base64, accent='mandarin')
+                text = recognize_baidu(audio_base64)
                 if text and text.strip():
-                    return make_response(200, {'text': text.strip(), 'provider': 'xunfei'})
+                    return make_response(200, {'text': text.strip(), 'provider': 'baidu', 'ver': 'v3'})
             except Exception as e:
-                logger.warning('Xunfei: %s' % str(e))
-        # ---- 第 3 层：百炼 DashScope（普通话，带热词）----
-        if DASHSCOPE_API_KEY:
-            try:
-                text = recognize_dashscope(audio_base64)
-                if text and text.strip():
-                    return make_response(200, {'text': text.strip(), 'provider': 'dashscope'})
-            except Exception as e:
-                logger.warning('DashScope: %s' % str(e))
-        return make_response(200, {'text': '', 'error': 'all providers failed'})
+                logger.warning('Baidu: %s' % str(e))
+            # 第2层：科大讯飞（普通话）
+            if XUNFEI_APP_ID and XUNFEI_API_KEY and XUNFEI_API_SECRET:
+                try:
+                    text = recognize_xunfei(audio_base64, accent='mandarin')
+                    if text and text.strip():
+                        return make_response(200, {'text': text.strip(), 'provider': 'xunfei', 'ver': 'v3'})
+                except Exception as e:
+                    logger.warning('Xunfei: %s' % str(e))
+            # 第3层：百炼 DashScope（普通话，带热词）
+            if DASHSCOPE_API_KEY:
+                try:
+                    text = recognize_dashscope(audio_base64)
+                    if text and text.strip():
+                        return make_response(200, {'text': text.strip(), 'provider': 'dashscope', 'ver': 'v3'})
+                except Exception as e:
+                    logger.warning('DashScope: %s' % str(e))
+            return make_response(200, {'text': '', 'error': 'all providers failed', 'ver': 'v3'})
     except Exception as e:
         logger.error('Handler: %s' % str(e))
         return make_response(500, {'text': '', 'error': str(e)})
