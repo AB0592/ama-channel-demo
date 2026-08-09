@@ -212,7 +212,11 @@ h1 { text-align: center; font-size: 24px; margin: 16px 0; color: #1a73e8; }
 
 <script>
 // ==================== 配置 ====================
-const API_BASE = window.location.origin.replace(/:\d+$/, '') + ':8520/api/v1';
+// HTTPS 隧道访问时走相对路径（经反向代理转发），本地访问时走 8520 端口
+var _API_ORIGIN = window.location.protocol === 'https:'
+  ? window.location.origin
+  : window.location.origin.replace(/:\d+$/, '') + ':8520';
+const API_BASE = _API_ORIGIN + '/api/v1';
 const USER_ID = 'record_user_' + Math.random().toString(36).substr(2, 8);
 
 // 节目名词表
