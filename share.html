@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>分享给家人 - 阿嬷的频道</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, "PingFang SC", "Noto Sans CJK SC", sans-serif;
+  background: #f0f2f5; color: #333; min-height: 100vh; padding: 16px;
+}
+.container { max-width: 600px; margin: 0 auto; }
+
+/* 头部 */
+.header {
+  text-align: center; padding: 24px 16px; margin-bottom: 20px;
+  background: linear-gradient(135deg, #e17055, #00b894);
+  border-radius: 16px; color: #fff;
+}
+.header h1 { font-size: 24px; margin-bottom: 8px; }
+.header p { font-size: 14px; opacity: 0.9; }
+
+/* IP 显示 */
+.ip-box {
+  background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 20px;
+  text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.ip-box .label { font-size: 13px; color: #999; margin-bottom: 4px; }
+.ip-box .ip { font-size: 20px; font-weight: 700; color: #e17055; font-family: monospace; }
+.ip-box .wifi-hint {
+  font-size: 12px; color: #999; margin-top: 8px;
+  padding: 6px 12px; background: #fff8e1; border-radius: 8px; display: inline-block;
+}
+
+/* 二维码卡片 */
+.qr-card {
+  background: #fff; border-radius: 12px; padding: 24px 20px; margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center;
+}
+.qr-card h2 { font-size: 18px; margin-bottom: 6px; }
+.qr-card .desc { font-size: 13px; color: #999; margin-bottom: 16px; }
+.qr-card .qr-wrap {
+  display: inline-block; padding: 16px; background: #fff;
+  border: 2px solid #f0f0f0; border-radius: 12px;
+}
+.qr-card .qr-wrap table { margin: 0 auto; }
+.qr-card .qr-wrap td {
+  width: 5px; height: 5px; padding: 0; margin: 0;
+}
+.qr-card .qr-wrap td.on { background: #333; }
+.qr-card .qr-wrap td.off { background: #fff; }
+.qr-card .url-display {
+  margin-top: 12px; font-size: 13px; color: #666; font-family: monospace;
+  word-break: break-all; padding: 8px 12px; background: #f5f5f5; border-radius: 8px;
+}
+.qr-card .tag {
+  display: inline-block; font-size: 12px; font-weight: 600;
+  padding: 3px 12px; border-radius: 20px; margin-bottom: 8px;
+}
+.qr-card .tag.elder { background: #e8f5e9; color: #2e7d32; }
+.qr-card .tag.helper { background: #e3f2fd; color: #1565c0; }
+
+/* 复制按钮 */
+.copy-btn {
+  margin-top: 12px; padding: 8px 20px; border: 2px solid #e17055;
+  border-radius: 8px; background: #fff; color: #e17055;
+  font-size: 14px; cursor: pointer; transition: all 0.2s;
+}
+.copy-btn:hover { background: #e17055; color: #fff; }
+.copy-btn.copied { background: #00b894; border-color: #00b894; color: #fff; }
+
+/* 说明 */
+.instructions {
+  background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.instructions h2 { font-size: 16px; margin-bottom: 12px; color: #333; }
+.instructions ol { padding-left: 20px; }
+.instructions li { font-size: 14px; line-height: 2; color: #555; }
+.instructions .tip {
+  margin-top: 12px; padding: 12px 16px; background: #fff3e0;
+  border-radius: 8px; font-size: 13px; color: #e65100;
+}
+
+/* 公网访问 */
+.tunnel-section {
+  background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.tunnel-section h2 { font-size: 16px; margin-bottom: 8px; }
+.tunnel-section p { font-size: 13px; color: #666; margin-bottom: 12px; line-height: 1.6; }
+.tunnel-btn {
+  padding: 10px 24px; border: none; border-radius: 8px;
+  background: #6c5ce7; color: #fff; font-size: 14px; cursor: pointer;
+  transition: all 0.2s;
+}
+.tunnel-btn:hover { background: #5f3dc4; }
+.tunnel-btn:disabled { background: #ccc; cursor: not-allowed; }
+.tunnel-status {
+  margin-top: 12px; padding: 12px; border-radius: 8px; font-size: 13px;
+  display: none;
+}
+.tunnel-status.show { display: block; }
+.tunnel-status.success { background: #e8f5e9; color: #2e7d32; }
+.tunnel-status.error { background: #fce4ec; color: #c62828; }
+.tunnel-url {
+  margin-top: 8px; font-size: 14px; font-weight: 600; color: #6c5ce7;
+  font-family: monospace; word-break: break-all;
+}
+
+footer { text-align: center; padding: 20px; color: #999; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>📱 分享给家人</h1>
+    <p>家人扫码就能用手机录音和点播</p>
+  </div>
+
+  <!-- IP 信息 -->
+  <div class="ip-box">
+    <div class="label">当前服务器地址</div>
+    <div class="ip" id="serverIp">检测中...</div>
+    <div class="wifi-hint">⚠️ 家人手机要和这台电脑连同一个 WiFi</div>
+  </div>
+
+  <!-- 点播页二维码 -->
+  <div class="qr-card">
+    <span class="tag elder">给阿嬷/长辈用</span>
+    <h2>📺 点播节目</h2>
+    <p class="desc">扫码后用莆仙话说节目名，自动播放</p>
+    <div class="qr-wrap" id="qrPlay"></div>
+    <div class="url-display" id="urlPlay"></div>
+    <button class="copy-btn" onclick="copyUrl('play')">复制链接</button>
+  </div>
+
+  <!-- 录音页二维码 -->
+  <div class="qr-card">
+    <span class="tag helper">给帮忙的家人用</span>
+    <h2>🎙️ 录音训练</h2>
+    <p class="desc">扫码后录制莆仙话语料，训练模型</p>
+    <div class="qr-wrap" id="qrRecord"></div>
+    <div class="url-display" id="urlRecord"></div>
+    <button class="copy-btn" onclick="copyUrl('record')">复制链接</button>
+  </div>
+
+  <!-- 使用说明 -->
+  <div class="instructions">
+    <h2>📋 家人使用步骤</h2>
+    <ol>
+      <li>家人用手机打开微信或相机，扫描上面的二维码</li>
+      <li>手机会自动打开网页（如果用微信扫码，点右上角"在浏览器打开"）</li>
+      <li><strong>点播：</strong>点麦克风 → 用莆仙话说节目名 → 自动播放</li>
+      <li><strong>录音：</strong>选节目名 → 点麦克风录音 → 保存到语料库</li>
+      <li>录够 3 条以上后，可以点"开始训练模型"让系统变聪明</li>
+    </ol>
+    <div class="tip">
+      💡 <strong>小提示：</strong>第一次打开时手机会问"是否允许使用麦克风"，要点"允许"。如果用微信打开，记得点右上角"⋯"选择"在浏览器中打开"，否则录音功能可能用不了。
+    </div>
+  </div>
+
+  <!-- 公网访问 -->
+  <div class="tunnel-section">
+    <h2>🌐 外网访问（可选）</h2>
+    <p>如果家人不在同一个 WiFi 下，可以用 Cloudflare Tunnel 创建公网链接。家人在外地也能录音和点播。</p>
+    <button class="tunnel-btn" id="tunnelBtn" onclick="startTunnel()">启动公网访问</button>
+    <div class="tunnel-status" id="tunnelStatus"></div>
+  </div>
+
+  <footer>
+    阿嬷的频道 · 用科技温暖家人 ❤
+  </footer>
+
+</div>
+
+<script src="qrcode.min.js"></script>
+<script>
+// ==================== 生成二维码 ====================
+var baseUrl = window.location.origin;
+var playUrl = baseUrl + '/index.html';
+var recordUrl = baseUrl + '/record.html';
+
+// 显示 URL
+document.getElementById('urlPlay').textContent = playUrl;
+document.getElementById('urlRecord').textContent = recordUrl;
+
+// 显示 IP
+var ip = window.location.hostname;
+document.getElementById('serverIp').textContent = ip + ':8080';
+
+// 生成点播页二维码
+function makeQR(containerId, text) {
+  var qr = qrcode(0, 'M');  // type 0 = auto, error correction M
+  qr.addData(text);
+  qr.make();
+
+  var container = document.getElementById(containerId);
+  var count = qr.getModuleCount();
+  var html = '<table>';
+  for (var r = 0; r < count; r++) {
+    html += '<tr>';
+    for (var c = 0; c < count; c++) {
+      var isDark = qr.isDark(r, c);
+      html += '<td class="' + (isDark ? 'on' : 'off') + '"></td>';
+    }
+    html += '</tr>';
+  }
+  html += '</table>';
+  container.innerHTML = html;
+}
+
+makeQR('qrPlay', playUrl);
+makeQR('qrRecord', recordUrl);
+
+// ==================== 复制链接 ====================
+function copyUrl(type) {
+  var url = type === 'play' ? playUrl : recordUrl;
+  var btn = event.target;
+
+  // 尝试使用 clipboard API
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(function() {
+      btn.textContent = '已复制!';
+      btn.classList.add('copied');
+      setTimeout(function() {
+        btn.textContent = '复制链接';
+        btn.classList.remove('copied');
+      }, 2000);
+    }).catch(function() {
+      fallbackCopy(url, btn);
+    });
+  } else {
+    fallbackCopy(url, btn);
+  }
+}
+
+function fallbackCopy(url, btn) {
+  var textarea = document.createElement('textarea');
+  textarea.value = url;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    document.execCommand('copy');
+    btn.textContent = '已复制!';
+    btn.classList.add('copied');
+    setTimeout(function() {
+      btn.textContent = '复制链接';
+      btn.classList.remove('copied');
+    }, 2000);
+  } catch(e) {
+    alert('复制失败，请手动复制: ' + url);
+  }
+  document.body.removeChild(textarea);
+}
+
+// ==================== 公网访问 (Cloudflare Tunnel) ====================
+function startTunnel() {
+  var btn = document.getElementById('tunnelBtn');
+  var status = document.getElementById('tunnelStatus');
+
+  btn.disabled = true;
+  btn.textContent = '正在启动...';
+  status.className = 'tunnel-status show';
+  status.innerHTML = '正在创建公网链接，请稍候...';
+
+  // 调用后端 API 启动 tunnel
+  var apiBase = window.location.origin.replace(/:\d+$/, '') + ':8520/api/v1';
+
+  fetch(apiBase + '/tunnel/start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      port: 8080
+    }),
+    signal: AbortSignal.timeout(30000)
+  })
+  .then(function(resp) {
+    if (!resp.ok) throw new Error('启动失败');
+    return resp.json();
+  })
+  .then(function(data) {
+    if (data.url) {
+      var tunnelUrl = data.url;
+      // 确保包含 record.html
+      var tunnelRecord = tunnelUrl + (tunnelUrl.endsWith('/') ? '' : '/') + 'record.html';
+      var tunnelPlay = tunnelUrl + (tunnelUrl.endsWith('/') ? '' : '/') + 'index.html';
+
+      status.className = 'tunnel-status show success';
+      status.innerHTML =
+        '✅ 公网链接已创建！把下面的链接发给家人：' +
+        '<div class="tunnel-url">点播: ' + tunnelPlay + '</div>' +
+        '<div class="tunnel-url">录音: ' + tunnelRecord + '</div>' +
+        '<p style="margin-top:8px;font-size:12px;color:#999;">家人在任何地方用手机打开就能用</p>';
+
+      // 更新二维码为公网链接
+      makeQR('qrPlay', tunnelPlay);
+      makeQR('qrRecord', tunnelRecord);
+      document.getElementById('urlPlay').textContent = tunnelPlay;
+      document.getElementById('urlRecord').textContent = tunnelRecord;
+
+      btn.textContent = '公网已开启';
+    } else {
+      throw new Error(data.error || '未获取到公网链接');
+    }
+  })
+  .catch(function(err) {
+    status.className = 'tunnel-status show error';
+    status.innerHTML =
+      '❌ 公网访问启动失败: ' + err.message + '<br>' +
+      '<span style="font-size:12px;">请确认已安装 cloudflared：<code>brew install cloudflared</code></span>';
+    btn.disabled = false;
+    btn.textContent = '重试';
+  });
+}
+</script>
+</body>
+</html>
