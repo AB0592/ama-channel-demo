@@ -163,9 +163,12 @@ footer { text-align: center; padding: 20px; color: #999; font-size: 12px; }
   </div>
 
   <!-- 公网访问 -->
-  <div class="tunnel-section">
-    <h2>🌐 外网访问（可选）</h2>
-    <p>如果家人不在同一个 WiFi 下，可以用 Cloudflare Tunnel 创建公网链接。家人在外地也能录音和点播。</p>
+  <div class="tunnel-section" id="tunnelSection">
+    <h2>🌐 外网访问</h2>
+    <p id="tunnelDesc">如果家人不在同一个 WiFi 下，可以启动公网访问。家人在外地也能录音和点播。</p>
+    <div id="tunnelActiveBanner" style="display:none;padding:12px;background:#e8f5e9;border-radius:8px;margin-bottom:12px;">
+      ✅ <strong>公网已开启！</strong>当前页面就是公网地址，把二维码发给家人，他们在任何地方都能扫码使用。
+    </div>
     <button class="tunnel-btn" id="tunnelBtn" onclick="startTunnel()">启动公网访问</button>
     <div class="tunnel-status" id="tunnelStatus"></div>
   </div>
@@ -182,14 +185,25 @@ footer { text-align: center; padding: 20px; color: #999; font-size: 12px; }
 var baseUrl = window.location.origin;
 var playUrl = baseUrl + '/index.html';
 var recordUrl = baseUrl + '/record.html';
+var isPublicTunnel = window.location.protocol === 'https:';
 
 // 显示 URL
 document.getElementById('urlPlay').textContent = playUrl;
 document.getElementById('urlRecord').textContent = recordUrl;
 
-// 显示 IP
-var ip = window.location.hostname;
-document.getElementById('serverIp').textContent = ip + ':8080';
+// 显示 IP / 公网地址
+if (isPublicTunnel) {
+  document.getElementById('serverIp').textContent = window.location.hostname;
+  document.querySelector('.ip-box .wifi-hint').textContent = '✅ 公网已开启，家人在任何地方都能访问';
+  document.querySelector('.ip-box .wifi-hint').style.background = '#e8f5e9';
+  document.querySelector('.ip-box .wifi-hint').style.color = '#2e7d32';
+  // 显示公网已开启横幅
+  document.getElementById('tunnelActiveBanner').style.display = 'block';
+  document.getElementById('tunnelBtn').style.display = 'none';
+  document.getElementById('tunnelDesc').textContent = '当前已通过公网访问。家人扫码即可使用，无需在同一 WiFi 下。';
+} else {
+  document.getElementById('serverIp').textContent = window.location.hostname + ':8080';
+}
 
 // 生成点播页二维码
 function makeQR(containerId, text) {
@@ -268,14 +282,14 @@ function startTunnel() {
   status.className = 'tunnel-status show';
   status.innerHTML = '正在创建公网链接，请稍候...';
 
-  // 调用后端 API 启动 tunnel
+  // 调用后端 API 启动 tunnel（通过反向代理端口 9090）
   var apiBase = window.location.origin.replace(/:\d+$/, '') + ':8520/api/v1';
 
   fetch(apiBase + '/tunnel/start', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      port: 8080
+      port: 9090
     }),
     signal: AbortSignal.timeout(30000)
   })
