@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>阿嬷的频道</title>
 <style>
+  /* @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap'); */
+
   :root {
     --gold: #B87520;
     --gold-light: #FFF1B8;
@@ -1424,28 +1426,6 @@ input[type="text"], input[type="search"], textarea { font-size: clamp(22px, 5vw,
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.15); }
 }
-
-/* ===== Accent Correction Toast ===== */
-.accent-toast {
-  position: fixed;
-  top: 70px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(135deg, #fff8e1, #fff3cd);
-  border: 1px solid var(--gold);
-  border-radius: 12px;
-  padding: 10px 18px;
-  box-shadow: 0 4px 16px rgba(184, 117, 32, 0.2);
-  z-index: 10000;
-  font-size: 0.86em;
-  color: var(--text-dark);
-  max-width: 90vw;
-  animation: accentToastSlide 0.4s ease;
-}
-@keyframes accentToastSlide {
-  from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
-}
 </style>
 </head>
 <body>
@@ -1491,8 +1471,8 @@ input[type="text"], input[type="search"], textarea { font-size: clamp(22px, 5vw,
   <div class="gallery-nav">
     <h2>&#127916; 频道精选</h2>
     <div class="category-tabs" id="categoryTabs">
-      <button class="cat-btn" data-cat="all">全部</button>
-      <button class="cat-btn active" data-cat="莆仙戏">莆仙戏</button>
+      <button class="cat-btn active" data-cat="all">全部</button>
+      <button class="cat-btn" data-cat="莆仙戏">莆仙戏</button>
       <button class="cat-btn" data-cat="歌仔戏">歌仔戏</button>
       <button class="cat-btn" data-cat="南音">南音</button>
       <button class="cat-btn" data-cat="木偶戏">木偶戏</button>
@@ -2176,74 +2156,6 @@ const puxianDict = {
   '初见': '庐山恋',
   '读英语': '庐山恋',
   '改革开放': '庐山恋',
-  // ---- 春草闯堂 补充词条 ----
-  'chhun chhó chhòng tn̂g': '春草闯堂',
-  'chhun chhó': '春草闯堂',
-  '王少媛': '春草闯堂',
-  '黄宝珍': '春草闯堂',
-  '许秀莺': '春草闯堂',
-  '丫鬟': '春草闯堂',
-  '机智丫鬟': '春草闯堂',
-  '姑爷': '春草闯堂',
-  '相府': '春草闯堂',
-  '小姐': '春草闯堂',
-  '知府审案': '春草闯堂',
-  '认姑爷': '春草闯堂',
-  '春草机智': '春草闯堂',
-  '救人': '春草闯堂',
-  '莆仙戏名剧': '春草闯堂',
-  // ---- 状元与乞丐 补充词条 ----
-  '丁花实': '状元与乞丐',
-  '天定胜人': '状元与乞丐',
-  '人定胜天': '状元与乞丐',
-  '算命': '状元与乞丐',
-  '改命': '状元与乞丐',
-  '勤学': '状元与乞丐',
-  '懒惰': '状元与乞丐',
-  '败子回头': '状元与乞丐',
-  '姑嫂教子': '状元与乞丐',
-  '柳氏教子': '状元与乞丐',
-  '文龙中举': '状元与乞丐',
-  '文虎败家': '状元与乞丐',
-  // ---- 江梅妃 补充词条 ----
-  '梅花赋': '江梅妃',
-  '上阳宫': '江梅妃',
-  '楼东赋': '江梅妃',
-  '珍珠': '江梅妃',
-  '谢珍珠': '江梅妃',
-  '梅妃楼东赋': '江梅妃',
-  '冷宫': '江梅妃',
-  '争宠': '江梅妃',
-  '贵妃': '江梅妃',
-  '莆仙戏江梅妃': '江梅妃',
-  '江梅妃传': '江梅妃',
-  'mei fei yuan': '江梅妃',
-  // ---- 新亭泪 补充词条 ----
-  '新亭泣': '新亭泪',
-  '王导周顗': '新亭泪',
-  '晋元帝': '新亭泪',
-  '新亭对泣泪': '新亭泪',
-  '风景不殊': '新亭泪',
-  '山河之异': '新亭泪',
-  '举目有山河之异': '新亭泪',
-  '周伯仁': '新亭泪',
-  '王与马共天下': '新亭泪',
-  '南渡士族': '新亭泪',
-  '恢复中原': '新亭泪',
-  '故国之思': '新亭泪',
-  // ---- 秋风辞 补充词条 ----
-  '秋风辞赋': '秋风辞',
-  '汉武秋风辞': '秋风辞',
-  '汾阴': '秋风辞',
-  '后土祠': '秋风辞',
-  '泛楼船': '秋风辞',
-  '济汾河': '秋风辞',
-  '箫鼓鸣': '秋风辞',
-  '发棹歌': '秋风辞',
-  '欢乐极兮哀情多': '秋风辞',
-  '兰有秀兮菊有芳': '秋风辞',
-  '怀佳人兮不能忘': '秋风辞',
-  '武帝求仙': '秋风辞',
 };
 
 // =============================================
@@ -3618,11 +3530,11 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
     } else if (currentLang === 'minnanhua') {
       userInput.placeholder = '用闽南话说戏名、节目名...';
       if (flowHeader) flowHeader.innerHTML = '&#127760; 闽南话翻译流程';
-      langHint.textContent = '优先方言识别，失败请用普通话';
+      langHint.textContent = '闽南话模式：优先方言识别，直接说节目名（如春草闯堂、状元与乞丐）；失败请用普通话读戏名';
     } else {
       userInput.placeholder = '用莆仙话说戏名、节目名...';
       if (flowHeader) flowHeader.innerHTML = '&#127760; 莆仙话翻译流程';
-      langHint.textContent = '暂不支持方言识别';
+      langHint.textContent = '莆仙话：先用闽南话引擎试识别（同属闽语，节目名可认出），配合语音库匹配；失败请用普通话读戏名';
     }
     // 同步更新语音识别语言：闽南话尝试方言引擎，莆仙话暂无引擎用普通话
     window.__speechLang = (currentLang === 'minnanhua' || currentLang === 'puxianhua') ? 'nan-Hant-TW' : 'zh-CN';
@@ -3790,8 +3702,6 @@ function getSpeechRecognitionCtor() {
 }
 
 // 通用 Google Web Speech 识别（闽南话用 nan-Hant-TW；任何失败返回 null 走降级链，不抛异常）
-// 注意：Chrome Web Speech 在国内无 VPN 环境下会走 Google 服务器，必然失败
-// 超时设为 3 秒快速失败，避免长时间挂起等待
 function recognizeWithGoogle(lang) {
   return new Promise(function(resolve) {
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -3802,25 +3712,15 @@ function recognizeWithGoogle(lang) {
     rec.interimResults = false;
     rec.maxAlternatives = 1;
     var done = false;
-    // 3 秒超时：国内网络无法访问 Google speech 服务，快速失败让降级链继续
-    var tid = setTimeout(function() {
-      if (done) return; done = true;
-      try { rec.stop(); } catch(e) {}
-      window.__chromeSpeechUnavailable = true;  // 标记 Google 语音不可用，跳过后续重试
-      console.log('Chrome Web Speech 超时（3秒），国内网络不可用，请直接打字输入');
-      resolve(null);
-    }, 3000);
+    var tid = setTimeout(function() { done = true; try { rec.stop(); } catch(e) {} resolve(null); }, 8000);
     rec.onresult = function(e) {
       if (done) return; done = true; clearTimeout(tid);
       var txt = '';
       try { txt = e.results[0][0].transcript || ''; } catch(err) {}
       resolve(txt || null);
     };
-    rec.onerror = function(err) {
-      if (done) return; done = true; clearTimeout(tid);
-      window.__chromeSpeechUnavailable = true;  // 标记 Google 语音不可用，跳过后续重试
-      console.log('Chrome Web Speech 出错:', (err && err.error) || err, '— 国内网络不可用');
-      resolve(null);
+    rec.onerror = function() {
+      if (done) return; done = true; clearTimeout(tid); resolve(null);
     };
     rec.onend = function() {
       if (done) return; done = true; clearTimeout(tid); resolve(null);
@@ -3892,7 +3792,7 @@ function showStatus(type, text) {
 }
 
 // =============================================
-// 主麦克风入口：录音 → 本地ASR → FC(百度→讯飞) → 百炼热词 → FunASR → Google → 提示
+// 主麦克风入口：录音 → FC(百度→讯飞) → Google → 提示
 // =============================================
 let _isRecording = false;
 
@@ -3917,9 +3817,7 @@ async function startVoiceWithFallback() {
   _isRecording = true;
   micBtn.classList.add('listening');
   micBtn.innerHTML = '&#9724; 停止';
-  // 录音 4 秒（三板块统一，保证最快速度）
-  var _recDuration = 4000;
-  if (typeof showStatus === 'function') showStatus('listening', '正在录音，请说出节目名（' + (_recDuration/1000) + ' 秒自动结束）...');
+  if (typeof showStatus === 'function') showStatus('listening', '正在录音，请说出节目名（4 秒自动结束）...');
 
   var stream, mediaRecorder, chunks = [];
   try {
@@ -3928,7 +3826,8 @@ async function startVoiceWithFallback() {
     mediaRecorder.ondataavailable = function(e) { if (e.data.size > 0) chunks.push(e.data); };
     mediaRecorder.start();
     
-    await new Promise(function(r) { setTimeout(r, _recDuration); });
+    // 录音 4 秒
+    await new Promise(function(r) { setTimeout(r, 4000); });
     
     // 如果用户提前取消了
     if (!_isRecording) {
@@ -3951,100 +3850,49 @@ async function startVoiceWithFallback() {
 
     var blob = new Blob(chunks, { type: 'audio/webm' });
 
-    // ═══ 三板块独立识别链路 ═══
+    // ─── 第 0 层：本地 ASR（仅莆仙话，调用本地 8520 端口原始模型）───
     if (currentLang === 'puxianhua') {
-      // ── 莆仙话链路：本地ASR → 热词 → FC → FunASR → Chrome ──
-      // 第 0 层：本地莆仙话微调模型
-      if (typeof showStatus === 'function') showStatus('listening', '正在识别（本地 ASR 莆仙话模型）...');
+      if (typeof showStatus === 'function') showStatus('listening', '正在识别（本地莆仙话模型）...');
       try {
-        var v1Result = await callV1AsrTranscribe(blob);
+        var v1Result = await callLocalAsr(blob);
         if (v1Result && v1Result.text && v1Result.text.trim()) {
-          if (typeof applyRecognitionResult === 'function' &&
-              applyRecognitionResult(v1Result.text, {
-                normalizedText: v1Result.normalizedText,
-                needsConfirmation: v1Result.needsConfirmation
-              })) return;
+          if (typeof applyRecognitionResult === 'function') {
+            if (applyRecognitionResult(v1Result.text)) return;
+          } else { return; }
         }
-      } catch(e) { console.log('[莆仙话] 本地 ASR 不可用:', e.message); }
-
-      // 第 1 层：百炼热词（35个节目名）
-      if (typeof showStatus === 'function') showStatus('listening', '正在识别（百炼热词）...');
-      try {
-        var hotwordText = await callHotwordASR(blob);
-        if (hotwordText && hotwordText.trim()) {
-          if (typeof applyRecognitionResult === 'function' && applyRecognitionResult(hotwordText)) return;
-        }
-      } catch(e) { console.log('[莆仙话] 热词ASR 不可用:', e.message); }
-
-      // 第 2 层：FC 云端（dialect=puxian，FC 内跳过讯飞走 DashScope→百度）
-      if (typeof showStatus === 'function') showStatus('listening', '正在识别（百炼云端）...');
-      try {
-        var text = await callAliyunFcProxy(blob);
-        if (text && text.trim()) {
-          if (typeof applyRecognitionResult === 'function' && applyRecognitionResult(text)) return;
-        }
-      } catch(e) { console.log('[莆仙话] FC 不可用:', e.message); }
-
-      // 第 3 层：FunASR
-      if (typeof showStatus === 'function') showStatus('listening', '正在识别（FunASR）...');
-      try {
-        var text2 = await tryFunasrWithBlob(blob);
-        if (text2 && text2.trim()) {
-          if (typeof applyRecognitionResult === 'function' && applyRecognitionResult(text2)) return;
-        }
-      } catch(e) { console.log('[莆仙话] FunASR 不可用:', e.message); }
-
-    } else if (currentLang === 'minnanhua') {
-      // ── 闽南话链路：FC → 热词 → FunASR → Chrome ──
-      // 第 1 层：FC 讯飞闽南话引擎（dialect=fujian）
-      if (typeof showStatus === 'function') showStatus('listening', '正在识别（讯飞闽南话引擎）...');
-      try {
-        var text = await callAliyunFcProxy(blob);
-        if (text && text.trim()) {
-          if (typeof applyRecognitionResult === 'function' && applyRecognitionResult(text)) return;
-        }
-      } catch(e) { console.log('[闽南话] FC 不可用:', e.message); }
-
-      // 第 2 层：百炼热词
-      if (typeof showStatus === 'function') showStatus('listening', '正在识别（百炼热词）...');
-      try {
-        var hotwordText = await callHotwordASR(blob);
-        if (hotwordText && hotwordText.trim()) {
-          if (typeof applyRecognitionResult === 'function' && applyRecognitionResult(hotwordText)) return;
-        }
-      } catch(e) { console.log('[闽南话] 热词ASR 不可用:', e.message); }
-
-      // 第 3 层：FunASR
-      if (typeof showStatus === 'function') showStatus('listening', '正在识别（FunASR）...');
-      try {
-        var text2 = await tryFunasrWithBlob(blob);
-        if (text2 && text2.trim()) {
-          if (typeof applyRecognitionResult === 'function' && applyRecognitionResult(text2)) return;
-        }
-      } catch(e) { console.log('[闽南话] FunASR 不可用:', e.message); }
-
-    } else {
-      // ── 中文链路：FC → Chrome（最简，不走热词/FunASR）──
-      // 第 1 层：FC 百度中文（dialect=mandarin）
-      if (typeof showStatus === 'function') showStatus('listening', '正在识别（百度中文识别）...');
-      try {
-        var text = await callAliyunFcProxy(blob);
-        if (text && text.trim()) {
-          if (typeof applyRecognitionResult === 'function' && applyRecognitionResult(text)) return;
-        }
-      } catch(e) { console.log('[中文] FC 不可用:', e.message); }
+      } catch(e) { console.log('本地 ASR 不可用:', e.message); }
     }
 
-    // ─── 最后兜底：Chrome Web Speech（三板块共用）───
-    // 注意：国内无 VPN 环境下 Chrome Web Speech 走 Google 服务器必然失败
-    // 首次失败后设标志位跳过第二次尝试，避免双倍超时等待
+    // ─── 第 1 层：阿里云 FC（百度→讯飞，方言模式传 accent 走讯飞方言引擎）───
+    if (typeof showStatus === 'function') showStatus('listening', '正在识别（讯飞闽南话引擎）...');
+    try {
+      var text = await callAliyunFcProxy(blob);
+      if (text && text.trim()) {
+        if (typeof applyRecognitionResult === 'function') {
+          if (applyRecognitionResult(text)) return;
+        } else { return; }
+      }
+    } catch(e) { console.log('FC 不可用:', e.message); }
+
+    // ─── 第 2 层：FunASR 容器 ───
+    if (typeof showStatus === 'function') showStatus('listening', '正在识别（FunASR）...');
+    try {
+      var text2 = await tryFunasrWithBlob(blob);
+      if (text2 && text2.trim()) {
+        if (typeof applyRecognitionResult === 'function') {
+          if (applyRecognitionResult(text2)) return;
+        } else { return; }
+      }
+    } catch(e) { console.log('FunASR 不可用:', e.message); }
+
+    // ─── 第 3 层：Chrome 自带识别（最后一层兜底）───
     if (typeof showStatus === 'function') showStatus('listening', '正在识别（浏览器）...');
     var text3 = await recognizeWithGoogle(window.__speechLang || 'zh-CN');
-    if (!text3 && (window.__speechLang || 'zh-CN') !== 'zh-CN' && !window.__chromeSpeechUnavailable) {
-      text3 = await recognizeWithGoogle('zh-CN');
-    }
+    if (!text3 && (window.__speechLang || 'zh-CN') !== 'zh-CN') text3 = await recognizeWithGoogle('zh-CN');
     if (text3 && text3.trim()) {
-      if (typeof applyRecognitionResult === 'function' && applyRecognitionResult(text3)) return;
+      if (typeof applyRecognitionResult === 'function') {
+        if (applyRecognitionResult(text3)) return;
+      } else { return; }
     }
 
     // ─── 全部失败 ───
@@ -4078,7 +3926,6 @@ async function startSmartVoiceRecognition(options) {
     var mr = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
     mr.ondataavailable = function(e) { if (e.data.size > 0) chunks.push(e.data); };
     mr.start();
-    // 录音 4 秒（三板块统一）
     await new Promise(function(r) { setTimeout(r, 4000); });
     if (mr.state === 'recording') mr.stop();
     await new Promise(function(r) { mr.onstop = r; });
@@ -4091,116 +3938,46 @@ async function startSmartVoiceRecognition(options) {
 
     var blob = new Blob(chunks, { type: 'audio/webm' });
 
-    // 文本清洗：去除标点后是否还有有效内容（防止"。"等纯标点截断链路）
-    function _hasMeaningful(text) {
-      if (!text || !text.trim()) return false;
-      var cleaned = text.trim().replace(/[。，、；：？！,.!?;:…·~\s]/g, '');
-      return cleaned.length > 0;
-    }
-
-    // ═══ 三板块独立识别链路 ═══
+    // 第 0 层：本地 ASR（仅莆仙话）
     if (currentLang === 'puxianhua') {
-      // ── 莆仙话链路：本地ASR → 热词 → FC → FunASR ──
-      // 第 0 层：本地莆仙话微调模型
       try {
-        var v1Res = await callV1AsrTranscribe(blob);
+        var v1Res = await callLocalAsr(blob);
         if (v1Res && v1Res.text && v1Res.text.trim()) {
-          var displayText = v1Res.normalizedText || v1Res.text;
-          var matchCheck = findBestVoiceMatches(displayText);
-          var layer0Adopt = false;
-          if (matchCheck && matchCheck.results && matchCheck.results.length > 0) {
-            layer0Adopt = true;
-          } else if (v1Res.confidence >= 0.85) {
-            layer0Adopt = true;
-          }
-          if (layer0Adopt && _hasMeaningful(displayText)) {
-            onResult(displayText, v1Res.needsConfirmation);
-            onDone(displayText);
+          var _cleaned = v1Res.text.trim().replace(/[。，、；：？！,.!?;:…·~\s]/g, '');
+          if (_cleaned) {
+            onResult(v1Res.text, false);
+            onDone(v1Res.text);
             return;
           }
-          console.log('[SmartVoice] 第0层降级，text=' + v1Res.text);
         }
-      } catch(e) { console.log('SmartVoice v1 ASR error:', e.message); }
-
-      // 第 1 层：百炼热词
-      try {
-        var hotwordText = await callHotwordASR(blob);
-        if (_hasMeaningful(hotwordText)) {
-          onResult(hotwordText, false);
-          onDone(hotwordText);
-          return;
-        }
-      } catch(e) { console.log('SmartVoice 热词ASR error:', e.message); }
-
-      // 第 2 层：FC 云端（dialect=puxian）
-      try {
-        var text = await callAliyunFcProxy(blob);
-        if (_hasMeaningful(text)) {
-          onResult(text, false);
-          onDone(text);
-          return;
-        }
-      } catch(e) { console.log('SmartVoice FC error:', e.message); }
-
-      // 第 3 层：FunASR
-      try {
-        var text2 = await tryFunasrWithBlob(blob);
-        if (_hasMeaningful(text2)) {
-          onResult(text2, false);
-          onDone(text2);
-          return;
-        }
-      } catch(e) { console.log('SmartVoice FunASR error:', e.message); }
-
-    } else if (currentLang === 'minnanhua') {
-      // ── 闽南话链路：FC → 热词 → FunASR ──
-      // 第 1 层：FC 讯飞闽南话引擎（dialect=fujian）
-      try {
-        var text = await callAliyunFcProxy(blob);
-        if (_hasMeaningful(text)) {
-          onResult(text, false);
-          onDone(text);
-          return;
-        }
-      } catch(e) { console.log('SmartVoice FC error:', e.message); }
-
-      // 第 2 层：百炼热词
-      try {
-        var hotwordText = await callHotwordASR(blob);
-        if (_hasMeaningful(hotwordText)) {
-          onResult(hotwordText, false);
-          onDone(hotwordText);
-          return;
-        }
-      } catch(e) { console.log('SmartVoice 热词ASR error:', e.message); }
-
-      // 第 3 层：FunASR
-      try {
-        var text2 = await tryFunasrWithBlob(blob);
-        if (_hasMeaningful(text2)) {
-          onResult(text2, false);
-          onDone(text2);
-          return;
-        }
-      } catch(e) { console.log('SmartVoice FunASR error:', e.message); }
-
-    } else {
-      // ── 中文链路：FC only（最简）──
-      try {
-        var text = await callAliyunFcProxy(blob);
-        if (_hasMeaningful(text)) {
-          onResult(text, false);
-          onDone(text);
-          return;
-        }
-      } catch(e) { console.log('SmartVoice FC error:', e.message); }
+      } catch(e) { console.log('SmartVoice 本地 ASR error:', e.message); }
     }
 
-    // ─── 最后兜底：Chrome Web Speech（三板块共用）───
+    // 第 1 层：FC 百度/讯飞
+    try {
+      var text = await callAliyunFcProxy(blob);
+      if (text && text.trim()) {
+        onResult(text, false);
+        onDone(text);
+        return;
+      }
+    } catch(e) { console.log('SmartVoice FC error:', e.message); }
+
+    // 第 2 层：FunASR
+    try {
+      var text2 = await tryFunasrWithBlob(blob);
+      if (text2 && text2.trim()) {
+        onResult(text2, false);
+        onDone(text2);
+        return;
+      }
+    } catch(e) { console.log('SmartVoice FunASR error:', e.message); }
+
+    // 第 3 层：Google Web Speech（方言模式优先方言语言码，失败再普通话）
     var _svLang = window.__speechLang || 'zh-CN';
     var _svText = await recognizeWithGoogle(_svLang);
-    if (!_svText && _svLang !== 'zh-CN' && !window.__chromeSpeechUnavailable) _svText = await recognizeWithGoogle('zh-CN');
-    if (_hasMeaningful(_svText)) {
+    if (!_svText && _svLang !== 'zh-CN') _svText = await recognizeWithGoogle('zh-CN');
+    if (_svText && _svText.trim()) {
       onResult(_svText, false);
       onDone(_svText);
       return;
@@ -4306,13 +4083,10 @@ function setupDialectDictMic(options) {
 // Search & Match (with Puxian Translation)
 // =============================================
 let originalInput = ''; // 保存原始方言输入
-let _autoPlayOnSingleMatch = false; // v1 API 高置信度时自动播放单一匹配
 
 function startSearch() {
   const rawInput = userInput.value.trim();
   if (!rawInput) return;
-  var _wasAutoPlay = _autoPlayOnSingleMatch;
-  _autoPlayOnSingleMatch = false; // 消费后重置
   // 口语清洗：去掉常见前缀表达
   var cleanedInput = rawInput
     .replace(/^(我要看|我想看|我要听|我想听|帮我找|帮我搜|帮我放|播放一下|给我放|我要播|我想播|请播|请放|搜索|查找|播放|播一下|放一下|来点|来一个|有没有|有没有什么|什么是|给我来|给我整个|整个|来个)\s*/, '')
@@ -5443,171 +5217,54 @@ if (origTranslateMinnan) {
 }
 
 // =============================================
-// [新增] 5 层语音识别降级（本地 ASR 莆仙话训练模型 → 阿里云 FC 百度→讯飞 → FunASR → Google）
+// [新增] 4 层语音识别降级（阿里云 FC 百度→讯飞 → Google → FunASR）
 // =============================================
 // 请在部署阿里云 FC 后，将下面的地址替换为实际地址
-
-// =============================================
-// 莆仙话 ASR v1 API（本地服务，默认端口 8520）
-// =============================================
-var _API_ORIGIN = window.location.protocol === 'https:'
-  ? window.location.origin
-  : window.location.origin.replace(/:\d+$/, '') + ':8520';
-const ASR_V1_URL = _API_ORIGIN + '/api/v1/asr/transcribe';
-const HOTWORD_ASR_URL = _API_ORIGIN + '/api/v1/asr/hotword';
-
-// 获取或创建持久化用户 ID
-function getPersistentUserId() {
-  var uid = localStorage.getItem('ama_user_id');
-  if (!uid) {
-    uid = 'user_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
-    localStorage.setItem('ama_user_id', uid);
-  }
-  return uid;
-}
-
-// 第 0 层（优先）：莆仙话 ASR v1 API（本地服务）
-// 发送原始 WebM 音频，服务端做识别 + 节目名规范化
-async function callV1AsrTranscribe(audioBlob) {
-  var formData = new FormData();
-  formData.append('audio', audioBlob, 'speech.webm');
-  formData.append('provider', 'local');  // 本地微调模型识别
-  formData.append('language', 'putian'); // 明确指定莆仙话，触发微调模型
-  formData.append('scene', 'program_search'); // 启用节目名规范化
-  formData.append('enable_candidates', 'true');
-  formData.append('save_recording', 'true');
-  formData.append('consent', 'true');
-
-  formData.append('user_id', getPersistentUserId());
-
-  var resp = await fetchWithTimeout(ASR_V1_URL, {
-    method: 'POST',
-    body: formData
-  }, 8000);
-
-  if (!resp.ok) {
-    var errBody = {};
-    try { errBody = await resp.json(); } catch(e) {}
-    var errDetail = errBody.detail || {};
-    var errMsg = (errDetail.error && errDetail.error.message) || errBody.detail || ('HTTP ' + resp.status);
-    throw new Error('v1 API: ' + errMsg);
-  }
-
-  var data = await resp.json();
-  if (!data.success) {
-    var e = data.error || {};
-    throw new Error('v1 API: ' + (e.message || '未知错误'));
-  }
-
-  return {
-    text: data.text || '',
-    normalizedText: data.normalized_text || null,
-    needsConfirmation: data.needs_confirmation || false,
-    confidence: data.confidence || 0,
-    recordingId: data.recording_id || null,
-    recordingSaved: data.recording_saved || false
-  };
-}
-
-// 第 1.5 层：阿里云百炼热词识别（35个节目名热词，方言模式优先）
-// 使用 paraformer-realtime-v2 + 热词表，提升节目名识别准确率
-// 热词层健康检查缓存（避免每次录音都探测）
-var _hotwordServiceAvailable = null;
-async function checkHotwordService() {
-  if (_hotwordServiceAvailable !== null) return _hotwordServiceAvailable;
-  try {
-    await fetchWithTimeout(_API_ORIGIN + '/api/health', { method: 'GET' }, 800);
-    _hotwordServiceAvailable = true;
-  } catch(e) {
-    _hotwordServiceAvailable = false;
-    console.log('[热词ASR] 本地服务不可用(' + _API_ORIGIN + ')，热词层整体跳过');
-  }
-  return _hotwordServiceAvailable;
-}
-
-async function callHotwordASR(blob) {
-  // 前置健康检查：本地服务不可达时直接跳过，不等 5s 超时
-  var available = await checkHotwordService();
-  if (!available) return null;
-
-  var formData = new FormData();
-  formData.append('audio', blob, 'speech.webm');
-  formData.append('language', 'zh');
-
-  var resp = await fetchWithTimeout(HOTWORD_ASR_URL, {
-    method: 'POST',
-    body: formData
-  }, 5000);
-  // 404 快速跳过：热词服务未部署时不等超时
-  if (resp.status === 404) {
-    console.log('[热词ASR] 服务未部署 (404)，快速跳过');
-    return null;
-  }
-  if (!resp.ok) throw new Error('热词识别 HTTP ' + resp.status);
-  var data = await resp.json();
-  if (data.success && data.text && data.text.trim()) {
-    console.log('[热词ASR] 识别成功:', data.text, '(热词:', data.hotword_count + '个, engine:', data.engine + ')');
-    return data.text;
-  }
-  console.log('[热词ASR] 无结果:', data.error || '未知');
-  return null;
-}
-
 const FC_PROXY_URL = 'https://ama-channel-qtsdkdknbc.cn-shanghai.fcapp.run';
 const FC_FUNASR_URL = 'wss://funasr-igkajrakfs.cn-shanghai.fcapp.run';
 
+// 本地 ASR 服务地址（8520 端口）
+var _API_ORIGIN = window.location.protocol === 'https:'
+  ? window.location.origin
+  : window.location.origin.replace(/:\d+$/, '') + ':8520';
+
+// 第 0 层：本地 ASR（仅莆仙话，调用本地 8520 端口 /api/v1/asr/transcribe）
+async function callLocalAsr(audioBlob) {
+  var formData = new FormData();
+  formData.append('audio', audioBlob, 'speech.webm');
+  formData.append('language', 'putian');
+  formData.append('provider', 'local');
+  var controller = new AbortController();
+  var timer = setTimeout(function() { controller.abort(); }, 8000);
+  try {
+    var resp = await fetch(_API_ORIGIN + '/api/v1/asr/transcribe', {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    if (!resp.ok) return null;
+    var data = await resp.json();
+    return data;
+  } catch(e) {
+    clearTimeout(timer);
+    console.log('本地 ASR 不可用:', e.message);
+    return null;
+  }
+}
+
 // 将识别结果填入搜索框并触发搜索
-// opts.normalizedText: v1 API 返回的规范化节目名（优先使用）
-// opts.needsConfirmation: v1 API 返回的是否需要确认
-function applyRecognitionResult(text, opts) {
+function applyRecognitionResult(text) {
   if (!text || !text.trim()) return false;
-  opts = opts || {};
-  // 优先使用规范化后的节目名
-  var displayText = opts.normalizedText || text;
   // 清洗语音识别结果中的标点符号和空格
-  var cleaned = displayText.trim().replace(/[。，、；：？！,.!?;:…·~\s]/g, '');
+  var cleaned = text.trim().replace(/[。，、；：？！,.!?;:…·~\s]/g, '');
   if (!cleaned) return false;
   var inputEl = document.getElementById('userInput');
   if (!inputEl) return false;
   inputEl.value = cleaned;
-  var statusMsg = opts.normalizedText
-    ? '识别结果：' + cleaned + (opts.normalizedText !== text ? '（来自：' + text + '）' : '')
-    : '识别结果：' + cleaned;
-  if (typeof showStatus === 'function') showStatus('result', statusMsg);
-  // v1 API 高置信度（needs_confirmation=false）时，单一匹配自动播放
-  _autoPlayOnSingleMatch = opts.needsConfirmation === false;
+  if (typeof showStatus === 'function') showStatus('result', '识别结果：' + cleaned);
   if (typeof startSearch === 'function') { setTimeout(function(){ startSearch(); }, 100); }
   return true;
-}
-
-// 口音纠错反馈提示
-function showAccentCorrectionToast(corrections) {
-  var existing = document.querySelector('.accent-toast');
-  if (existing) existing.remove();
-
-  var correctionsHtml = '';
-  for (var i = 0; i < corrections.length; i++) {
-    var c = corrections[i];
-    correctionsHtml += '<div style="margin-top:4px;">' +
-      '<span style="text-decoration:line-through;color:#999;">' + escapeHtmlSafe(c.original) + '</span>' +
-      ' &#8594; ' +
-      '<span style="color:var(--gold);font-weight:600;">' + escapeHtmlSafe(c.corrected) + '</span>';
-    if (c.reason) {
-      correctionsHtml += ' <span style="color:#999;font-size:0.9em;">(' + escapeHtmlSafe(c.reason) + ')</span>';
-    }
-    correctionsHtml += '</div>';
-  }
-
-  var toast = document.createElement('div');
-  toast.className = 'accent-toast';
-  toast.innerHTML =
-    '<div style="font-weight:600;margin-bottom:2px;">&#127880; 口音纠错已应用</div>' +
-    correctionsHtml;
-  document.body.appendChild(toast);
-
-  setTimeout(function() {
-    if (toast && toast.parentNode) toast.remove();
-  }, 3000);
 }
 
 // WebM → 16kHz PCM base64
@@ -5638,36 +5295,17 @@ async function webmToPcmBase64(webmBlob) {
 }
 
 
-// 带超时的 fetch（兼容所有浏览器，不依赖 AbortSignal.timeout）
-function fetchWithTimeout(url, options, timeoutMs) {
-  var controller = new AbortController();
-  var timeoutId = setTimeout(function() { controller.abort(); }, timeoutMs);
-  return fetch(url, Object.assign({}, options, { signal: controller.signal }))
-    .then(function(resp) {
-      clearTimeout(timeoutId);
-      return resp;
-    })
-    .catch(function(err) {
-      clearTimeout(timeoutId);
-      throw err;
-    });
-}
-
-// 阿里云 FC 代理：发送 PCM base64，按板块传不同 dialect
+// 第 2 层：阿里云 FC 代理（百度→讯飞），发送 PCM base64
 async function callAliyunFcProxy(audioBlob) {
   var pcmBase64 = await webmToPcmBase64(audioBlob);
-  // 三板块各自不同的 dialect 参数
-  var dialectMap = { puxianhua: 'puxian', minnanhua: 'fujian', chinese: 'mandarin' };
-  var dialectParam = dialectMap[currentLang] || 'mandarin';
-  var body = JSON.stringify({ audio_base64: pcmBase64, format: 'pcm', dialect: dialectParam });
-
-  // 统一 8s 单次请求（不重试，失败快速降级）
-  var resp = await fetchWithTimeout(FC_PROXY_URL, {
+  // 闽南话/莆仙话同属闽语，先用讯飞闽南话引擎(accent=fujian)试识别
+  var dialectParam = (currentLang === 'minnanhua' || currentLang === 'puxianhua') ? 'fujian' : 'mandarin';
+  var resp = await fetch(FC_PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: body
-  }, 8000);
-  if (!resp.ok) throw new Error('FC HTTP ' + resp.status);
+    body: JSON.stringify({ audio_base64: pcmBase64, format: 'pcm', dialect: dialectParam }),
+    signal: AbortSignal.timeout(8000)
+  });
   var data = await resp.json();
   if (data.error) throw new Error(data.error);
   return data.text || null;
@@ -5684,7 +5322,7 @@ async function tryFunasrWithBlob(webmBlob) {
   return new Promise(function(resolve, reject) {
     var ws = new WebSocket(FC_FUNASR_URL);
     var finalText = '';
-    var timeout = setTimeout(function() { try { ws.close(); } catch(e) {} reject(new Error('timeout')); }, 6000);
+    var timeout = setTimeout(function() { try { ws.close(); } catch(e) {} reject(new Error('timeout')); }, 10000);
     ws.onopen = function() {
       ws.send(JSON.stringify({
         mode: '2pass', chunk_size: [5, 10, 5],
