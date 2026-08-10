@@ -33,7 +33,7 @@ HOTWORDS = ("春草闯堂 状元与乞丐 江梅妃 新亭泪 秋风辞 射雕�
 "直入花园 小沙弥下山 驯猴 元宵乐 大名府 雷万春打虎")
 # 百炼热词表 ID（在阿里云百炼控制台创建，含上述 35 个节目名）
 # 已通过 DashScope VocabularyService 创建并验证
-VOCABULARY_ID = os.environ.get('DASHSCOPE_VOCABULARY_ID', 'vocab-puxian-f24eb1eb7c7e4c448048259a3fda04a8')
+VOCABULARY_ID = os.environ.get('DASHSCOPE_VOCABULARY_ID', 'vocab-puxian-2328d50b6f864ac4974070400c3ae0ac')
 # =============================================
 # 百炼 DashScope 实时识别（paraformer-realtime-v2，带热词）
 # =============================================
