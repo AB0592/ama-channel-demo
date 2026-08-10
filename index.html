@@ -3712,7 +3712,7 @@ function recognizeWithGoogle(lang) {
     rec.interimResults = false;
     rec.maxAlternatives = 1;
     var done = false;
-    var tid = setTimeout(function() { done = true; try { rec.stop(); } catch(e) {} resolve(null); }, 8000);
+    var tid = setTimeout(function() { done = true; try { rec.stop(); } catch(e) {} resolve(null); }, 4000);
     rec.onresult = function(e) {
       if (done) return; done = true; clearTimeout(tid);
       var txt = '';
@@ -3863,8 +3863,9 @@ async function startVoiceWithFallback() {
       } catch(e) { console.log('本地 ASR 不可用:', e.message); }
     }
 
-    // ─── 第 1 层：阿里云 FC（百度→讯飞，方言模式传 accent 走讯飞方言引擎）───
-    if (typeof showStatus === 'function') showStatus('listening', '正在识别（讯飞闽南话引擎）...');
+    // ─── 第 1 层：阿里云 FC（三模块独立路由：mandarin/fujian/puxian）───
+    var _fcStatus = currentLang === 'puxianhua' ? '正在识别（云端语音识别）...' : (currentLang === 'minnanhua' ? '正在识别（讯飞闽南话引擎）...' : '正在识别（百度中文引擎）...');
+    if (typeof showStatus === 'function') showStatus('listening', _fcStatus);
     try {
       var text = await callAliyunFcProxy(blob);
       if (text && text.trim()) {
@@ -3953,7 +3954,7 @@ async function startSmartVoiceRecognition(options) {
       } catch(e) { console.log('SmartVoice 本地 ASR error:', e.message); }
     }
 
-    // 第 1 层：FC 百度/讯飞
+    // 第 1 层：FC 三模块独立识别
     try {
       var text = await callAliyunFcProxy(blob);
       if (text && text.trim()) {
@@ -5298,11 +5299,11 @@ async function webmToPcmBase64(webmBlob) {
 }
 
 
-// 第 2 层：阿里云 FC 代理（百度→讯飞），发送 PCM base64
+// 阿里云 FC 代理（三模块独立识别），发送 PCM base64
 async function callAliyunFcProxy(audioBlob) {
   var pcmBase64 = await webmToPcmBase64(audioBlob);
-  // 闽南话/莆仙话同属闽语，先用讯飞闽南话引擎(accent=fujian)试识别
-  var dialectParam = (currentLang === 'minnanhua' || currentLang === 'puxianhua') ? 'fujian' : 'mandarin';
+  // 三模块独立路由：puxianhua→puxian, minnanhua→fujian, chinese→mandarin
+  var dialectParam = currentLang === 'puxianhua' ? 'puxian' : (currentLang === 'minnanhua' ? 'fujian' : 'mandarin');
   var resp = await fetch(FC_PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -5325,7 +5326,7 @@ async function tryFunasrWithBlob(webmBlob) {
   return new Promise(function(resolve, reject) {
     var ws = new WebSocket(FC_FUNASR_URL);
     var finalText = '';
-    var timeout = setTimeout(function() { try { ws.close(); } catch(e) {} reject(new Error('timeout')); }, 10000);
+    var timeout = setTimeout(function() { try { ws.close(); } catch(e) {} reject(new Error('timeout')); }, 6000);
     ws.onopen = function() {
       ws.send(JSON.stringify({
         mode: '2pass', chunk_size: [5, 10, 5],
