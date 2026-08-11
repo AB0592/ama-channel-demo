@@ -18,3 +18,4 @@ requirements.txt
 # Python
 __pycache__/
 *.pyc
+fuzzy_test.html

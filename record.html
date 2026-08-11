@@ -14,7 +14,6 @@ body {
 h1 { text-align: center; font-size: 24px; margin: 16px 0; color: #1a73e8; }
 .subtitle { text-align: center; font-size: 14px; color: #666; margin-bottom: 24px; }
 
-/* 节目名选择区 */
 .section {
   background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -28,30 +27,59 @@ h1 { text-align: center; font-size: 24px; margin: 16px 0; color: #1a73e8; }
   padding: 2px 8px; border-radius: 10px; font-weight: normal;
 }
 
+/* 待录制提醒 */
+.alert-bar {
+  background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px;
+  padding: 12px 16px; margin-bottom: 16px; font-size: 14px; color: #856404;
+  display: none;
+}
+.alert-bar.show { display: block; }
+.alert-bar strong { color: #d63384; }
+
+/* 进度条 */
+.progress-bar {
+  width: 100%; height: 8px; background: #e0e0e0; border-radius: 4px;
+  margin: 8px 0 4px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: #34a853; border-radius: 4px;
+  transition: width 0.5s ease;
+}
+.progress-text { font-size: 12px; color: #666; }
+
 /* 节目名按钮网格 */
 .program-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   gap: 8px;
 }
 .program-btn {
   padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px;
   background: #fff; cursor: pointer; font-size: 14px; color: #333;
-  transition: all 0.2s; text-align: center;
+  transition: all 0.2s; text-align: center; position: relative;
 }
 .program-btn:hover { border-color: #1a73e8; background: #f8fbff; }
 .program-btn.selected {
   border-color: #1a73e8; background: #e8f0fe; color: #1a73e8;
   font-weight: 600; box-shadow: 0 2px 8px rgba(26,115,232,0.2);
 }
+.program-btn.trained { border-color: #34a853; }
+.program-btn.trained::after {
+  content: '✓'; position: absolute; top: 2px; right: 6px;
+  font-size: 12px; color: #34a853;
+}
 .program-btn .count {
   font-size: 11px; color: #999; display: block; margin-top: 2px;
 }
 .program-btn.selected .count { color: #1a73e8; }
+.program-btn .status {
+  font-size: 10px; display: block; margin-top: 1px;
+}
+.status-recorded { color: #f9a825; }
+.status-trained { color: #34a853; }
+.status-none { color: #ccc; }
 
 /* 录音区域 */
-.record-area {
-  text-align: center; padding: 24px 16px;
-}
+.record-area { text-align: center; padding: 24px 16px; }
 .selected-display {
   font-size: 28px; font-weight: 700; color: #1a73e8; margin-bottom: 16px;
 }
@@ -62,19 +90,14 @@ h1 { text-align: center; font-size: 24px; margin: 16px 0; color: #1a73e8; }
   display: inline-flex; align-items: center; justify-content: center;
 }
 .record-btn:hover { transform: scale(1.05); }
-.record-btn.recording {
-  background: #34a853; animation: pulse 1.5s infinite;
-}
+.record-btn.recording { background: #34a853; animation: pulse 1.5s infinite; }
 @keyframes pulse {
   0%, 100% { box-shadow: 0 4px 12px rgba(52,168,83,0.3); }
   50% { box-shadow: 0 4px 24px rgba(52,168,83,0.6); }
 }
-.record-hint {
-  margin-top: 12px; font-size: 14px; color: #666;
-}
+.record-hint { margin-top: 12px; font-size: 14px; color: #666; }
 .timer { font-size: 20px; font-weight: 600; color: #333; margin-top: 8px; }
 
-/* 保存按钮 */
 .save-btn {
   margin-top: 16px; padding: 12px 32px; border: none; border-radius: 8px;
   background: #1a73e8; color: #fff; font-size: 16px; cursor: pointer;
@@ -84,9 +107,7 @@ h1 { text-align: center; font-size: 24px; margin: 16px 0; color: #1a73e8; }
 .save-btn:disabled { background: #ccc; cursor: not-allowed; }
 
 /* 统计 */
-.stats-row {
-  display: flex; gap: 12px; margin: 12px 0;
-}
+.stats-row { display: flex; gap: 12px; margin: 12px 0; }
 .stat-card {
   flex: 1; background: #f8fbff; border-radius: 8px; padding: 12px;
   text-align: center;
@@ -94,23 +115,27 @@ h1 { text-align: center; font-size: 24px; margin: 16px 0; color: #1a73e8; }
 .stat-card .num { font-size: 28px; font-weight: 700; color: #1a73e8; }
 .stat-card .label { font-size: 12px; color: #666; margin-top: 2px; }
 
-/* 训练区域 */
+/* 训练 */
 .train-btn {
   padding: 14px 32px; border: none; border-radius: 8px;
   background: #34a853; color: #fff; font-size: 16px; cursor: pointer;
-  width: 100%; transition: all 0.2s;
+  width: 100%; transition: all 0.2s; font-weight: 600;
 }
 .train-btn:hover { background: #2d9244; }
 .train-btn:disabled { background: #ccc; cursor: not-allowed; }
-.train-status {
-  margin-top: 12px; padding: 12px; border-radius: 8px;
-  font-size: 14px; display: none;
+.train-result {
+  margin-top: 12px; padding: 16px; border-radius: 8px;
+  background: #e8f5e9; font-size: 14px; display: none;
 }
-.train-status.active { display: block; background: #e8f5e9; color: #2e7d32; }
-.train-status.error { display: block; background: #fce4ec; color: #c62828; }
-.train-status.success { display: block; background: #e8f5e9; color: #2e7d32; }
+.train-result.show { display: block; }
+.train-result table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.train-result th, .train-result td {
+  text-align: left; padding: 4px 8px; border-bottom: 1px solid #c8e6c9;
+  font-size: 13px;
+}
+.train-result th { color: #2e7d32; }
 
-/* 测试区域 */
+/* 测试 */
 .test-btn {
   padding: 12px 24px; border: 2px solid #1a73e8; border-radius: 8px;
   background: #fff; color: #1a73e8; font-size: 14px; cursor: pointer;
@@ -120,21 +145,18 @@ h1 { text-align: center; font-size: 24px; margin: 16px 0; color: #1a73e8; }
 .test-btn.recording { background: #ea4335; color: #fff; border-color: #ea4335; }
 .test-result {
   margin-top: 12px; padding: 16px; border-radius: 8px;
-  background: #f5f5f5; font-size: 18px; text-align: center;
-  display: none;
+  background: #f5f5f5; font-size: 18px; text-align: center; display: none;
 }
 .test-result.show { display: block; }
 .test-result .recognized { font-size: 24px; font-weight: 700; color: #1a73e8; }
 .test-result .match { font-size: 14px; margin-top: 8px; }
 
-/* 搜索框 */
 .search-box {
   width: 100%; padding: 10px 14px; border: 2px solid #e0e0e0;
   border-radius: 8px; font-size: 14px; margin-bottom: 12px;
 }
 .search-box:focus { border-color: #1a73e8; outline: none; }
 
-/* Toast */
 .toast {
   position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
   padding: 12px 24px; border-radius: 8px; color: #fff; font-size: 14px;
@@ -148,7 +170,10 @@ h1 { text-align: center; font-size: 24px; margin: 16px 0; color: #1a73e8; }
 <body>
 <div class="container">
   <h1>莆仙话语料录入</h1>
-  <p class="subtitle">用莆仙话录制节目名称，帮助模型学习方言发音</p>
+  <p class="subtitle">用莆仙话录制节目名称，录入后训练即可自动生效</p>
+
+  <!-- 待录制提醒 -->
+  <div class="alert-bar" id="alertBar"></div>
 
   <!-- 节目名选择 -->
   <div class="section">
@@ -156,7 +181,9 @@ h1 { text-align: center; font-size: 24px; margin: 16px 0; color: #1a73e8; }
       第 1 步：选择要录制的节目名
       <span class="badge" id="programCount">加载中...</span>
     </div>
-    <input type="text" class="search-box" id="searchBox" placeholder="搜索节目名...">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-text" id="progressText">加载中...</div>
+    <input type="text" class="search-box" id="searchBox" placeholder="搜索节目名..." style="margin-top:12px;">
     <div class="program-grid" id="programGrid"></div>
   </div>
 
@@ -172,34 +199,19 @@ h1 { text-align: center; font-size: 24px; margin: 16px 0; color: #1a73e8; }
     </div>
   </div>
 
-  <!-- 统计 -->
-  <div class="section">
-    <div class="section-title">第 3 步：查看录入进度</div>
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="num" id="totalRecordings">0</div>
-        <div class="label">已录入录音</div>
-      </div>
-      <div class="stat-card">
-        <div class="num" id="totalPrograms">0</div>
-        <div class="label">已覆盖节目</div>
-      </div>
-    </div>
-  </div>
-
   <!-- 训练 -->
   <div class="section">
-    <div class="section-title">第 4 步：重新训练模型</div>
+    <div class="section-title">第 3 步：训练并生效</div>
     <p style="font-size:13px;color:#666;margin-bottom:12px;">
-      录入足够录音后（建议每个节目名至少 3 条），点击按钮重新训练模型。
+      录入录音后点击训练，DTW 参考库会自动重建并立即生效（无需重启服务）。
     </p>
-    <button class="train-btn" id="trainBtn">🚀 开始训练模型</button>
-    <div class="train-status" id="trainStatus"></div>
+    <button class="train-btn" id="trainBtn">🚀 训练并更新参考库</button>
+    <div class="train-result" id="trainResult"></div>
   </div>
 
   <!-- 测试识别 -->
   <div class="section">
-    <div class="section-title">第 5 步：测试识别效果</div>
+    <div class="section-title">第 4 步：测试识别效果</div>
     <p style="font-size:13px;color:#666;margin-bottom:12px;">
       训练完成后，用莆仙话说出节目名，看模型能否识别。
     </p>
@@ -212,15 +224,13 @@ h1 { text-align: center; font-size: 24px; margin: 16px 0; color: #1a73e8; }
 
 <script>
 // ==================== 配置 ====================
-// HTTPS 隧道访问时走相对路径（经反向代理转发），本地访问时走 8520 端口
 var _API_ORIGIN = window.location.protocol === 'https:'
   ? window.location.origin
   : window.location.origin.replace(/:\d+$/, '') + ':8520';
 const API_BASE = _API_ORIGIN + '/api/v1';
 const USER_ID = 'record_user_' + Math.random().toString(36).substr(2, 8);
 
-// 节目名词表
-let PROGRAMS = [];
+let PROGRAMS = [];       // [{name, recorded_count, trained_count}]
 let selectedProgram = null;
 let mediaRecorder = null;
 let audioChunks = [];
@@ -229,10 +239,8 @@ let recordStream = null;
 let recordTimer = null;
 let recordSeconds = 0;
 let isRecording = false;
-let datasetId = null;
-let recordingCounts = {}; // {节目名: 数量}
 
-// ==================== 工具函数 ====================
+// ==================== 工具 ====================
 function showToast(msg, type) {
   var toast = document.getElementById('toast');
   toast.textContent = msg;
@@ -240,34 +248,39 @@ function showToast(msg, type) {
   setTimeout(function() { toast.className = 'toast'; }, 2500);
 }
 
-// ==================== 加载节目名 ====================
+// ==================== 加载节目名（动态） ====================
 async function loadPrograms() {
   try {
-    var resp = await fetch('/program_vocab.json');
-    if (!resp.ok) {
-      // 如果本地没有，从 API 获取
-      var resp2 = await fetch(API_BASE + '/asr/capabilities');
-      var caps = await resp2.json();
-      PROGRAMS = ['春草闯堂','状元与乞丐','江梅妃','新亭泪','秋风辞','团圆之后',
-        '踏伞行','目连救母','琴挑','百花亭','张协状元','蔡伯喈','王魁','杀狗记',
-        '刘知远','刘文龙','郭华','王十朋','高文举','妈祖','御史江春霖','朱买臣',
-        '赵盾','董永','三打王瑛','射雕英雄传','红楼梦','三国演义','水浒传','西游记',
-        '东方红','打靶归来','最炫民族风','小苹果','地道战','铁道游击队','英雄儿女',
-        '人到中年','庐山恋','陈三五娘','梁山伯与祝英台','吕蒙正','薛平贵与王宝钏',
-        '王金龙与苏三','八骏马','梅花操','百鸟归巢','三千两金','直入花园','小沙弥下山',
-        '驯猴','元宵乐','大名府','雷万春打虎','岳飞传','猪八戒娶亲'];
-    } else {
-      var data = await resp.json();
-      PROGRAMS = data.entries.map(function(e) { return e.canonical; });
-    }
-  } catch(e) {
-    PROGRAMS = ['春草闯堂','状元与乞丐','江梅妃','新亭泪','秋风辞','团圆之后',
-      '踏伞行','目连救母','琴挑','百花亭'];
-  }
+    var resp = await fetch(API_BASE + '/programs');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+    PROGRAMS = data.programs || [];
+    var total = data.total || PROGRAMS.length;
+    var recorded = data.recorded_programs || 0;
+    var trained = data.trained_programs || 0;
+    var unrecorded = data.unrecorded || [];
 
-  document.getElementById('programCount').textContent = PROGRAMS.length + ' 个节目';
-  document.getElementById('totalPrograms').textContent = '0';
-  renderPrograms();
+    document.getElementById('programCount').textContent = total + ' 个节目';
+    var pct = total > 0 ? Math.round(recorded / total * 100) : 0;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressText').textContent =
+      recorded + '/' + total + ' 已录制 (' + pct + '%)，' + trained + ' 已训练';
+
+    // 待录制提醒
+    if (unrecorded.length > 0) {
+      var bar = document.getElementById('alertBar');
+      bar.className = 'alert-bar show';
+      var display = unrecorded.length > 10
+        ? unrecorded.slice(0, 10).join('、') + '...等 ' + unrecorded.length + ' 个'
+        : unrecorded.join('、');
+      bar.innerHTML = '<strong>待录制：</strong>' + display;
+    }
+
+    renderPrograms();
+  } catch(e) {
+    document.getElementById('programCount').textContent = '加载失败';
+    showToast('节目名加载失败: ' + e.message, 'error');
+  }
 }
 
 function renderPrograms(filter) {
@@ -276,20 +289,35 @@ function renderPrograms(filter) {
   var filtered = PROGRAMS;
   if (filter) {
     filtered = PROGRAMS.filter(function(p) {
-      return p.indexOf(filter) >= 0;
+      return p.name.indexOf(filter) >= 0;
     });
   }
-  filtered.forEach(function(name) {
+  filtered.forEach(function(p) {
     var btn = document.createElement('button');
     btn.className = 'program-btn';
-    if (name === selectedProgram) btn.classList.add('selected');
-    btn.innerHTML = name + '<span class="count">' + (recordingCounts[name] || 0) + ' 条</span>';
-    btn.onclick = function() { selectProgram(name); };
+    if (p.name === selectedProgram) btn.classList.add('selected');
+    if (p.trained_count > 0) btn.classList.add('trained');
+
+    var statusText, statusClass;
+    if (p.trained_count > 0) {
+      statusText = '已训练 ' + p.trained_count;
+      statusClass = 'status-trained';
+    } else if (p.recorded_count > 0) {
+      statusText = '已录 ' + p.recorded_count;
+      statusClass = 'status-recorded';
+    } else {
+      statusText = '未录制';
+      statusClass = 'status-none';
+    }
+
+    btn.innerHTML = p.name +
+      '<span class="count">录' + p.recorded_count + ' / 训' + p.trained_count + '</span>' +
+      '<span class="status ' + statusClass + '">' + statusText + '</span>';
+    btn.onclick = function() { selectProgram(p.name); };
     grid.appendChild(btn);
   });
 }
 
-// ==================== 选择节目名 ====================
 function selectProgram(name) {
   selectedProgram = name;
   document.getElementById('selectedDisplay').textContent = name;
@@ -302,16 +330,9 @@ async function startRecording() {
   try {
     recordStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     audioChunks = [];
-
-    // 优先使用 audio/webm，回退到 audio/mp4
     var mimeType = 'audio/webm;codecs=opus';
-    if (!MediaRecorder.isTypeSupported(mimeType)) {
-      mimeType = 'audio/webm';
-    }
-    if (!MediaRecorder.isTypeSupported(mimeType)) {
-      mimeType = 'audio/mp4';
-    }
-
+    if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'audio/webm';
+    if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'audio/mp4';
     mediaRecorder = new MediaRecorder(recordStream, { mimeType: mimeType });
     mediaRecorder.ondataavailable = function(e) {
       if (e.data.size > 0) audioChunks.push(e.data);
@@ -322,7 +343,6 @@ async function startRecording() {
       document.getElementById('saveBtn').disabled = false;
       document.getElementById('recordHint').textContent = '录音完成！点击"保存到语料库"';
     };
-
     mediaRecorder.start();
     isRecording = true;
     recordSeconds = 0;
@@ -330,7 +350,6 @@ async function startRecording() {
     document.getElementById('recordBtn').classList.add('recording');
     document.getElementById('recordHint').textContent = '正在录音...再次点击停止';
     document.getElementById('saveBtn').disabled = true;
-
     recordTimer = setInterval(function() {
       recordSeconds++;
       document.getElementById('timer').textContent = recordSeconds + ' 秒';
@@ -341,12 +360,8 @@ async function startRecording() {
 }
 
 function stopRecording() {
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    mediaRecorder.stop();
-  }
-  if (recordStream) {
-    recordStream.getTracks().forEach(function(t) { t.stop(); });
-  }
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  if (recordStream) recordStream.getTracks().forEach(function(t) { t.stop(); });
   clearInterval(recordTimer);
   isRecording = false;
   document.getElementById('recordBtn').textContent = '🎤';
@@ -354,22 +369,17 @@ function stopRecording() {
 }
 
 document.getElementById('recordBtn').onclick = function() {
-  if (isRecording) {
-    stopRecording();
-  } else {
-    startRecording();
-  }
+  if (isRecording) stopRecording(); else startRecording();
 };
 
-// ==================== 保存录音 ====================
+// ==================== 保存录音（含标注 API） ====================
 document.getElementById('saveBtn').onclick = async function() {
   if (!audioBlob || !selectedProgram) return;
-
   this.disabled = true;
   this.textContent = '保存中...';
 
   try {
-    // 1. 发送到 API，保存录音
+    // 1. 保存录音
     var formData = new FormData();
     var ext = audioBlob.type.includes('webm') ? 'webm' : 'mp4';
     formData.append('audio', audioBlob, 'speech.' + ext);
@@ -380,52 +390,32 @@ document.getElementById('saveBtn').onclick = async function() {
     formData.append('user_id', USER_ID);
 
     var resp = await fetch(API_BASE + '/asr/transcribe', {
-      method: 'POST',
-      body: formData,
-      signal: AbortSignal.timeout(60000)
+      method: 'POST', body: formData, signal: AbortSignal.timeout(60000)
     });
-
     if (!resp.ok) {
       var errBody = {};
       try { errBody = await resp.json(); } catch(e) {}
       throw new Error(errBody.detail || ('HTTP ' + resp.status));
     }
-
     var data = await resp.json();
-    if (!data.success && !data.recording_id) {
-      throw new Error(data.error ? data.error.message : '保存失败');
-    }
-
     var recordingId = data.recording_id;
-    if (!recordingId) {
-      throw new Error('未获取到录音 ID');
-    }
+    if (!recordingId) throw new Error('未获取到录音 ID');
 
-    // 2. 确保有数据集
-    if (!datasetId) {
-      datasetId = await ensureDataset();
-    }
-
-    // 3. 添加到数据集，用选择的节目名作为标注
-    var sampleResp = await fetch(API_BASE + '/datasets/' + datasetId + '/samples', {
+    // 2. 调用标注 API 写入 normalized_text（关键步骤）
+    var labelResp = await fetch(API_BASE + '/recordings/' + recordingId + '/label?user_id=' + USER_ID, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        recording_id: recordingId,
-        user_id: USER_ID,
-        corrected_text: selectedProgram
-      })
+      body: JSON.stringify({ normalized_text: selectedProgram })
     });
+    if (!labelResp.ok) console.warn('标注失败');
 
-    if (!sampleResp.ok) {
-      var sampleErr = {};
-      try { sampleErr = await sampleResp.json(); } catch(e) {}
-      console.warn('添加样本失败:', sampleErr);
+    // 3. 更新本地计数
+    for (var i = 0; i < PROGRAMS.length; i++) {
+      if (PROGRAMS[i].name === selectedProgram) {
+        PROGRAMS[i].recorded_count++;
+        break;
+      }
     }
-
-    // 4. 更新计数
-    recordingCounts[selectedProgram] = (recordingCounts[selectedProgram] || 0) + 1;
-    updateStats();
     renderPrograms(document.getElementById('searchBox').value);
 
     showToast('保存成功！' + selectedProgram + ' 已录入', 'success');
@@ -433,7 +423,6 @@ document.getElementById('saveBtn').onclick = async function() {
     document.getElementById('saveBtn').textContent = '保存到语料库';
     document.getElementById('recordHint').textContent = '点击麦克风开始录音';
     document.getElementById('timer').textContent = '';
-
   } catch(e) {
     showToast('保存失败: ' + e.message, 'error');
     this.disabled = false;
@@ -441,150 +430,59 @@ document.getElementById('saveBtn').onclick = async function() {
   }
 };
 
-// ==================== 数据集管理 ====================
-async function ensureDataset() {
-  // 查找现有数据集
-  var resp = await fetch(API_BASE + '/datasets');
-  var data = await resp.json();
-  if (data.datasets) {
-    for (var i = 0; i < data.datasets.length; i++) {
-      if (data.datasets[i].name === '莆仙话节目名语音库') {
-        return data.datasets[i].dataset_id;
-      }
-    }
-  }
-  // 创建新数据集
-  var createResp = await fetch(API_BASE + '/datasets', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: '莆仙话节目名语音库',
-      description: '用户用莆仙话录制的节目名称，用于模型微调'
-    })
-  });
-  var createData = await createResp.json();
-  return createData.dataset_id;
-}
-
-// ==================== 统计 ====================
-function updateStats() {
-  var total = 0;
-  var programs = 0;
-  for (var name in recordingCounts) {
-    total += recordingCounts[name];
-    if (recordingCounts[name] > 0) programs++;
-  }
-  document.getElementById('totalRecordings').textContent = total;
-  document.getElementById('totalPrograms').textContent = programs;
-}
-
-// ==================== 训练 ====================
+// ==================== 训练（重建 DTW 参考库） ====================
 document.getElementById('trainBtn').onclick = async function() {
-  if (!datasetId) {
-    showToast('请先录入至少一条录音', 'error');
-    return;
-  }
-
-  var total = 0;
-  for (var name in recordingCounts) total += recordingCounts[name];
-  if (total < 3) {
-    showToast('至少需要 3 条录音才能训练，当前只有 ' + total + ' 条', 'error');
-    return;
-  }
-
   this.disabled = true;
   this.textContent = '训练中...';
-  var statusDiv = document.getElementById('trainStatus');
-  statusDiv.className = 'train-status active';
-  statusDiv.textContent = '训练已启动，请耐心等待...';
+  var resultDiv = document.getElementById('trainResult');
+  resultDiv.className = 'train-result show';
+  resultDiv.innerHTML = '正在重建 DTW 参考库...';
 
   try {
-    var resp = await fetch(API_BASE + '/model/finetune/train', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        dataset_id: datasetId,
-        activate: true
-      })
-    });
+    var resp = await fetch(API_BASE + '/recordings/train', { method: 'POST' });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
 
-    if (!resp.ok) {
-      var err = {};
-      try { err = await resp.json(); } catch(e) {}
-      throw new Error(err.detail || '训练启动失败');
+    var html = '<strong>训练完成！</strong> 参考库已热更新生效<br>';
+    html += '总节目名: ' + data.total_programs + '，总参考条数: ' + data.total_refs;
+    html += '（上限 ' + data.max_per_program + ' 条/节目名）<br>';
+    html += '<table><tr><th>节目名</th><th>参考条数</th></tr>';
+    var progs = data.programs || {};
+    var sorted = Object.keys(progs).sort(function(a, b) { return progs[b] - progs[a]; });
+    for (var i = 0; i < sorted.length; i++) {
+      html += '<tr><td>' + sorted[i] + '</td><td>' + progs[sorted[i]] + '</td></tr>';
     }
+    html += '</table>';
+    resultDiv.innerHTML = html;
+    showToast('训练完成！参考库已生效', 'success');
 
-    // 轮询训练状态
-    var pollTimer = setInterval(async function() {
-      try {
-        var statusResp = await fetch(API_BASE + '/model/finetune/train/status');
-        var status = await statusResp.json();
-
-        if (status.progress) {
-          statusDiv.textContent = status.progress;
-        }
-
-        if (!status.running) {
-          clearInterval(pollTimer);
-          var btn = document.getElementById('trainBtn');
-          btn.disabled = false;
-          btn.textContent = '🚀 开始训练模型';
-
-          if (status.error) {
-            statusDiv.className = 'train-status error';
-            statusDiv.textContent = '训练失败: ' + status.error.substring(0, 200);
-          } else if (status.model_id) {
-            statusDiv.className = 'train-status success';
-            statusDiv.textContent = '训练完成！新模型 ' + status.model_id + ' 已激活。';
-            showToast('模型训练完成！', 'success');
-          } else {
-            statusDiv.className = 'train-status success';
-            statusDiv.textContent = '训练完成！';
-          }
-        }
-      } catch(e) {
-        // 忽略轮询错误
-      }
-    }, 5000);
-
+    // 刷新节目名状态
+    await loadPrograms();
   } catch(e) {
-    this.disabled = false;
-    this.textContent = '🚀 开始训练模型';
-    statusDiv.className = 'train-status error';
-    statusDiv.textContent = '启动失败: ' + e.message;
+    resultDiv.innerHTML = '<span style="color:#c62828;">训练失败: ' + e.message + '</span>';
   }
+  this.disabled = false;
+  this.textContent = '🚀 训练并更新参考库';
 };
 
 // ==================== 测试识别 ====================
-var testMediaRecorder = null;
-var testChunks = [];
-var testStream = null;
-var testIsRecording = false;
+var testMediaRecorder = null, testChunks = [], testStream = null, testIsRecording = false;
 
 document.getElementById('testBtn').onclick = async function() {
   if (testIsRecording) {
-    // 停止录音并识别
-    if (testMediaRecorder && testMediaRecorder.state !== 'inactive') {
-      testMediaRecorder.stop();
-    }
-    if (testStream) {
-      testStream.getTracks().forEach(function(t) { t.stop(); });
-    }
+    if (testMediaRecorder && testMediaRecorder.state !== 'inactive') testMediaRecorder.stop();
+    if (testStream) testStream.getTracks().forEach(function(t) { t.stop(); });
     testIsRecording = false;
     this.classList.remove('recording');
     this.textContent = '🎤 用莆仙话说话测试';
     return;
   }
-
-  // 开始录音
   try {
     testStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     testChunks = [];
-
     var mimeType = 'audio/webm;codecs=opus';
     if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'audio/webm';
     if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'audio/mp4';
-
     testMediaRecorder = new MediaRecorder(testStream, { mimeType: mimeType });
     testMediaRecorder.ondataavailable = function(e) {
       if (e.data.size > 0) testChunks.push(e.data);
@@ -595,43 +493,33 @@ document.getElementById('testBtn').onclick = async function() {
       var resultDiv = document.getElementById('testResult');
       resultDiv.className = 'test-result show';
       resultDiv.innerHTML = '识别中...';
-
       try {
         var ext = type.includes('webm') ? 'webm' : 'mp4';
         var formData = new FormData();
         formData.append('audio', blob, 'test.' + ext);
         formData.append('provider', 'local');
-        formData.append('language', 'auto');
+        formData.append('language', 'putian');
         formData.append('scene', 'program_search');
         formData.append('enable_candidates', 'true');
         formData.append('save_recording', 'false');
         formData.append('consent', 'false');
         formData.append('user_id', USER_ID);
-
         var resp = await fetch(API_BASE + '/asr/transcribe', {
-          method: 'POST',
-          body: formData,
-          signal: AbortSignal.timeout(30000)
+          method: 'POST', body: formData, signal: AbortSignal.timeout(30000)
         });
-
         var data = await resp.json();
         var text = data.text || '(未识别到内容)';
         var norm = data.normalized_text || '';
         var candidates = data.candidates || [];
-
         var html = '<div class="recognized">' + text + '</div>';
-        if (norm && norm !== text) {
-          html += '<div class="match">匹配节目: ' + norm + '</div>';
-        }
-        if (candidates && candidates.length > 0) {
-          html += '<div class="match">候选: ' + candidates.join('、') + '</div>';
-        }
+        if (norm && norm !== text) html += '<div class="match">匹配节目: ' + norm + '</div>';
+        if (candidates && candidates.length > 0)
+          html += '<div class="match">候选: ' + candidates.map(function(c){return c.text||c;}).join('、') + '</div>';
         resultDiv.innerHTML = html;
       } catch(e) {
         resultDiv.innerHTML = '<div style="color:#ea4335;">识别失败: ' + e.message + '</div>';
       }
     };
-
     testMediaRecorder.start();
     testIsRecording = true;
     this.classList.add('recording');
@@ -643,9 +531,7 @@ document.getElementById('testBtn').onclick = async function() {
 };
 
 // ==================== 搜索 ====================
-document.getElementById('searchBox').oninput = function() {
-  renderPrograms(this.value);
-};
+document.getElementById('searchBox').oninput = function() { renderPrograms(this.value); };
 
 // ==================== 初始化 ====================
 loadPrograms();
