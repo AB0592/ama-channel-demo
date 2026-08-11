@@ -3855,10 +3855,15 @@ async function startVoiceWithFallback() {
       if (typeof showStatus === 'function') showStatus('listening', '正在识别（本地莆仙话模型）...');
       try {
         var v1Result = await callLocalAsr(blob);
-        if (v1Result && v1Result.text && v1Result.text.trim()) {
-          if (typeof applyRecognitionResult === 'function') {
-            if (applyRecognitionResult(v1Result.text)) return;
-          } else { return; }
+        console.log('[ASR] 本地 8520 返回:', v1Result);
+        if (v1Result) {
+          // 优先使用 DTW 匹配的 normalized_text（节目名）
+          var _useText = v1Result.normalized_text || v1Result.text;
+          if (_useText && _useText.trim()) {
+            if (typeof applyRecognitionResult === 'function') {
+              if (applyRecognitionResult(_useText)) return;
+            } else { return; }
+          }
         }
       } catch(e) { console.log('本地 ASR 不可用:', e.message); }
     }
@@ -3943,14 +3948,19 @@ async function startSmartVoiceRecognition(options) {
     if (currentLang === 'puxianhua') {
       try {
         var v1Res = await callLocalAsr(blob);
-        if (v1Res && v1Res.text && v1Res.text.trim()) {
-          var _cleaned = v1Res.text.trim().replace(/[。，、；：？！,.!?;:…·~\s]/g, '');
-          if (_cleaned) {
-            var _m0 = fuzzyMatch(v1Res.text);
-            var _final0 = (_m0 && _m0.type === 'program') ? _m0.canonical : v1Res.text;
-            onResult(_final0, false);
-            onDone(_final0);
-            return;
+        console.log('[SmartVoice] 本地 8520 返回:', v1Res);
+        if (v1Res) {
+          // 优先使用 DTW 匹配的 normalized_text（节目名）
+          var _useText0 = v1Res.normalized_text || v1Res.text;
+          if (_useText0 && _useText0.trim()) {
+            var _cleaned = _useText0.trim().replace(/[。，、；：？！,.!?;:…·~\s]/g, '');
+            if (_cleaned) {
+              var _m0 = fuzzyMatch(_useText0);
+              var _final0 = (_m0 && _m0.type === 'program') ? _m0.canonical : _useText0;
+              onResult(_final0, false);
+              onDone(_final0);
+              return;
+            }
           }
         }
       } catch(e) { console.log('SmartVoice 本地 ASR error:', e.message); }
@@ -5247,6 +5257,7 @@ async function callLocalAsr(audioBlob) {
   formData.append('audio', audioBlob, 'speech.webm');
   formData.append('language', 'putian');
   formData.append('provider', 'local');
+  formData.append('scene', 'program_search');
   var controller = new AbortController();
   var timer = setTimeout(function() { controller.abort(); }, 8000);
   try {
@@ -5256,12 +5267,17 @@ async function callLocalAsr(audioBlob) {
       signal: controller.signal
     });
     clearTimeout(timer);
-    if (!resp.ok) return null;
+    console.log('[ASR] 8520 响应状态:', resp.status, resp.ok);
+    if (!resp.ok) {
+      console.log('[ASR] 8520 返回非 200:', resp.status);
+      return null;
+    }
     var data = await resp.json();
+    console.log('[ASR] 8520 识别结果: text=', data.text, 'normalized_text=', data.normalized_text);
     return data;
   } catch(e) {
     clearTimeout(timer);
-    console.log('本地 ASR 不可用:', e.message);
+    console.log('[ASR] 本地 ASR 请求失败:', e.name, e.message);
     return null;
   }
 }
